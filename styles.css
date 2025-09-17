@@ -263,6 +263,11 @@ textarea.form-input:not(:placeholder-shown) + .form-label {
     color: #4b5563;
     height: 100%;
 }
+.config-card-visual .peer:checked ~ .config-card-content {
+    border-color: #D4AF37;
+    background-color: #fefce8; /* gold-50 */
+    box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+}
 
 .peer:checked ~ .config-card-content .visual-example {
     color: #D4AF37;
@@ -273,6 +278,11 @@ textarea.form-input:not(:placeholder-shown) + .form-label {
     width: 80px;
     margin-bottom: 0.5rem;
     color: #9ca3af;
+}
+
+.config-card-visual-small .peer:checked ~ .config-card-content-small {
+    border-color: #D4AF37;
+    background-color: #fefce8; /* gold-50 */
 }
 
 .config-card-visual-small {
@@ -307,6 +317,11 @@ textarea.form-input:not(:placeholder-shown) + .form-label {
     width: 50px;
     color: #9ca3af;
 }
+.peer:checked ~ .config-card-content-small .visual-example-small {
+    color: #D4AF37;
+}
+
+
 
 /* Estilos para os sliders do simulador */
 .styled-slider {

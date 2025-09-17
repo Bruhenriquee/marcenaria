@@ -477,11 +477,26 @@
                 </p>
             </div>
 
-            <div class="max-w-4xl mx-auto">
-                <div class="bg-white rounded-2xl shadow-2xl p-6 md:p-10">
-                    <form id="simulator-form">
-                        <!-- Progress Bar -->
+            <div class="max-w-7xl mx-auto grid lg:grid-cols-12 gap-8 lg:gap-12">
+                <!-- Coluna do Formulário -->
+                <div class="lg:col-span-7 bg-white rounded-2xl shadow-2xl p-6 md:p-10">
+                    <form id="simulator-form" novalidate>
+                        <!-- 
+                            ================================
+                            CABEÇALHO E BARRA DE PROGRESSO
+                            ================================
+                        -->
                         <div class="mb-8">
+                            <div class="text-center lg:text-left">
+                                <h3 class="font-montserrat font-bold text-2xl text-charcoal">
+                                    Configure seu Móvel
+                                </h3>
+                                <p class="text-gray-500 mb-6">
+                                    Siga os passos para obter uma estimativa.
+                                </p>
+                            </div>
+
+                            <!-- Barra de Progresso -->
                             <div class="flex items-center justify-center">
                                 <div class="progress-step active" data-step="1">1</div>
                                 <div class="flex-auto border-t-2 progress-bar-line"></div>
@@ -499,19 +514,23 @@
                             </div>
                         </div>
 
-                        <!-- Step 1: Tipo de Móvel -->
+                        <!-- 
+                            ================================
+                            PASSO 1: TIPO DE MÓVEL
+                            ================================
+                        -->
                         <div class="form-step active-step">
                             <h3 class="font-montserrat font-bold text-2xl text-charcoal mb-6 text-center">1. Qual tipo de móvel?</h3>
                             <div class="grid md:grid-cols-2 gap-4">
                                 <label class="relative cursor-pointer">
-                                    <input type="radio" name="furniture-type" value="cozinha" class="sr-only peer" required>
+                                    <input type="radio" name="furnitureType" value="cozinha" class="sr-only peer" required data-config="furnitureType">
                                     <div class="border-2 border-gray-300 rounded-xl p-6 text-center peer-checked:border-gold peer-checked:bg-gold/5 hover:border-gold/50 transition-all duration-300">
                                         <i class="fas fa-utensils text-3xl text-gold mb-4"></i>
                                         <h3 class="font-semibold text-charcoal">Cozinha Planejada</h3>
                                     </div>
                                 </label>
                                 <label class="relative cursor-pointer">
-                                    <input type="radio" name="furniture-type" value="guarda-roupa" class="sr-only peer" required>
+                                    <input type="radio" name="furnitureType" value="guarda-roupa" class="sr-only peer" required data-config="furnitureType">
                                     <div class="border-2 border-gray-300 rounded-xl p-6 text-center peer-checked:border-gold peer-checked:bg-gold/5 hover:border-gold/50 transition-all duration-300">
                                         <i class="fas fa-tshirt text-3xl text-gold mb-4"></i>
                                         <h3 class="font-semibold text-charcoal">Guarda-Roupa</h3>
@@ -525,40 +544,44 @@
                             </div>
                         </div>
 
-                        <!-- Step 2: Dimensões -->
+                        <!-- 
+                            ================================
+                            PASSO 2: DIMENSÕES
+                            ================================
+                        -->
                         <div class="form-step hidden">
                             <h3 class="font-montserrat font-bold text-2xl text-charcoal mb-6 text-center">2. Quais as dimensões?</h3>
                             <!-- Campos para Guarda-Roupa -->
                             <div id="wardrobe-dims" class="grid md:grid-cols-3 gap-8">
                                 <div class="slider-group">
                                     <div class="flex justify-between items-center mb-2">
-                                        <label for="width" class="text-charcoal font-semibold">Largura (m) *</label>
-                                        <input type="number" id="width" name="width" step="0.1" min="1" max="10" value="3.5" class="w-24 text-center border-2 rounded-lg focus:border-gold focus:outline-none" required>
+                                        <label for="width" class="text-charcoal font-semibold">Largura (m)</label>
+                                        <input type="number" id="width" name="width" step="0.1" min="1" max="10" value="3.5" class="w-24 text-center border-2 rounded-lg focus:border-gold focus:outline-none" required data-config="width">
                                     </div>
-                                    <input type="range" data-sync-input="width" step="0.1" min="1" max="10" value="3.5" class="w-full styled-slider">
+                                    <input type="range" data-sync-input="width" step="0.1" min="1" max="10" value="3.5" class="w-full styled-slider" data-config="width">
                                 </div>
                                 <div class="slider-group">
                                     <div class="flex justify-between items-center mb-2">
-                                        <label for="height" class="text-charcoal font-semibold">Altura (m) *</label>
-                                        <input type="number" id="height" name="height" step="0.1" min="1" max="4" value="2.7" class="w-24 text-center border-2 rounded-lg focus:border-gold focus:outline-none" required>
+                                        <label for="height" class="text-charcoal font-semibold">Altura (m)</label>
+                                        <input type="number" id="height" name="height" step="0.1" min="1" max="4" value="2.7" class="w-24 text-center border-2 rounded-lg focus:border-gold focus:outline-none" required data-config="height">
                                     </div>
-                                    <input type="range" data-sync-input="height" step="0.1" min="1" max="4" value="2.7" class="w-full styled-slider">
+                                    <input type="range" data-sync-input="height" step="0.1" min="1" max="4" value="2.7" class="w-full styled-slider" data-config="height">
                                 </div>
                                 <div class="slider-group">
                                     <div class="flex justify-between items-center mb-2">
-                                        <label for="depth" class="text-charcoal font-semibold">Profundidade (cm) *</label>
-                                        <input type="number" id="depth" name="depth" step="1" min="30" max="100" value="60" class="w-24 text-center border-2 rounded-lg focus:border-gold focus:outline-none" required>
+                                        <label for="depth" class="text-charcoal font-semibold">Profundidade (cm)</label>
+                                        <input type="number" id="depth" name="depth" step="1" min="30" max="100" value="60" class="w-24 text-center border-2 rounded-lg focus:border-gold focus:outline-none" required data-config="depth">
                                     </div>
-                                    <input type="range" data-sync-input="depth" step="1" min="30" max="100" value="60" class="w-full styled-slider">
+                                    <input type="range" data-sync-input="depth" step="1" min="30" max="100" value="60" class="w-full styled-slider" data-config="depth">
                                 </div>
                             </div>
                             <!-- Campos para Cozinha -->
                             <div id="kitchen-dims" class="hidden space-y-6">
                                 <p class="text-center text-gray-600">Informe a largura de cada parede que receberá armários. Deixe em branco as que não usar.</p>
                                 <div class="space-y-4" id="kitchen-walls-container">
-                                    <div id="wall-input-1"><label for="width1" class="block text-charcoal font-semibold mb-2">Largura Parede 1 (m) *</label><input type="number" id="width1" name="width1" step="0.1" min="0" class="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-gold focus:outline-none" placeholder="Ex: 4.0"></div>
-                                    <div id="wall-input-2" class="hidden"><label for="width2" class="block text-charcoal font-semibold mb-2">Largura Parede 2 (m)</label><input type="number" id="width2" name="width2" step="0.1" min="0" class="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-gold focus:outline-none" placeholder="Para cozinha em 'L'"></div>
-                                    <div id="wall-input-3" class="hidden"><label for="width3" class="block text-charcoal font-semibold mb-2">Largura Parede 3 (m)</label><input type="number" id="width3" name="width3" step="0.1" min="0" class="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-gold focus:outline-none" placeholder="Para cozinha em 'U'"></div>
+                                    <div id="wall-input-1"><label for="width1" class="block text-charcoal font-semibold mb-2">Largura Parede 1 (m)</label><input type="number" id="width1" name="width1" step="0.1" min="0" class="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-gold focus:outline-none" placeholder="Ex: 4.0" data-config="width1" required></div>
+                                    <div id="wall-input-2" class="hidden"><label for="width2" class="block text-charcoal font-semibold mb-2">Largura Parede 2 (m)</label><input type="number" id="width2" name="width2" step="0.1" min="0" class="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-gold focus:outline-none" placeholder="Para cozinha em 'L'" data-config="width2"></div>
+                                    <div id="wall-input-3" class="hidden"><label for="width3" class="block text-charcoal font-semibold mb-2">Largura Parede 3 (m)</label><input type="number" id="width3" name="width3" step="0.1" min="0" class="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-gold focus:outline-none" placeholder="Para cozinha em 'U'" data-config="width3"></div>
                                 </div>
                                 <div class="text-center">
                                     <button type="button" id="add-wall-btn" class="border-2 border-dashed border-gold text-gold px-6 py-2 rounded-lg hover:bg-gold/10 transition-colors">
@@ -566,8 +589,8 @@
                                     </button>
                                 </div>
                                 <div>
-                                    <label for="kitchen_height" class="block text-charcoal font-semibold mb-2">Altura / Pé-direito (m) *</label>
-                                    <input type="number" id="kitchen_height" name="kitchen_height" step="0.1" min="2" max="4" value="2.7" class="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-gold focus:outline-none" placeholder="Ex: 2.7">
+                                    <label for="kitchenHeight" class="block text-charcoal font-semibold mb-2">Altura / Pé-direito (m)</label>
+                                    <input type="number" id="kitchenHeight" name="kitchenHeight" step="0.1" min="2" max="4" value="2.7" class="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-gold focus:outline-none" placeholder="Ex: 2.7" data-config="height" required>
                                 </div>
                             </div>
                             <div class="mt-8 flex justify-between">
@@ -580,7 +603,11 @@
                             </div>
                         </div>
 
-                        <!-- Step 3: Componentes Internos -->
+                        <!-- 
+                            ================================
+                            PASSO 3: COMPONENTES INTERNOS
+                            ================================
+                        -->
                         <div class="form-step hidden">
                             <h3 class="font-montserrat font-bold text-2xl text-charcoal mb-6 text-center">3. Configuração</h3>
                             
@@ -590,25 +617,25 @@
                                 <div>
                                     <h4 class="config-section-title">Tipo de Porta</h4>
                                     <div class="grid md:grid-cols-2 gap-4">
-                                        <label class="config-card-visual"><input type="radio" name="door_type" value="hinged" class="sr-only peer" checked><div class="config-card-content"><div class="visual-example"><svg viewBox="0 0 100 100"><rect x="20" y="10" width="60" height="80" fill="none" stroke="currentColor" stroke-width="4"/><rect x="50" y="10" width="1" height="80" stroke="currentColor" stroke-width="2" stroke-dasharray="4"/><circle cx="40" cy="50" r="3"/><circle cx="60" cy="50" r="3"/></svg></div><span class="font-semibold">Portas de Abrir</span><p class="text-xs">Tradicionais, abrem para fora.</p></div></label>
-                                        <label class="config-card-visual"><input type="radio" name="door_type" value="sliding" class="sr-only peer"><div class="config-card-content"><div class="visual-example"><svg viewBox="0 0 100 100"><rect x="20" y="10" width="60" height="80" fill="none" stroke="currentColor" stroke-width="4"/><rect x="22" y="15" width="28" height="70" fill="currentColor" opacity="0.2"/><rect x="50" y="15" width="28" height="70" fill="currentColor" opacity="0.3"/></svg></div><span class="font-semibold">Portas de Correr</span><p class="text-xs">Otimizam o espaço.</p></div></label>
+                                        <label class="config-card-visual"><input type="radio" name="doorType" value="hinged" class="sr-only peer" checked data-config="doorType"><div class="config-card-content"><div class="visual-example"><svg viewBox="0 0 100 100"><rect x="20" y="10" width="60" height="80" fill="none" stroke="currentColor" stroke-width="4"/><rect x="50" y="10" width="1" height="80" stroke="currentColor" stroke-width="2" stroke-dasharray="4"/><circle cx="40" cy="50" r="3"/><circle cx="60" cy="50" r="3"/></svg></div><span class="font-semibold">Portas de Abrir</span><p class="text-xs">Tradicionais, abrem para fora.</p></div></label>
+                                        <label class="config-card-visual"><input type="radio" name="doorType" value="sliding" class="sr-only peer" data-config="doorType"><div class="config-card-content"><div class="visual-example"><svg viewBox="0 0 100 100"><rect x="20" y="10" width="60" height="80" fill="none" stroke="currentColor" stroke-width="4"/><rect x="22" y="15" width="28" height="70" fill="currentColor" opacity="0.2"/><rect x="50" y="15" width="28" height="70" fill="currentColor" opacity="0.3"/></svg></div><span class="font-semibold">Portas de Correr</span><p class="text-xs">Otimizam o espaço.</p></div></label>
                                     </div>
                                 </div>
                                 <!-- Acabamento Interno -->
                                 <div>
                                     <h4 class="config-section-title">Acabamento Interno</h4>
                                     <div class="grid md:grid-cols-2 gap-4">
-                                        <label class="config-card-visual"><input type="radio" name="internal_finish" value="white" class="sr-only peer" checked><div class="config-card-content"><i class="fas fa-paint-roller text-2xl mb-2"></i><span class="font-semibold">Branco Padrão</span><p class="text-xs">Interior branco fosco.</p></div></label>
-                                        <label class="config-card-visual"><input type="radio" name="internal_finish" value="wood" class="sr-only peer"><div class="config-card-content"><i class="fas fa-tree text-2xl mb-2"></i><span class="font-semibold">Madeirado/Texturizado</span><p class="text-xs">Interior com textura de madeira.</p></div></label>
+                                        <label class="config-card-visual"><input type="radio" name="internalFinish" value="white" class="sr-only peer" checked data-config="internalFinish"><div class="config-card-content"><i class="fas fa-paint-roller text-2xl mb-2"></i><span class="font-semibold">Branco Padrão</span><p class="text-xs">Interior branco fosco.</p></div></label>
+                                        <label class="config-card-visual"><input type="radio" name="internalFinish" value="wood" class="sr-only peer" data-config="internalFinish"><div class="config-card-content"><i class="fas fa-tree text-2xl mb-2"></i><span class="font-semibold">Madeirado/Texturizado</span><p class="text-xs">Interior com textura de madeira.</p></div></label>
                                     </div>
                                 </div>
                                 <!-- Componentes -->
                                 <div>
                                     <h4 class="config-section-title">Componentes Internos</h4>
                                     <div class="grid grid-cols-2 md:grid-cols-3 gap-4">
-                                        <div><label class="block text-sm font-medium text-gray-700 mb-1">Gavetas</label><input type="number" name="drawers" value="4" min="0" class="form-input-small"></div>
-                                        <div><label class="block text-sm font-medium text-gray-700 mb-1">Prateleiras</label><input type="number" name="extra-shelves" value="5" min="0" class="form-input-small"></div>
-                                        <div><label class="block text-sm font-medium text-gray-700 mb-1">Cabideiros</label><input type="number" name="hanging_rails" value="2" min="0" class="form-input-small"></div>
+                                        <div><label class="block text-sm font-medium text-gray-700 mb-1">Gavetas</label><input type="number" name="drawers" value="4" min="0" class="form-input-small" data-config="drawers"></div>
+                                        <div><label class="block text-sm font-medium text-gray-700 mb-1">Prateleiras</label><input type="number" name="extraShelves" value="5" min="0" class="form-input-small" data-config="extraShelves"></div>
+                                        <div><label class="block text-sm font-medium text-gray-700 mb-1">Cabideiros</label><input type="number" name="hangingRails" value="2" min="0" class="form-input-small" data-config="hangingRails"></div>
                                     </div>
                                 </div>
                             </div>
@@ -619,9 +646,9 @@
                                 <div>
                                     <h4 class="config-section-title">Módulos da Cozinha</h4>
                                     <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                                        <label class="config-card-visual"><input type="checkbox" name="modules" value="inferior" class="sr-only peer" checked><div class="config-card-content"><i class="fas fa-layer-group text-2xl mb-2"></i><span class="font-semibold">Armários Inferiores</span></div></label>
-                                        <label class="config-card-visual"><input type="checkbox" name="modules" value="superior" class="sr-only peer" checked><div class="config-card-content"><i class="fas fa-box-open text-2xl mb-2"></i><span class="font-semibold">Armários Superiores</span></div></label>
-                                        <label class="config-card-visual"><input type="checkbox" name="hot_tower" id="hot_tower" class="sr-only peer"><div class="config-card-content"><i class="fas fa-thermometer-three-quarters text-2xl mb-2"></i><span class="font-semibold">Torre Quente</span></div></label>
+                                        <label class="config-card-visual"><input type="checkbox" name="hasInferior" class="sr-only peer" checked data-config="hasInferior"><div class="config-card-content"><i class="fas fa-layer-group text-2xl mb-2"></i><span class="font-semibold">Armários Inferiores</span></div></label>
+                                        <label class="config-card-visual"><input type="checkbox" name="hasSuperior" class="sr-only peer" checked data-config="hasSuperior"><div class="config-card-content"><i class="fas fa-box-open text-2xl mb-2"></i><span class="font-semibold">Armários Superiores</span></div></label>
+                                        <label class="config-card-visual"><input type="checkbox" name="hasHotTower" id="hot_tower" class="sr-only peer" data-config="hasHotTower"><div class="config-card-content"><i class="fas fa-thermometer-three-quarters text-2xl mb-2"></i><span class="font-semibold">Torre Quente</span></div></label>
                                     </div>
                                 </div>
 
@@ -635,21 +662,21 @@
                                             <div class="space-y-4">
                                                 <h5 class="font-semibold text-gray-800">Gabinete da Pia</h5>
                                                 <div>
-                                                    <label for="sink_area_width" class="block text-sm font-medium text-gray-700">Largura do Gabinete (m)</label>
-                                                    <input type="number" id="sink_area_width" name="sink_area_width" step="0.1" min="0" value="1.2" class="form-input-small">
+                                                    <label for="sinkAreaWidth" class="block text-sm font-medium text-gray-700">Largura do Gabinete (m)</label>
+                                                    <input type="number" id="sinkAreaWidth" name="sinkAreaWidth" step="0.1" min="0" value="1.2" class="form-input-small" data-config="sinkAreaWidth">
                                                 </div>
                                                 <div class="grid grid-cols-2 gap-2">
-                                                    <label class="config-card-visual-small"><input type="radio" name="sink_cabinet_type" value="simple" class="sr-only peer" checked><div class="config-card-content-small"><div class="visual-example-small"><svg viewBox="0 0 100 100"><rect x="20" y="20" width="60" height="60" fill="none" stroke="currentColor" stroke-width="4"/><line x1="50" y1="20" x2="50" y2="80" stroke="currentColor" stroke-width="2" stroke-dasharray="4"/><circle cx="40" cy="50" r="3"/><circle cx="60" cy="50" r="3"/></svg></div><span>Portas</span></div></label>
-                                                    <label class="config-card-visual-small"><input type="radio" name="sink_cabinet_type" value="drawers" class="sr-only peer"><div class="config-card-content-small"><div class="visual-example-small"><svg viewBox="0 0 100 100"><rect x="20" y="20" width="60" height="60" fill="none" stroke="currentColor" stroke-width="4"/><line x1="20" y1="40" x2="80" y2="40" stroke="currentColor" stroke-width="2"/><line x1="20" y1="60" x2="80" y2="60" stroke="currentColor" stroke-width="2"/><line x1="45" y1="30" x2="55" y2="30" stroke="currentColor" stroke-width="2"/><line x1="45" y1="50" x2="55" y2="50" stroke="currentColor" stroke-width="2"/><line x1="45" y1="70" x2="55" y2="70" stroke="currentColor" stroke-width="2"/></svg></div><span>Gavetas</span></div></label>
+                                                    <label class="config-card-visual-small"><input type="radio" name="sinkCabinetType" value="simple" class="sr-only peer" checked data-config="sinkCabinetType"><div class="config-card-content-small"><div class="visual-example-small"><svg viewBox="0 0 100 100"><rect x="20" y="20" width="60" height="60" fill="none" stroke="currentColor" stroke-width="4"/><line x1="50" y1="20" x2="50" y2="80" stroke="currentColor" stroke-width="2" stroke-dasharray="4"/><circle cx="40" cy="50" r="3"/><circle cx="60" cy="50" r="3"/></svg></div><span>Portas</span></div></label>
+                                                    <label class="config-card-visual-small"><input type="radio" name="sinkCabinetType" value="drawers" class="sr-only peer" data-config="sinkCabinetType"><div class="config-card-content-small"><div class="visual-example-small"><svg viewBox="0 0 100 100"><rect x="20" y="20" width="60" height="60" fill="none" stroke="currentColor" stroke-width="4"/><line x1="20" y1="40" x2="80" y2="40" stroke="currentColor" stroke-width="2"/><line x1="20" y1="60" x2="80" y2="60" stroke="currentColor" stroke-width="2"/><line x1="45" y1="30" x2="55" y2="30" stroke="currentColor" stroke-width="2"/><line x1="45" y1="50" x2="55" y2="50" stroke="currentColor" stroke-width="2"/><line x1="45" y1="70" x2="55" y2="70" stroke="currentColor" stroke-width="2"/></svg></div><span>Gavetas</span></div></label>
                                                 </div>
-                                                <label class="flex items-center text-sm"><input type="radio" name="sink_cabinet_type" value="none" class="mr-2"><span>Nenhum gabinete (vão livre)</span></label>
+                                                <label class="flex items-center text-sm"><input type="radio" name="sinkCabinetType" value="none" class="mr-2" data-config="sinkCabinetType"><span>Nenhum gabinete (vão livre)</span></label>
                                             </div>
                                             <!-- Gavetas no Restante -->
                                             <div class="space-y-4">
                                                 <h5 class="font-semibold text-gray-800">Restante da Bancada</h5>
                                                 <div>
-                                                    <label for="kitchen_drawers" class="block text-sm font-medium text-gray-700">Número de Gavetas</label>
-                                                    <input type="number" id="kitchen_drawers" name="kitchen_drawers" min="0" max="20" value="3" class="form-input-small">
+                                                    <label for="kitchenDrawers" class="block text-sm font-medium text-gray-700">Número de Gavetas</label>
+                                                    <input type="number" id="kitchenDrawers" name="kitchenDrawers" min="0" max="20" value="3" class="form-input-small" data-config="drawers">
                                                     <p class="text-xs text-gray-500 mt-1">Gavetas fora da área da pia.</p>
                                                 </div>
                                             </div>
@@ -661,8 +688,8 @@
                                         <div class="p-6 bg-gray-50 rounded-lg border">
                                             <p class="text-sm text-gray-600 mb-4">A torre tem largura padrão de 60cm. Informe a altura desejada.</p>
                                             <div>
-                                                <label for="hot_tower_height" class="block text-sm font-medium text-gray-700">Altura da Torre (m)</label>
-                                                <input type="number" id="hot_tower_height" name="hot_tower_height" step="0.1" min="1.5" max="2.7" value="2.2" class="form-input-small">
+                                                <label for="hotTowerHeight" class="block text-sm font-medium text-gray-700">Altura da Torre (m)</label>
+                                                <input type="number" id="hotTowerHeight" name="hotTowerHeight" step="0.1" min="1.5" max="2.7" value="2.2" class="form-input-small" data-config="hotTowerHeight">
                                             </div>
                                         </div>
                                     </div>
@@ -675,13 +702,17 @@
                             </div>
                         </div>
 
-                        <!-- Step 4: Acabamentos -->
+                        <!-- 
+                            ================================
+                            PASSO 4: ACABAMENTOS
+                            ================================
+                        -->
                         <div class="form-step hidden">
                             <h3 class="font-montserrat font-bold text-2xl text-charcoal mb-6 text-center">4. Escolha os acabamentos</h3>
                             <div class="space-y-8">
                                 <!-- Material -->
                                 <div>
-                                    <label class="block text-charcoal font-semibold mb-2">Material *</label>
+                                    <label class="block text-charcoal font-semibold mb-2">Material</label>
                                     <div class="grid md:grid-cols-2 gap-4">
                                         <label class="relative cursor-pointer">
                                             <input type="radio" name="material" value="branco" class="sr-only peer" required>
@@ -692,7 +723,7 @@
                                             </div>
                                         </label>
                                         <label class="relative cursor-pointer">
-                                            <input type="radio" name="material" value="premium" class="sr-only peer" required>
+                                            <input type="radio" name="material" value="premium" class="sr-only peer" required checked>
                                             <div class="border-2 border-gray-300 rounded-xl p-4 peer-checked:border-gold peer-checked:bg-gold/5 hover:border-gold/50">
                                                 <h3 class="font-semibold text-charcoal">MDF Premium/Colorido</h3>
                                                 <p class="text-gray-600 text-sm">Cores e texturas especiais.</p>
@@ -706,7 +737,7 @@
                                     <label class="block text-charcoal font-semibold mb-2">Puxadores</label>
                                     <div class="grid md:grid-cols-2 gap-4">
                                         <label class="relative cursor-pointer">
-                                            <input type="radio" name="handles" value="padrao" class="sr-only peer" checked>
+                                            <input type="radio" name="handles" value="padrao" class="sr-only peer" checked data-config="handles">
                                             <div class="border-2 border-gray-300 rounded-xl p-4 peer-checked:border-gold peer-checked:bg-gold/5 hover:border-gold/50">
                                                 <h3 class="font-semibold text-charcoal">Padrão</h3>
                                                 <p class="text-gray-600 text-sm">Modelos básicos já inclusos.</p>
@@ -714,7 +745,7 @@
                                             </div>
                                         </label>
                                         <label class="relative cursor-pointer">
-                                            <input type="radio" name="handles" value="premium" class="sr-only peer">
+                                            <input type="radio" name="handles" value="premium" class="sr-only peer" data-config="handles">
                                             <div class="border-2 border-gray-300 rounded-xl p-4 peer-checked:border-gold peer-checked:bg-gold/5 hover:border-gold/50">
                                                 <h3 class="font-semibold text-charcoal">Premium</h3>
                                                 <p class="text-gray-600 text-sm">Design exclusivo e maior qualidade.</p>
@@ -728,18 +759,59 @@
                                 <button type="button" class="prev-step-btn">
                                     <i class="fas fa-arrow-left mr-2"></i> Anterior
                                 </button>
-                                <button type="submit" class="w-auto bg-gradient-to-r from-gold to-yellow-600 text-white py-3 px-8 rounded-lg font-montserrat font-bold text-lg hover:shadow-xl transform hover:-translate-y-1">
-                                    <i class="fas fa-calculator mr-2"></i> Calcular Preço
+                                <button type="button" onclick="requestQuoteFromSimulator()" class="w-auto bg-gradient-to-r from-gold to-yellow-600 text-white py-3 px-8 rounded-lg font-montserrat font-bold text-lg hover:shadow-xl transform hover:-translate-y-1">
+                                    <i class="fas fa-phone mr-2"></i> Solicitar Orçamento
                                 </button>
                             </div>
                         </div>
                     </form>
+                </div>
 
-                    <!-- Resultado -->
-                    <div id="result" class="hidden mt-12 p-8 bg-gray-50 rounded-2xl">
-                        <!-- Resultado será inserido aqui via JavaScript -->
+                <!-- Coluna do Resumo -->
+                <div class="lg:col-span-5">
+                    <div id="simulator-summary" class="bg-white rounded-2xl shadow-2xl p-8 sticky top-28">
+                        <h3 class="font-montserrat font-bold text-2xl text-charcoal mb-2">
+                            Resumo do Orçamento
+                        </h3>
+                        <p class="text-gray-500 mb-6">
+                            Valores estimados com base em suas seleções.
+                        </p>
+
+                        <div id="summary-content" class="space-y-3 mb-6">
+                            <!-- Conteúdo do resumo será inserido aqui -->
+                        </div>
+
+                        <div class="border-t-2 border-dashed border-gray-200 pt-4">
+                            <div class="flex justify-between items-center">
+                                <span class="font-montserrat font-bold text-lg text-charcoal">Total Estimado:</span>
+                                <div class="text-right">
+                                    <span id="total-price" class="font-montserrat font-bold text-3xl text-gold">
+                                        R$ 0
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="mt-6 p-4 bg-blue-50 rounded-lg text-sm text-blue-700">
+                            <p class="font-semibold mb-2"><i class="fas fa-info-circle mr-2"></i>Importante:</p>
+                            <ul class="list-disc list-inside space-y-1">
+                                <li>Este é um orçamento preliminar.</li>
+                                <li>Preços podem variar com o projeto final.</li>
+                                <li>Montagem e frete sob consulta.</li>
+                            </ul>
+                        </div>
+
+                        <button onclick="requestQuoteFromSimulator()" class="w-full mt-6 bg-gradient-to-r from-gold to-yellow-600 text-white py-3 rounded-lg font-montserrat font-bold text-lg hover:shadow-xl transform hover:-translate-y-1 transition-all duration-300">
+                            <i class="fas fa-phone mr-2"></i> Solicitar Orçamento Detalhado
+                        </button>
                     </div>
                 </div>
+
+            </div>
+
+            <!-- Resultado (mantido para compatibilidade, mas agora o foco é o resumo) -->
+            <div id="result" class="hidden max-w-4xl mx-auto mt-12 p-8 bg-gray-50 rounded-2xl">
+                <!-- O resultado final pode ser mostrado aqui se necessário -->
             </div>
         </div>
     </section>
