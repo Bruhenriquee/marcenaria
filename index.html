@@ -1,0 +1,959 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Roni Marceneiro - Móveis Planejados Premium | Cozinhas e Guarda-Roupas Sob Medida</title>
+    <meta name="description" content="Especialista em móveis planejados premium. Cozinhas e guarda-roupas sob medida com materiais de alta qualidade e design exclusivo. Orçamento online grátis.">
+    <meta name="keywords" content="móveis planejados, cozinha planejada, guarda-roupa planejado, marcenaria, móveis sob medida">
+    
+    <!-- Open Graph -->
+    <meta property="og:title" content="Roni Marceneiro - Móveis Planejados Premium">
+    <meta property="og:description" content="Especialista em móveis planejados premium. Cozinhas e guarda-roupas sob medida com design exclusivo.">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="">
+    <meta property="og:image" content="">
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700&family=Roboto:wght@300;400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="styles.css">
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        'montserrat': ['Montserrat', 'sans-serif'],
+                        'roboto': ['Roboto', 'sans-serif'],
+                    },
+                    colors: {
+                        'wood': '#8B4513',
+                        'gold': '#D4AF37',
+                        'charcoal': '#2F2F2F',
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="font-roboto">
+    <!-- Header -->
+    <header class="fixed w-full top-0 z-50 bg-white/95 backdrop-blur-md shadow-sm transition-all duration-300" id="header">
+        <nav class="container mx-auto px-6 py-4">
+            <div class="flex items-center justify-between">
+                <!-- Logo SVG -->
+                <div class="flex items-center space-x-3">
+                    <svg class="w-10 h-10" viewBox="0 0 50 50" xmlns="http://www.w3.org/2000/svg">
+                        <rect x="10" y="15" width="30" height="20" rx="2" fill="#8B4513" stroke="#D4AF37" stroke-width="1"/>
+                        <rect x="15" y="20" width="5" height="10" fill="#D4AF37"/>
+                        <rect x="22.5" y="20" width="5" height="10" fill="#D4AF37"/>
+                        <rect x="30" y="20" width="5" height="10" fill="#D4AF37"/>
+                        <text x="25" y="45" text-anchor="middle" font-family="Montserrat" font-size="8" font-weight="600" fill="#2F2F2F">RM</text>
+                    </svg>
+                    <div>
+                        <h1 class="font-montserrat font-bold text-xl text-charcoal">Roni Marceneiro</h1>
+                        <p class="text-xs text-gray-600">Móveis Planejados</p>
+                    </div>
+                </div>
+                
+                <!-- Desktop Navigation -->
+                <nav class="hidden md:flex items-center space-x-8">
+                    <a href="#inicio" class="text-gray-700 hover:text-gold transition-colors duration-300">Início</a>
+                    <a href="#sobre" class="text-gray-700 hover:text-gold transition-colors duration-300">Sobre</a>
+                    <a href="#servicos" class="text-gray-700 hover:text-gold transition-colors duration-300">Serviços</a>
+                    <a href="#galeria" class="text-gray-700 hover:text-gold transition-colors duration-300">Galeria</a>
+                    <a href="#simulador" class="text-gray-700 hover:text-gold transition-colors duration-300">Simulador</a>
+                    <a href="#contato" class="text-gray-700 hover:text-gold transition-colors duration-300">Contato</a>
+                </nav>
+                
+                <!-- CTA Button -->
+                <button class="hidden md:block bg-gradient-to-r from-gold to-yellow-600 text-white px-6 py-3 rounded-lg font-montserrat font-semibold hover:shadow-lg transform hover:-translate-y-1 transition-all duration-300">
+                    Simule Agora
+                </button>
+                
+                <!-- Mobile Menu Toggle -->
+                <button class="md:hidden text-charcoal" 
+                        id="mobile-menu-toggle"
+                        aria-controls="mobile-menu" 
+                        aria-expanded="false"
+                        aria-label="Abrir menu de navegação">
+                    <i class="fas fa-bars text-2xl"></i>
+                </button>
+            </div>
+            
+            <!-- Mobile Menu -->
+            <div class="md:hidden mt-4 hidden" id="mobile-menu">
+                <div class="flex flex-col space-y-4 py-4">
+                    <a href="#inicio" class="text-gray-700 hover:text-gold transition-colors">Início</a>
+                    <a href="#sobre" class="text-gray-700 hover:text-gold transition-colors">Sobre</a>
+                    <a href="#servicos" class="text-gray-700 hover:text-gold transition-colors">Serviços</a>
+                    <a href="#galeria" class="text-gray-700 hover:text-gold transition-colors">Galeria</a>
+                    <a href="#simulador" class="text-gray-700 hover:text-gold transition-colors">Simulador</a>
+                    <a href="#contato" class="text-gray-700 hover:text-gold transition-colors">Contato</a>
+                    <button class="bg-gradient-to-r from-gold to-yellow-600 text-white px-6 py-3 rounded-lg font-semibold mt-4">
+                        Simule Agora
+                    </button>
+                </div>
+            </div>
+        </nav>
+    </header>
+
+    <!-- Hero Section -->
+    <section id="inicio" class="relative min-h-screen flex items-center justify-center overflow-hidden">
+        <div class="absolute inset-0 z-0">
+            <img src="https://images.unsplash.com/photo-1686023858213-9653d3248fdc?crop=entropy&cs=srgb&fm=jpg&ixid=M3w3NDQ2MzR8MHwxfHNlYXJjaHwxfHxjdXN0b20lMjBraXRjaGVuJTIwY2FiaW5ldHN8ZW58MHx8fHwxNzU4MTMwMTI1fDA&ixlib=rb-4.1.0&q=85" 
+                 alt="Cozinha planejada premium" 
+                 class="w-full h-full object-cover"
+                 loading="eager">
+            <div class="absolute inset-0 bg-gradient-to-r from-black/70 via-black/50 to-transparent"></div>
+        </div>
+        
+        <div class="relative z-10 container mx-auto px-6 text-left max-w-4xl">
+            <div class="max-w-2xl">
+                <h1 class="font-montserrat font-bold text-5xl md:text-6xl lg:text-7xl text-white mb-6 leading-tight">
+                    Móveis Planejados
+                    <span class="text-gold block">Premium</span>
+                </h1>
+                <p class="text-xl md:text-2xl text-gray-200 mb-8 font-light leading-relaxed">
+                    Transformamos seus sonhos em realidade com móveis sob medida, 
+                    design exclusivo e materiais de alta qualidade.
+                </p>
+                <div class="flex flex-col sm:flex-row gap-4">
+                    <button onclick="scrollToSection('simulador')" class="bg-gradient-to-r from-gold to-yellow-600 text-white px-8 py-4 rounded-lg font-montserrat font-semibold text-lg hover:shadow-xl transform hover:-translate-y-2 transition-all duration-300">
+                        <i class="fas fa-calculator mr-2"></i>
+                        Simular Preço
+                    </button>
+                    <button onclick="scrollToSection('galeria')" class="border-2 border-white text-white px-8 py-4 rounded-lg font-montserrat font-semibold text-lg hover:bg-white hover:text-charcoal transition-all duration-300">
+                        <i class="fas fa-images mr-2"></i>
+                        Ver Projetos
+                    </button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Scroll Indicator -->
+        <div class="absolute bottom-8 left-1/2 transform -translate-x-1/2 text-white animate-bounce">
+            <i class="fas fa-chevron-down text-2xl"></i>
+        </div>
+    </section>
+
+    <!-- Sobre Nós -->
+    <section id="sobre" class="py-20 bg-gray-50">
+        <div class="container mx-auto px-6">
+            <div class="grid md:grid-cols-2 gap-12 items-center">
+                <div class="space-y-6">
+                    <h2 class="font-montserrat font-bold text-4xl md:text-5xl text-charcoal mb-6">
+                        Sobre a 
+                        <span class="text-gold">Roni Marceneiro</span>
+                    </h2>
+                    <div class="space-y-4 text-gray-700 leading-relaxed">
+                        <p class="text-lg">
+                            Com mais de 15 anos de experiência em marcenaria de alta qualidade, 
+                            a Roni Marceneiro se especializou na criação de móveis planejados premium 
+                            que transformam ambientes em espaços únicos e funcionais.
+                        </p>
+                        <p>
+                            Nossa expertise está focada em cozinhas planejadas e guarda-roupas sob medida, 
+                            utilizando apenas materiais premium e técnicas artesanais refinadas. 
+                            Cada projeto é desenvolvido com atenção aos mínimos detalhes.
+                        </p>
+                        <p>
+                            Acreditamos que móveis planejados não são apenas funcionais, mas verdadeiras 
+                            obras de arte que refletem a personalidade e o estilo de vida de nossos clientes.
+                        </p>
+                    </div>
+                    
+                    <!-- Stats -->
+                    <div class="grid grid-cols-3 gap-6 pt-8">
+                        <div class="text-center">
+                            <div class="text-3xl font-bold text-gold mb-2">500+</div>
+                            <div class="text-sm text-gray-600">Projetos Entregues</div>
+                        </div>
+                        <div class="text-center">
+                            <div class="text-3xl font-bold text-gold mb-2">15+</div>
+                            <div class="text-sm text-gray-600">Anos de Experiência</div>
+                        </div>
+                        <div class="text-center">
+                            <div class="text-3xl font-bold text-gold mb-2">100%</div>
+                            <div class="text-sm text-gray-600">Satisfação</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="relative">
+                    <img src="https://images.unsplash.com/photo-1754611362309-71297e9f42fd?crop=entropy&cs=srgb&fm=jpg&ixid=M3w3NDQ2NDF8MHwxfHNlYXJjaHwxfHxwcmVtaXVtJTIwZnVybml0dXJlfGVufDB8fHx8MTc1ODEzMDEzMXww&ixlib=rb-4.1.0&q=85" 
+                         alt="Ambiente com móveis premium" 
+                         class="rounded-2xl shadow-2xl w-full h-96 object-cover"
+                         loading="lazy">
+                    <div class="absolute -bottom-6 -right-6 bg-gold text-white p-6 rounded-2xl shadow-xl">
+                        <i class="fas fa-award text-3xl mb-2"></i>
+                        <div class="font-semibold">Qualidade</div>
+                        <div class="text-sm">Garantida</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Serviços -->
+    <section id="servicos" class="py-20">
+        <div class="container mx-auto px-6">
+            <div class="text-center mb-16">
+                <h2 class="font-montserrat font-bold text-4xl md:text-5xl text-charcoal mb-6">
+                    Nossos <span class="text-gold">Serviços</span>
+                </h2>
+                <p class="text-xl text-gray-600 max-w-3xl mx-auto">
+                    Especializados em móveis planejados de alta qualidade com foco em funcionalidade e design exclusivo
+                </p>
+            </div>
+
+            <!-- Serviços Principais (com simulador) -->
+            <div class="grid md:grid-cols-2 gap-8 mb-16">
+                <!-- Cozinhas Planejadas -->
+                <div class="group bg-white rounded-2xl shadow-lg overflow-hidden hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2">
+                    <div class="relative h-64 overflow-hidden">
+                        <img src="https://images.unsplash.com/photo-1657524497227-66242be7ee6e?crop=entropy&cs=srgb&fm=jpg&ixid=M3w3NDQ2MzR8MHwxfHNlYXJjaHw0fHxjdXN0b20lMjBraXRjaGVuJTIwY2FiaW5ldHN8ZW58MHx8fHwxNzU4MTMwMTI1fDA&ixlib=rb-4.1.0&q=85" 
+                             alt="Cozinha planejada premium" 
+                             class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
+                             loading="lazy">
+                        <div class="absolute top-4 right-4 bg-gold text-white px-3 py-1 rounded-full text-sm font-semibold">
+                            <i class="fas fa-calculator mr-1"></i>
+                            Com Simulador
+                        </div>
+                    </div>
+                    <div class="p-8">
+                        <h3 class="font-montserrat font-bold text-2xl text-charcoal mb-4">Cozinhas Planejadas</h3>
+                        <p class="text-gray-600 mb-6 leading-relaxed">
+                            Cozinhas sob medida com design funcional e elegante. Materiais premium, 
+                            puxadores de qualidade e acabamentos impecáveis para o coração da sua casa.
+                        </p>
+                        <ul class="space-y-2 mb-6">
+                            <li class="flex items-center text-gray-700">
+                                <i class="fas fa-check text-gold mr-3"></i>
+                                Design 3D personalizado
+                            </li>
+                            <li class="flex items-center text-gray-700">
+                                <i class="fas fa-check text-gold mr-3"></i>
+                                Materiais premium
+                            </li>
+                            <li class="flex items-center text-gray-700">
+                                <i class="fas fa-check text-gold mr-3"></i>
+                                Montagem profissional
+                            </li>
+                        </ul>
+                        <button onclick="openSimulator('cozinha')" class="w-full bg-gradient-to-r from-gold to-yellow-600 text-white py-3 rounded-lg font-semibold hover:shadow-lg transition-all duration-300">
+                            <i class="fas fa-calculator mr-2"></i>
+                            Simular Preço
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Guarda-Roupas -->
+                <div class="group bg-white rounded-2xl shadow-lg overflow-hidden hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2">
+                    <div class="relative h-64 overflow-hidden">
+                        <img src="https://images.unsplash.com/photo-1708758487256-8a3a73565dc2?crop=entropy&cs=srgb&fm=jpg&ixid=M3w3NDQ2NDF8MHwxfHNlYXJjaHwyfHxwcmVtaXVtJTIwZnVybml0dXJlfGVufDB8fHx8MTc1ODEzMDEzMXww&ixlib=rb-4.1.0&q=85" 
+                             alt="Guarda-roupa planejado" 
+                             class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
+                             loading="lazy">
+                        <div class="absolute top-4 right-4 bg-gold text-white px-3 py-1 rounded-full text-sm font-semibold">
+                            <i class="fas fa-calculator mr-1"></i>
+                            Com Simulador
+                        </div>
+                    </div>
+                    <div class="p-8">
+                        <h3 class="font-montserrat font-bold text-2xl text-charcoal mb-4">Guarda-Roupas Planejados</h3>
+                        <p class="text-gray-600 mb-6 leading-relaxed">
+                            Guarda-roupas sob medida que maximizam o espaço e organização. 
+                            Soluções inteligentes para todos os tipos de ambientes.
+                        </p>
+                        <ul class="space-y-2 mb-6">
+                            <li class="flex items-center text-gray-700">
+                                <i class="fas fa-check text-gold mr-3"></i>
+                                Otimização de espaço
+                            </li>
+                            <li class="flex items-center text-gray-700">
+                                <i class="fas fa-check text-gold mr-3"></i>
+                                Acabamentos de luxo
+                            </li>
+                            <li class="flex items-center text-gray-700">
+                                <i class="fas fa-check text-gold mr-3"></i>
+                                Divisórias personalizadas
+                            </li>
+                        </ul>
+                        <button onclick="openSimulator('guarda-roupa')" class="w-full bg-gradient-to-r from-gold to-yellow-600 text-white py-3 rounded-lg font-semibold hover:shadow-lg transition-all duration-300">
+                            <i class="fas fa-calculator mr-2"></i>
+                            Simular Preço
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Outros Serviços -->
+            <div class="bg-gray-50 rounded-2xl p-8">
+                <h3 class="font-montserrat font-bold text-2xl text-charcoal mb-8 text-center">Outros Móveis Planejados</h3>
+                <div class="grid md:grid-cols-4 gap-6">
+                    <div class="text-center p-6 bg-white rounded-xl hover:shadow-lg transition-shadow duration-300">
+                        <i class="fas fa-tv text-3xl text-gold mb-4"></i>
+                        <h4 class="font-semibold text-charcoal mb-2">Home Theater</h4>
+                        <p class="text-sm text-gray-600">Móveis para entretenimento</p>
+                    </div>
+                    <div class="text-center p-6 bg-white rounded-xl hover:shadow-lg transition-shadow duration-300">
+                        <i class="fas fa-book text-3xl text-gold mb-4"></i>
+                        <h4 class="font-semibold text-charcoal mb-2">Estantes</h4>
+                        <p class="text-sm text-gray-600">Bibliotecas personalizadas</p>
+                    </div>
+                    <div class="text-center p-6 bg-white rounded-xl hover:shadow-lg transition-shadow duration-300">
+                        <i class="fas fa-desktop text-3xl text-gold mb-4"></i>
+                        <h4 class="font-semibold text-charcoal mb-2">Home Office</h4>
+                        <p class="text-sm text-gray-600">Escritórios funcionais</p>
+                    </div>
+                    <div class="text-center p-6 bg-white rounded-xl hover:shadow-lg transition-shadow duration-300">
+                        <i class="fas fa-bed text-3xl text-gold mb-4"></i>
+                        <h4 class="font-semibold text-charcoal mb-2">Dormitórios</h4>
+                        <p class="text-sm text-gray-600">Quartos completos</p>
+                    </div>
+                </div>
+                <div class="text-center mt-8">
+                    <p class="text-gray-600 mb-4">Para outros móveis, entre em contato para orçamento personalizado</p>
+                    <button onclick="scrollToSection('contato')" class="bg-charcoal text-white px-8 py-3 rounded-lg font-semibold hover:bg-gray-800 transition-colors duration-300">
+                        <i class="fas fa-phone mr-2"></i>
+                        Solicitar Orçamento
+                    </button>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Diferenciais -->
+    <section class="py-20 bg-charcoal text-white">
+        <div class="container mx-auto px-6">
+            <div class="text-center mb-16">
+                <h2 class="font-montserrat font-bold text-4xl md:text-5xl mb-6">
+                    Nossos <span class="text-gold">Diferenciais</span>
+                </h2>
+                <p class="text-xl text-gray-300 max-w-3xl mx-auto">
+                    O que nos torna únicos na criação de móveis planejados premium
+                </p>
+            </div>
+
+            <div class="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
+                <div class="text-center group">
+                    <div class="bg-gold/10 rounded-full w-20 h-20 flex items-center justify-center mx-auto mb-6 group-hover:bg-gold/20 transition-colors duration-300">
+                        <i class="fas fa-gem text-3xl text-gold"></i>
+                    </div>
+                    <h3 class="font-montserrat font-bold text-xl mb-4">Materiais Premium</h3>
+                    <p class="text-gray-300 leading-relaxed">
+                        Utilizamos apenas materiais de primeira linha, garantindo durabilidade e beleza por muitos anos.
+                    </p>
+                </div>
+
+                <div class="text-center group">
+                    <div class="bg-gold/10 rounded-full w-20 h-20 flex items-center justify-center mx-auto mb-6 group-hover:bg-gold/20 transition-colors duration-300">
+                        <i class="fas fa-hand-sparkles text-3xl text-gold"></i>
+                    </div>
+                    <h3 class="font-montserrat font-bold text-xl mb-4">Puxadores de Qualidade</h3>
+                    <p class="text-gray-300 leading-relaxed">
+                        Puxadores e ferragens premium que complementam o design e garantem funcionamento suave.
+                    </p>
+                </div>
+
+                <div class="text-center group">
+                    <div class="bg-gold/10 rounded-full w-20 h-20 flex items-center justify-center mx-auto mb-6 group-hover:bg-gold/20 transition-colors duration-300">
+                        <i class="fas fa-palette text-3xl text-gold"></i>
+                    </div>
+                    <h3 class="font-montserrat font-bold text-xl mb-4">Design Exclusivo</h3>
+                    <p class="text-gray-300 leading-relaxed">
+                        Cada projeto é único, desenvolvido especialmente para seu espaço e necessidades específicas.
+                    </p>
+                </div>
+
+                <div class="text-center group">
+                    <div class="bg-gold/10 rounded-full w-20 h-20 flex items-center justify-center mx-auto mb-6 group-hover:bg-gold/20 transition-colors duration-300">
+                        <i class="fas fa-tools text-3xl text-gold"></i>
+                    </div>
+                    <h3 class="font-montserrat font-bold text-xl mb-4">Montagem Profissional</h3>
+                    <p class="text-gray-300 leading-relaxed">
+                        Equipe especializada em montagem, garantindo acabamento perfeito e instalação segura.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Galeria -->
+    <section id="galeria" class="py-20 bg-gray-50">
+        <div class="container mx-auto px-6">
+            <div class="text-center mb-16">
+                <h2 class="font-montserrat font-bold text-4xl md:text-5xl text-charcoal mb-6">
+                    Nossa <span class="text-gold">Galeria</span>
+                </h2>
+                <p class="text-xl text-gray-600 max-w-3xl mx-auto">
+                    Conheça alguns dos nossos projetos de móveis planejados premium
+                </p>
+            </div>
+
+            <!-- Galeria Mosaico -->
+            <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                <div class="group cursor-pointer overflow-hidden rounded-xl aspect-square" data-gallery-item>
+                    <img src="https://images.unsplash.com/photo-1722357533744-40bb2646f4c6?crop=entropy&cs=srgb&fm=jpg&ixid=M3w3NDQ2MzR8MHwxfHNlYXJjaHwyfHxjdXN0b20lMjBraXRjaGVuJTIwY2FiaW5ldHN8ZW58MHx8fHwxNzU4MTMwMTI1fDA&ixlib=rb-4.1.0&q=85" 
+                         alt="Projeto de móvel planejado" 
+                         class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                         loading="lazy">
+                    <div class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
+                        <i class="fas fa-search-plus text-white text-3xl"></i>
+                    </div>
+                </div>
+
+                <div class="group cursor-pointer overflow-hidden rounded-xl aspect-square" data-gallery-item>
+                    <img src="https://images.unsplash.com/photo-1746439323242-4d45b124b9bf?crop=entropy&cs=srgb&fm=jpg&ixid=M3w3NDQ2NDF8MHwxfHNlYXJjaHwzfHxwcmVtaXVtJTIwZnVybml0dXJlfGVufDB8fHx8MTc1ODEzMDEzMXww&ixlib=rb-4.1.0&q=85" 
+                         alt="Mesa com design exclusivo" 
+                         class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                         loading="lazy">
+                    <div class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
+                        <i class="fas fa-search-plus text-white text-3xl"></i>
+                    </div>
+                </div>
+
+                <div class="group cursor-pointer overflow-hidden rounded-xl aspect-square" data-gallery-item>
+                    <img src="https://images.unsplash.com/photo-1614597795732-f7607f30a491?crop=entropy&cs=srgb&fm=jpg&ixid=M3w3NDQ2NDF8MHwxfHNlYXJjaHw0fHxwcmVtaXVtJTIwZnVybml0dXJlfGVufDB8fHx8MTc1ODEzMDEzMXww&ixlib=rb-4.1.0&q=85" 
+                         alt="Poltrona premium" 
+                         class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                         loading="lazy">
+                    <div class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
+                        <i class="fas fa-search-plus text-white text-3xl"></i>
+                    </div>
+                </div>
+
+                <div class="group cursor-pointer overflow-hidden rounded-xl aspect-square" data-gallery-item>
+                    <img src="https://images.unsplash.com/photo-1722357533653-7eb00f7f243d?crop=entropy&cs=srgb&fm=jpg&ixid=M3w3NDQ2MzR8MHwxfHNlYXJjaHwzfHxjdXN0b20lMjBraXRjaGVuJTIwY2FiaW5ldHN8ZW58MHx8fHwxNzU4MTMwMTI1fDA&ixlib=rb-4.1.0&q=85" 
+                         alt="Cadeira com design único" 
+                         class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                         loading="lazy">
+                    <div class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
+                        <i class="fas fa-search-plus text-white text-3xl"></i>
+                    </div>
+                </div>
+
+                <div class="group cursor-pointer overflow-hidden rounded-xl aspect-square" data-gallery-item>
+                    <img src="https://images.unsplash.com/photo-1686023858213-9653d3248fdc?crop=entropy&cs=srgb&fm=jpg&ixid=M3w3NDQ2MzR8MHwxfHNlYXJjaHwxfHxjdXN0b20lMjBraXRjaGVuJTIwY2FiaW5ldHN8ZW58MHx8fHwxNzU4MTMwMTI1fDA&ixlib=rb-4.1.0&q=85" 
+                         alt="Cozinha premium" 
+                         class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                         loading="lazy">
+                    <div class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
+                        <i class="fas fa-search-plus text-white text-3xl"></i>
+                    </div>
+                </div>
+
+                <div class="group cursor-pointer overflow-hidden rounded-xl aspect-square" data-gallery-item>
+                    <img src="https://images.unsplash.com/photo-1657524497227-66242be7ee6e?crop=entropy&cs=srgb&fm=jpg&ixid=M3w3NDQ2MzR8MHwxfHNlYXJjaHw0fHxjdXN0b20lMjBraXRjaGVuJTIwY2FiaW5ldHN8ZW58MHx8fHwxNzU4MTMwMTI1fDA&ixlib=rb-4.1.0&q=85" 
+                         alt="Armários planejados" 
+                         class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                         loading="lazy">
+                    <div class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
+                        <i class="fas fa-search-plus text-white text-3xl"></i>
+                    </div>
+                </div>
+            </div>
+
+            <div class="text-center mt-12">
+                <button onclick="scrollToSection('contato')" class="bg-gradient-to-r from-gold to-yellow-600 text-white px-8 py-4 rounded-lg font-montserrat font-semibold text-lg hover:shadow-xl transform hover:-translate-y-1 transition-all duration-300">
+                    <i class="fas fa-images mr-2"></i>
+                    Ver Mais Projetos
+                </button>
+            </div>
+        </div>
+    </section>
+
+    <!-- Simulador -->
+    <section id="simulador" class="py-20">
+        <div class="container mx-auto px-6">
+            <div class="text-center mb-16">
+                <h2 class="font-montserrat font-bold text-4xl md:text-5xl text-charcoal mb-6">
+                    Simulador de <span class="text-gold">Preços</span>
+                </h2>
+                <p class="text-xl text-gray-600 max-w-3xl mx-auto">
+                    Simule o preço do seu móvel planejado de forma rápida e transparente
+                </p>
+            </div>
+
+            <div class="max-w-4xl mx-auto">
+                <div class="bg-white rounded-2xl shadow-2xl p-8 md:p-12">
+                    <form id="simulator-form" class="space-y-8">
+                        <!-- Tipo de Móvel -->
+                        <div>
+                            <label class="block text-charcoal font-montserrat font-semibold text-lg mb-4">
+                                Tipo de Móvel *
+                            </label>
+                            <div class="grid md:grid-cols-2 gap-4">
+                                <label class="relative cursor-pointer">
+                                    <input type="radio" name="furniture-type" value="cozinha" class="sr-only peer" required>
+                                    <div class="border-2 border-gray-300 rounded-xl p-6 peer-checked:border-gold peer-checked:bg-gold/5 hover:border-gold/50 transition-all duration-300">
+                                        <i class="fas fa-utensils text-3xl text-gold mb-4"></i>
+                                        <h3 class="font-semibold text-charcoal mb-2">Cozinha Planejada</h3>
+                                        <p class="text-gray-600 text-sm">Armários sob medida para cozinha</p>
+                                    </div>
+                                </label>
+                                <label class="relative cursor-pointer">
+                                    <input type="radio" name="furniture-type" value="guarda-roupa" class="sr-only peer" required>
+                                    <div class="border-2 border-gray-300 rounded-xl p-6 peer-checked:border-gold peer-checked:bg-gold/5 hover:border-gold/50 transition-all duration-300">
+                                        <i class="fas fa-tshirt text-3xl text-gold mb-4"></i>
+                                        <h3 class="font-semibold text-charcoal mb-2">Guarda-Roupa</h3>
+                                        <p class="text-gray-600 text-sm">Armário planejado para quarto</p>
+                                    </div>
+                                </label>
+                            </div>
+                        </div>
+
+                        <!-- Dimensões -->
+                        <div class="grid md:grid-cols-2 gap-8">
+                            <div>
+                                <label for="width" class="block text-charcoal font-montserrat font-semibold text-lg mb-4">
+                                    Largura (metros) *
+                                </label>
+                                <input type="number" id="width" name="width" step="0.1" min="1" max="10" 
+                                       class="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-gold focus:outline-none transition-colors duration-300" 
+                                       placeholder="Ex: 3.5" required>
+                            </div>
+                            <div>
+                                <label for="height" class="block text-charcoal font-montserrat font-semibold text-lg mb-4">
+                                    Altura (metros) *
+                                </label>
+                                <input type="number" id="height" name="height" step="0.1" min="1" max="4" 
+                                       class="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-gold focus:outline-none transition-colors duration-300" 
+                                       placeholder="Ex: 2.7" required>
+                            </div>
+                        </div>
+
+                        <!-- Material -->
+                        <div>
+                            <label class="block text-charcoal font-montserrat font-semibold text-lg mb-4">
+                                Material *
+                            </label>
+                            <div class="grid md:grid-cols-2 gap-4">
+                                <label class="relative cursor-pointer">
+                                    <input type="radio" name="material" value="branco" class="sr-only peer" required>
+                                    <div class="border-2 border-gray-300 rounded-xl p-6 peer-checked:border-gold peer-checked:bg-gold/5 hover:border-gold/50 transition-all duration-300">
+                                        <div class="flex justify-between items-start mb-4">
+                                            <h3 class="font-semibold text-charcoal">MDF Branco</h3>
+                                            <span class="text-gold font-bold">R$ 800/m²</span>
+                                        </div>
+                                        <p class="text-gray-600 text-sm">Material padrão com acabamento branco</p>
+                                    </div>
+                                </label>
+                                <label class="relative cursor-pointer">
+                                    <input type="radio" name="material" value="premium" class="sr-only peer" required>
+                                    <div class="border-2 border-gray-300 rounded-xl p-6 peer-checked:border-gold peer-checked:bg-gold/5 hover:border-gold/50 transition-all duration-300">
+                                        <div class="flex justify-between items-start mb-4">
+                                            <h3 class="font-semibold text-charcoal">MDF Premium/Colorido</h3>
+                                            <span class="text-gold font-bold">R$ 1.200/m²</span>
+                                        </div>
+                                        <p class="text-gray-600 text-sm">Material premium com cores e texturas especiais</p>
+                                    </div>
+                                </label>
+                            </div>
+                        </div>
+
+                        <!-- Puxadores -->
+                        <div>
+                            <label class="block text-charcoal font-montserrat font-semibold text-lg mb-4">
+                                Puxadores
+                            </label>
+                            <div class="grid md:grid-cols-2 gap-4">
+                                <label class="relative cursor-pointer">
+                                    <input type="radio" name="handles" value="padrao" class="sr-only peer" checked>
+                                    <div class="border-2 border-gray-300 rounded-xl p-6 peer-checked:border-gold peer-checked:bg-gold/5 hover:border-gold/50 transition-all duration-300">
+                                        <div class="flex justify-between items-start mb-4">
+                                            <h3 class="font-semibold text-charcoal">Puxadores Padrão</h3>
+                                            <span class="text-green-600 font-bold">Incluso</span>
+                                        </div>
+                                        <p class="text-gray-600 text-sm">Puxadores básicos inclusos no preço</p>
+                                    </div>
+                                </label>
+                                <label class="relative cursor-pointer">
+                                    <input type="radio" name="handles" value="premium" class="sr-only peer">
+                                    <div class="border-2 border-gray-300 rounded-xl p-6 peer-checked:border-gold peer-checked:bg-gold/5 hover:border-gold/50 transition-all duration-300">
+                                        <div class="flex justify-between items-start mb-4">
+                                            <h3 class="font-semibold text-charcoal">Puxadores Premium</h3>
+                                            <span class="text-gold font-bold">+R$ 150/chapa</span>
+                                        </div>
+                                        <p class="text-gray-600 text-sm">Puxadores de alta qualidade com design exclusivo</p>
+                                    </div>
+                                </label>
+                            </div>
+                        </div>
+
+                        <!-- Botão Calcular -->
+                        <div class="text-center pt-8">
+                            <button type="submit" class="bg-gradient-to-r from-gold to-yellow-600 text-white px-12 py-4 rounded-lg font-montserrat font-bold text-xl hover:shadow-xl transform hover:-translate-y-1 transition-all duration-300">
+                                <i class="fas fa-calculator mr-3"></i>
+                                Calcular Preço
+                            </button>
+                        </div>
+                    </form>
+
+                    <!-- Resultado -->
+                    <div id="result" class="hidden mt-12 p-8 bg-gray-50 rounded-2xl">
+                        <!-- Resultado será inserido aqui via JavaScript -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Depoimentos -->
+    <section class="py-20 bg-gray-50">
+        <div class="container mx-auto px-6">
+            <div class="text-center mb-16">
+                <h2 class="font-montserrat font-bold text-4xl md:text-5xl text-charcoal mb-6">
+                    O que nossos <span class="text-gold">clientes dizem</span>
+                </h2>
+                <p class="text-xl text-gray-600 max-w-3xl mx-auto">
+                    Depoimentos reais de clientes satisfeitos com nossos móveis planejados
+                </p>
+            </div>
+
+            <div class="grid md:grid-cols-3 gap-8">
+                <div class="bg-white rounded-2xl p-8 shadow-lg hover:shadow-xl transition-shadow duration-300">
+                    <div class="flex items-center mb-6">
+                        <div class="w-12 h-12 bg-gold rounded-full flex items-center justify-center text-white font-bold mr-4">
+                            MC
+                        </div>
+                        <div>
+                            <h4 class="font-semibold text-charcoal">Maria Clara</h4>
+                            <div class="text-gold">
+                                <i class="fas fa-star"></i>
+                                <i class="fas fa-star"></i>
+                                <i class="fas fa-star"></i>
+                                <i class="fas fa-star"></i>
+                                <i class="fas fa-star"></i>
+                            </div>
+                        </div>
+                    </div>
+                    <p class="text-gray-600 leading-relaxed">
+                        "Incrível! A cozinha planejada superou todas as minhas expectativas. 
+                        O Roni é um verdadeiro artista, cada detalhe foi pensado com carinho. 
+                        Recomendo sem hesitar!"
+                    </p>
+                </div>
+
+                <div class="bg-white rounded-2xl p-8 shadow-lg hover:shadow-xl transition-shadow duration-300">
+                    <div class="flex items-center mb-6">
+                        <div class="w-12 h-12 bg-gold rounded-full flex items-center justify-center text-white font-bold mr-4">
+                            JS
+                        </div>
+                        <div>
+                            <h4 class="font-semibold text-charcoal">João Silva</h4>
+                            <div class="text-gold">
+                                <i class="fas fa-star"></i>
+                                <i class="fas fa-star"></i>
+                                <i class="fas fa-star"></i>
+                                <i class="fas fa-star"></i>
+                                <i class="fas fa-star"></i>
+                            </div>
+                        </div>
+                    </div>
+                    <p class="text-gray-600 leading-relaxed">
+                        "Meu guarda-roupa planejado ficou perfeito! Aproveitou cada centímetro 
+                        do espaço e os acabamentos são impecáveis. Qualidade premium mesmo!"
+                    </p>
+                </div>
+
+                <div class="bg-white rounded-2xl p-8 shadow-lg hover:shadow-xl transition-shadow duration-300">
+                    <div class="flex items-center mb-6">
+                        <div class="w-12 h-12 bg-gold rounded-full flex items-center justify-center text-white font-bold mr-4">
+                            AS
+                        </div>
+                        <div>
+                            <h4 class="font-semibold text-charcoal">Ana Santos</h4>
+                            <div class="text-gold">
+                                <i class="fas fa-star"></i>
+                                <i class="fas fa-star"></i>
+                                <i class="fas fa-star"></i>
+                                <i class="fas fa-star"></i>
+                                <i class="fas fa-star"></i>
+                            </div>
+                        </div>
+                    </div>
+                    <p class="text-gray-600 leading-relaxed">
+                        "Profissionalismo do início ao fim. O projeto 3D me ajudou a visualizar 
+                        tudo antes da execução. O resultado foi ainda melhor que imaginei!"
+                    </p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Contato -->
+    <section id="contato" class="py-20">
+        <div class="container mx-auto px-6">
+            <div class="text-center mb-16">
+                <h2 class="font-montserrat font-bold text-4xl md:text-5xl text-charcoal mb-6">
+                    Entre em <span class="text-gold">Contato</span>
+                </h2>
+                <p class="text-xl text-gray-600 max-w-3xl mx-auto">
+                    Pronto para transformar seu espaço? Vamos conversar sobre seu projeto
+                </p>
+            </div>
+
+            <div class="grid md:grid-cols-2 gap-12 max-w-6xl mx-auto">
+                <!-- Informações de Contato -->
+                <div class="space-y-8">
+                    <div>
+                        <h3 class="font-montserrat font-bold text-2xl text-charcoal mb-6">Fale Conosco</h3>
+                        <div class="space-y-6">
+                            <div class="flex items-center space-x-4">
+                                <div class="w-12 h-12 bg-gold rounded-full flex items-center justify-center">
+                                    <i class="fas fa-phone text-white"></i>
+                                </div>
+                                <div>
+                                    <h4 class="font-semibold text-charcoal">Telefone</h4>
+                                    <p class="text-gray-600">(11) 99999-9999</p>
+                                </div>
+                            </div>
+                            
+                            <div class="flex items-center space-x-4">
+                                <div class="w-12 h-12 bg-gold rounded-full flex items-center justify-center">
+                                    <i class="fas fa-envelope text-white"></i>
+                                </div>
+                                <div>
+                                    <h4 class="font-semibold text-charcoal">E-mail</h4>
+                                    <p class="text-gray-600">contato@ronimarceneiro.com</p>
+                                </div>
+                            </div>
+                            
+                            <div class="flex items-center space-x-4">
+                                <div class="w-12 h-12 bg-gold rounded-full flex items-center justify-center">
+                                    <i class="fas fa-map-marker-alt text-white"></i>
+                                </div>
+                                <div>
+                                    <h4 class="font-semibold text-charcoal">Localização</h4>
+                                    <p class="text-gray-600">São Paulo - SP</p>
+                                </div>
+                            </div>
+                            
+                            <div class="flex items-center space-x-4">
+                                <div class="w-12 h-12 bg-gold rounded-full flex items-center justify-center">
+                                    <i class="fas fa-clock text-white"></i>
+                                </div>
+                                <div>
+                                    <h4 class="font-semibold text-charcoal">Horário</h4>
+                                    <p class="text-gray-600">Seg-Sex: 8h às 18h<br>Sáb: 8h às 12h</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Redes Sociais -->
+                    <div>
+                        <h4 class="font-montserrat font-semibold text-lg text-charcoal mb-4">Siga-nos</h4>
+                        <div class="flex space-x-4">
+                            <a href="#" class="w-12 h-12 bg-charcoal rounded-full flex items-center justify-center text-white hover:bg-gold transition-colors duration-300">
+                                <i class="fab fa-instagram"></i>
+                            </a>
+                            <a href="#" class="w-12 h-12 bg-charcoal rounded-full flex items-center justify-center text-white hover:bg-gold transition-colors duration-300">
+                                <i class="fab fa-facebook"></i>
+                            </a>
+                            <a href="#" class="w-12 h-12 bg-charcoal rounded-full flex items-center justify-center text-white hover:bg-gold transition-colors duration-300">
+                                <i class="fab fa-whatsapp"></i>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Formulário -->
+                <div class="bg-white rounded-2xl shadow-2xl p-8">
+                    <form action="https://formspree.io/f/SEU_ID_AQUI" method="POST" id="contact-form" class="space-y-6">
+                        <div>
+                            <label for="name" class="block text-charcoal font-semibold mb-2">Nome Completo *</label>
+                            <input type="text" id="name" name="name" required 
+                                   class="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-gold focus:outline-none transition-colors duration-300" 
+                                   placeholder="Seu nome completo">
+                        </div>
+                        
+                        <div class="grid md:grid-cols-2 gap-4">
+                            <div>
+                                <label for="email" class="block text-charcoal font-semibold mb-2">E-mail *</label>
+                                <input type="email" id="email" name="email" required 
+                                       class="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-gold focus:outline-none transition-colors duration-300" 
+                                       placeholder="seu@email.com">
+                            </div>
+                            <div>
+                                <label for="phone" class="block text-charcoal font-semibold mb-2">Telefone</label>
+                                <input type="tel" id="phone" name="phone" 
+                                       class="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-gold focus:outline-none transition-colors duration-300" 
+                                       placeholder="(11) 99999-9999">
+                            </div>
+                        </div>
+                        
+                        <div>
+                            <label for="subject" class="block text-charcoal font-semibold mb-2">Tipo de Móvel</label>
+                            <select id="subject" name="subject" 
+                                    class="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-gold focus:outline-none transition-colors duration-300">
+                                <option value="">Selecione o tipo de móvel</option>
+                                <option value="cozinha">Cozinha Planejada</option>
+                                <option value="guarda-roupa">Guarda-Roupa Planejado</option>
+                                <option value="home-theater">Home Theater</option>
+                                <option value="estante">Estante/Biblioteca</option>
+                                <option value="home-office">Home Office</option>
+                                <option value="dormitorio">Dormitório Completo</option>
+                                <option value="outro">Outro</option>
+                            </select>
+                        </div>
+                        
+                        <div>
+                            <label for="message" class="block text-charcoal font-semibold mb-2">Mensagem *</label>
+                            <textarea id="message" name="message" rows="5" required 
+                                      class="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-gold focus:outline-none transition-colors duration-300 resize-none" 
+                                      placeholder="Descreva seu projeto, dimensões do ambiente, preferências de estilo, etc."></textarea>
+                        </div>
+                        
+                        <button type="submit" 
+                                class="w-full bg-gradient-to-r from-gold to-yellow-600 text-white py-4 rounded-lg font-montserrat font-bold text-lg hover:shadow-xl transform hover:-translate-y-1 transition-all duration-300">
+                            <i class="fas fa-paper-plane mr-2"></i>
+                            Enviar Mensagem
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="bg-charcoal text-white py-12">
+        <div class="container mx-auto px-6">
+            <div class="grid md:grid-cols-4 gap-8">
+                <!-- Logo e Descrição -->
+                <div class="md:col-span-2">
+                    <div class="flex items-center space-x-3 mb-6">
+                        <svg class="w-10 h-10" viewBox="0 0 50 50" xmlns="http://www.w3.org/2000/svg">
+                            <rect x="10" y="15" width="30" height="20" rx="2" fill="#D4AF37" stroke="#D4AF37" stroke-width="1"/>
+                            <rect x="15" y="20" width="5" height="10" fill="#2F2F2F"/>
+                            <rect x="22.5" y="20" width="5" height="10" fill="#2F2F2F"/>
+                            <rect x="30" y="20" width="5" height="10" fill="#2F2F2F"/>
+                            <text x="25" y="45" text-anchor="middle" font-family="Montserrat" font-size="8" font-weight="600" fill="#D4AF37">RM</text>
+                        </svg>
+                        <div>
+                            <h3 class="font-montserrat font-bold text-xl">Roni Marceneiro</h3>
+                            <p class="text-sm text-gray-400">Móveis Planejados Premium</p>
+                        </div>
+                    </div>
+                    <p class="text-gray-300 leading-relaxed mb-6">
+                        Especialistas em móveis planejados de alta qualidade. 
+                        Transformamos seu espaço com design exclusivo e acabamento impecável.
+                    </p>
+                    <div class="flex space-x-4">
+                        <a href="#" class="w-10 h-10 bg-gold rounded-full flex items-center justify-center text-white hover:bg-yellow-600 transition-colors duration-300">
+                            <i class="fab fa-instagram"></i>
+                        </a>
+                        <a href="#" class="w-10 h-10 bg-gold rounded-full flex items-center justify-center text-white hover:bg-yellow-600 transition-colors duration-300">
+                            <i class="fab fa-facebook"></i>
+                        </a>
+                        <a href="#" class="w-10 h-10 bg-gold rounded-full flex items-center justify-center text-white hover:bg-yellow-600 transition-colors duration-300">
+                            <i class="fab fa-whatsapp"></i>
+                        </a>
+                    </div>
+                </div>
+                
+                <!-- Links Rápidos -->
+                <div>
+                    <h4 class="font-montserrat font-semibold text-lg mb-6">Links Rápidos</h4>
+                    <ul class="space-y-3">
+                        <li><a href="#inicio" class="text-gray-300 hover:text-gold transition-colors duration-300">Início</a></li>
+                        <li><a href="#sobre" class="text-gray-300 hover:text-gold transition-colors duration-300">Sobre Nós</a></li>
+                        <li><a href="#servicos" class="text-gray-300 hover:text-gold transition-colors duration-300">Serviços</a></li>
+                        <li><a href="#galeria" class="text-gray-300 hover:text-gold transition-colors duration-300">Galeria</a></li>
+                        <li><a href="#simulador" class="text-gray-300 hover:text-gold transition-colors duration-300">Simulador</a></li>
+                    </ul>
+                </div>
+                
+                <!-- Contato -->
+                <div>
+                    <h4 class="font-montserrat font-semibold text-lg mb-6">Contato</h4>
+                    <ul class="space-y-3 text-gray-300">
+                        <li class="flex items-center">
+                            <i class="fas fa-phone text-gold mr-3"></i>
+                            (11) 99999-9999
+                        </li>
+                        <li class="flex items-center">
+                            <i class="fas fa-envelope text-gold mr-3"></i>
+                            contato@ronimarceneiro.com
+                        </li>
+                        <li class="flex items-center">
+                            <i class="fas fa-map-marker-alt text-gold mr-3"></i>
+                            São Paulo - SP
+                        </li>
+                    </ul>
+                </div>
+            </div>
+            
+            <div class="border-t border-gray-700 mt-12 pt-8">
+                <div class="flex flex-col md:flex-row justify-between items-center">
+                    <p class="text-gray-400 text-sm">
+                        © 2024 Roni Marceneiro. Todos os direitos reservados.
+                    </p>
+                    <p class="text-gray-400 text-sm mt-4 md:mt-0">
+                        Desenvolvido com ❤️ para móveis planejados premium
+                    </p>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <!-- WhatsApp Float Button -->
+    <a href="https://wa.me/5511999999999?text=Olá! Gostaria de saber mais sobre móveis planejados." 
+       target="_blank" 
+       class="fixed bottom-6 right-6 bg-green-500 text-white w-16 h-16 rounded-full flex items-center justify-center shadow-2xl hover:bg-green-600 transition-all duration-300 transform hover:scale-110 z-50">
+        <i class="fab fa-whatsapp text-2xl"></i>
+    </a>
+
+    <!-- Modal Simulador -->
+    <div id="simulator-modal" class="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-white rounded-2xl p-8 max-w-md w-full mx-4">
+            <div class="text-center">
+                <i class="fas fa-info-circle text-gold text-4xl mb-4"></i>
+                <h3 class="font-montserrat font-bold text-xl text-charcoal mb-4">Simulador Indisponível</h3>
+                <p class="text-gray-600 mb-6">
+                    O simulador está disponível apenas para cozinhas e guarda-roupas planejados. 
+                    Para outros móveis, entre em contato conosco para um orçamento personalizado.
+                </p>
+                <div class="flex gap-4">
+                    <button onclick="closeSimulatorModal()" class="flex-1 border-2 border-gray-300 text-gray-700 py-3 rounded-lg font-semibold hover:bg-gray-50 transition-colors duration-300">
+                        Fechar
+                    </button>
+                    <button onclick="scrollToSection('contato'); closeSimulatorModal();" class="flex-1 bg-gradient-to-r from-gold to-yellow-600 text-white py-3 rounded-lg font-semibold hover:shadow-lg transition-all duration-300">
+                        Entrar em Contato
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Lightbox da Galeria -->
+    <div id="gallery-lightbox" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-[100] flex items-center justify-center p-4 hidden" role="dialog" aria-modal="true" aria-hidden="true" aria-labelledby="lightbox-heading">
+        <!-- Botão Fechar -->
+        <button id="lightbox-close" class="absolute top-4 right-4 text-white text-3xl hover:text-gold transition-colors">
+            <i class="fas fa-times"></i>
+        </button>
+
+        <!-- Botão Anterior -->
+        <button id="lightbox-prev" class="absolute left-4 md:left-8 text-white text-3xl hover:text-gold transition-colors">
+            <i class="fas fa-chevron-left"></i>
+        </button>
+
+        <!-- Imagem -->
+        <div>
+            <h2 id="lightbox-heading" class="sr-only">Visualizador de Imagens da Galeria</h2>
+            <img id="lightbox-image" src="" alt="Projeto em destaque" class="max-w-full max-h-full object-contain rounded-lg shadow-2xl">
+        </div>
+
+        <!-- Botão Próximo -->
+        <button id="lightbox-next" class="absolute right-4 md:right-8 text-white text-3xl hover:text-gold transition-colors">
+            <i class="fas fa-chevron-right"></i>
+        </button>
+    </div>
+
+
+    <script src="script.js"></script>
+</body>
+</html>
