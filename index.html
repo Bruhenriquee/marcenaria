@@ -478,117 +478,260 @@
             </div>
 
             <div class="max-w-4xl mx-auto">
-                <div class="bg-white rounded-2xl shadow-2xl p-8 md:p-12">
-                    <form id="simulator-form" class="space-y-8">
-                        <!-- Tipo de Móvel -->
-                        <div>
-                            <label class="block text-charcoal font-montserrat font-semibold text-lg mb-4">
-                                Tipo de Móvel *
-                            </label>
+                <div class="bg-white rounded-2xl shadow-2xl p-6 md:p-10">
+                    <form id="simulator-form">
+                        <!-- Progress Bar -->
+                        <div class="mb-8">
+                            <div class="flex items-center justify-center">
+                                <div class="progress-step active" data-step="1">1</div>
+                                <div class="flex-auto border-t-2 progress-bar-line"></div>
+                                <div class="progress-step" data-step="2">2</div>
+                                <div class="flex-auto border-t-2 progress-bar-line"></div>
+                                <div class="progress-step" data-step="3">3</div>
+                                <div class="flex-auto border-t-2 progress-bar-line"></div>
+                                <div class="progress-step" data-step="4">4</div>
+                            </div>
+                            <div class="flex justify-between mt-2 text-xs text-gray-500">
+                                <span class="w-1/4 text-center">Tipo</span>
+                                <span class="w-1/4 text-center">Medidas</span>
+                                <span class="w-1/4 text-center">Internos</span>
+                                <span class="w-1/4 text-center">Acabamento</span>
+                            </div>
+                        </div>
+
+                        <!-- Step 1: Tipo de Móvel -->
+                        <div class="form-step active-step">
+                            <h3 class="font-montserrat font-bold text-2xl text-charcoal mb-6 text-center">1. Qual tipo de móvel?</h3>
                             <div class="grid md:grid-cols-2 gap-4">
                                 <label class="relative cursor-pointer">
                                     <input type="radio" name="furniture-type" value="cozinha" class="sr-only peer" required>
-                                    <div class="border-2 border-gray-300 rounded-xl p-6 peer-checked:border-gold peer-checked:bg-gold/5 hover:border-gold/50 transition-all duration-300">
+                                    <div class="border-2 border-gray-300 rounded-xl p-6 text-center peer-checked:border-gold peer-checked:bg-gold/5 hover:border-gold/50 transition-all duration-300">
                                         <i class="fas fa-utensils text-3xl text-gold mb-4"></i>
-                                        <h3 class="font-semibold text-charcoal mb-2">Cozinha Planejada</h3>
-                                        <p class="text-gray-600 text-sm">Armários sob medida para cozinha</p>
+                                        <h3 class="font-semibold text-charcoal">Cozinha Planejada</h3>
                                     </div>
                                 </label>
                                 <label class="relative cursor-pointer">
                                     <input type="radio" name="furniture-type" value="guarda-roupa" class="sr-only peer" required>
-                                    <div class="border-2 border-gray-300 rounded-xl p-6 peer-checked:border-gold peer-checked:bg-gold/5 hover:border-gold/50 transition-all duration-300">
+                                    <div class="border-2 border-gray-300 rounded-xl p-6 text-center peer-checked:border-gold peer-checked:bg-gold/5 hover:border-gold/50 transition-all duration-300">
                                         <i class="fas fa-tshirt text-3xl text-gold mb-4"></i>
-                                        <h3 class="font-semibold text-charcoal mb-2">Guarda-Roupa</h3>
-                                        <p class="text-gray-600 text-sm">Armário planejado para quarto</p>
+                                        <h3 class="font-semibold text-charcoal">Guarda-Roupa</h3>
                                     </div>
                                 </label>
+                            </div>
+                            <div class="mt-8 text-right">
+                                <button type="button" class="next-step-btn">
+                                    Próximo <i class="fas fa-arrow-right ml-2"></i>
+                                </button>
                             </div>
                         </div>
 
-                        <!-- Dimensões -->
-                        <div class="grid md:grid-cols-2 gap-8">
-                            <div>
-                                <label for="width" class="block text-charcoal font-montserrat font-semibold text-lg mb-4">
-                                    Largura (metros) *
-                                </label>
-                                <input type="number" id="width" name="width" step="0.1" min="1" max="10" 
-                                       class="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-gold focus:outline-none transition-colors duration-300" 
-                                       placeholder="Ex: 3.5" required>
+                        <!-- Step 2: Dimensões -->
+                        <div class="form-step hidden">
+                            <h3 class="font-montserrat font-bold text-2xl text-charcoal mb-6 text-center">2. Quais as dimensões?</h3>
+                            <!-- Campos para Guarda-Roupa -->
+                            <div id="wardrobe-dims" class="grid md:grid-cols-3 gap-8">
+                                <div class="slider-group">
+                                    <div class="flex justify-between items-center mb-2">
+                                        <label for="width" class="text-charcoal font-semibold">Largura (m) *</label>
+                                        <input type="number" id="width" name="width" step="0.1" min="1" max="10" value="3.5" class="w-24 text-center border-2 rounded-lg focus:border-gold focus:outline-none" required>
+                                    </div>
+                                    <input type="range" data-sync-input="width" step="0.1" min="1" max="10" value="3.5" class="w-full styled-slider">
+                                </div>
+                                <div class="slider-group">
+                                    <div class="flex justify-between items-center mb-2">
+                                        <label for="height" class="text-charcoal font-semibold">Altura (m) *</label>
+                                        <input type="number" id="height" name="height" step="0.1" min="1" max="4" value="2.7" class="w-24 text-center border-2 rounded-lg focus:border-gold focus:outline-none" required>
+                                    </div>
+                                    <input type="range" data-sync-input="height" step="0.1" min="1" max="4" value="2.7" class="w-full styled-slider">
+                                </div>
+                                <div class="slider-group">
+                                    <div class="flex justify-between items-center mb-2">
+                                        <label for="depth" class="text-charcoal font-semibold">Profundidade (cm) *</label>
+                                        <input type="number" id="depth" name="depth" step="1" min="30" max="100" value="60" class="w-24 text-center border-2 rounded-lg focus:border-gold focus:outline-none" required>
+                                    </div>
+                                    <input type="range" data-sync-input="depth" step="1" min="30" max="100" value="60" class="w-full styled-slider">
+                                </div>
                             </div>
-                            <div>
-                                <label for="height" class="block text-charcoal font-montserrat font-semibold text-lg mb-4">
-                                    Altura (metros) *
-                                </label>
-                                <input type="number" id="height" name="height" step="0.1" min="1" max="4" 
-                                       class="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-gold focus:outline-none transition-colors duration-300" 
-                                       placeholder="Ex: 2.7" required>
+                            <!-- Campos para Cozinha -->
+                            <div id="kitchen-dims" class="hidden space-y-6">
+                                <p class="text-center text-gray-600">Informe a largura de cada parede que receberá armários. Deixe em branco as que não usar.</p>
+                                <div class="space-y-4" id="kitchen-walls-container">
+                                    <div id="wall-input-1"><label for="width1" class="block text-charcoal font-semibold mb-2">Largura Parede 1 (m) *</label><input type="number" id="width1" name="width1" step="0.1" min="0" class="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-gold focus:outline-none" placeholder="Ex: 4.0"></div>
+                                    <div id="wall-input-2" class="hidden"><label for="width2" class="block text-charcoal font-semibold mb-2">Largura Parede 2 (m)</label><input type="number" id="width2" name="width2" step="0.1" min="0" class="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-gold focus:outline-none" placeholder="Para cozinha em 'L'"></div>
+                                    <div id="wall-input-3" class="hidden"><label for="width3" class="block text-charcoal font-semibold mb-2">Largura Parede 3 (m)</label><input type="number" id="width3" name="width3" step="0.1" min="0" class="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-gold focus:outline-none" placeholder="Para cozinha em 'U'"></div>
+                                </div>
+                                <div class="text-center">
+                                    <button type="button" id="add-wall-btn" class="border-2 border-dashed border-gold text-gold px-6 py-2 rounded-lg hover:bg-gold/10 transition-colors">
+                                        <i class="fas fa-plus mr-2"></i> Adicionar Parede
+                                    </button>
+                                </div>
+                                <div>
+                                    <label for="kitchen_height" class="block text-charcoal font-semibold mb-2">Altura / Pé-direito (m) *</label>
+                                    <input type="number" id="kitchen_height" name="kitchen_height" step="0.1" min="2" max="4" value="2.7" class="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-gold focus:outline-none" placeholder="Ex: 2.7">
+                                </div>
                             </div>
-                        </div>
-
-                        <!-- Material -->
-                        <div>
-                            <label class="block text-charcoal font-montserrat font-semibold text-lg mb-4">
-                                Material *
-                            </label>
-                            <div class="grid md:grid-cols-2 gap-4">
-                                <label class="relative cursor-pointer">
-                                    <input type="radio" name="material" value="branco" class="sr-only peer" required>
-                                    <div class="border-2 border-gray-300 rounded-xl p-6 peer-checked:border-gold peer-checked:bg-gold/5 hover:border-gold/50 transition-all duration-300">
-                                        <div class="flex justify-between items-start mb-4">
-                                            <h3 class="font-semibold text-charcoal">MDF Branco</h3>
-                                            <span class="text-gold font-bold">R$ 800/m²</span>
-                                        </div>
-                                        <p class="text-gray-600 text-sm">Material padrão com acabamento branco</p>
-                                    </div>
-                                </label>
-                                <label class="relative cursor-pointer">
-                                    <input type="radio" name="material" value="premium" class="sr-only peer" required>
-                                    <div class="border-2 border-gray-300 rounded-xl p-6 peer-checked:border-gold peer-checked:bg-gold/5 hover:border-gold/50 transition-all duration-300">
-                                        <div class="flex justify-between items-start mb-4">
-                                            <h3 class="font-semibold text-charcoal">MDF Premium/Colorido</h3>
-                                            <span class="text-gold font-bold">R$ 1.200/m²</span>
-                                        </div>
-                                        <p class="text-gray-600 text-sm">Material premium com cores e texturas especiais</p>
-                                    </div>
-                                </label>
-                            </div>
-                        </div>
-
-                        <!-- Puxadores -->
-                        <div>
-                            <label class="block text-charcoal font-montserrat font-semibold text-lg mb-4">
-                                Puxadores
-                            </label>
-                            <div class="grid md:grid-cols-2 gap-4">
-                                <label class="relative cursor-pointer">
-                                    <input type="radio" name="handles" value="padrao" class="sr-only peer" checked>
-                                    <div class="border-2 border-gray-300 rounded-xl p-6 peer-checked:border-gold peer-checked:bg-gold/5 hover:border-gold/50 transition-all duration-300">
-                                        <div class="flex justify-between items-start mb-4">
-                                            <h3 class="font-semibold text-charcoal">Puxadores Padrão</h3>
-                                            <span class="text-green-600 font-bold">Incluso</span>
-                                        </div>
-                                        <p class="text-gray-600 text-sm">Puxadores básicos inclusos no preço</p>
-                                    </div>
-                                </label>
-                                <label class="relative cursor-pointer">
-                                    <input type="radio" name="handles" value="premium" class="sr-only peer">
-                                    <div class="border-2 border-gray-300 rounded-xl p-6 peer-checked:border-gold peer-checked:bg-gold/5 hover:border-gold/50 transition-all duration-300">
-                                        <div class="flex justify-between items-start mb-4">
-                                            <h3 class="font-semibold text-charcoal">Puxadores Premium</h3>
-                                            <span class="text-gold font-bold">+R$ 150/chapa</span>
-                                        </div>
-                                        <p class="text-gray-600 text-sm">Puxadores de alta qualidade com design exclusivo</p>
-                                    </div>
-                                </label>
+                            <div class="mt-8 flex justify-between">
+                                <button type="button" class="prev-step-btn">
+                                    <i class="fas fa-arrow-left mr-2"></i> Anterior
+                                </button>
+                                <button type="button" class="next-step-btn">
+                                    Próximo <i class="fas fa-arrow-right ml-2"></i>
+                                </button>
                             </div>
                         </div>
 
-                        <!-- Botão Calcular -->
-                        <div class="text-center pt-8">
-                            <button type="submit" class="bg-gradient-to-r from-gold to-yellow-600 text-white px-12 py-4 rounded-lg font-montserrat font-bold text-xl hover:shadow-xl transform hover:-translate-y-1 transition-all duration-300">
-                                <i class="fas fa-calculator mr-3"></i>
-                                Calcular Preço
-                            </button>
+                        <!-- Step 3: Componentes Internos -->
+                        <div class="form-step hidden">
+                            <h3 class="font-montserrat font-bold text-2xl text-charcoal mb-6 text-center">3. Configuração</h3>
+                            
+                            <!-- Componentes Guarda-Roupa -->
+                            <div id="wardrobe-internals" class="hidden space-y-8">
+                                <!-- Tipo de Porta -->
+                                <div>
+                                    <h4 class="config-section-title">Tipo de Porta</h4>
+                                    <div class="grid md:grid-cols-2 gap-4">
+                                        <label class="config-card-visual"><input type="radio" name="door_type" value="hinged" class="sr-only peer" checked><div class="config-card-content"><div class="visual-example"><svg viewBox="0 0 100 100"><rect x="20" y="10" width="60" height="80" fill="none" stroke="currentColor" stroke-width="4"/><rect x="50" y="10" width="1" height="80" stroke="currentColor" stroke-width="2" stroke-dasharray="4"/><circle cx="40" cy="50" r="3"/><circle cx="60" cy="50" r="3"/></svg></div><span class="font-semibold">Portas de Abrir</span><p class="text-xs">Tradicionais, abrem para fora.</p></div></label>
+                                        <label class="config-card-visual"><input type="radio" name="door_type" value="sliding" class="sr-only peer"><div class="config-card-content"><div class="visual-example"><svg viewBox="0 0 100 100"><rect x="20" y="10" width="60" height="80" fill="none" stroke="currentColor" stroke-width="4"/><rect x="22" y="15" width="28" height="70" fill="currentColor" opacity="0.2"/><rect x="50" y="15" width="28" height="70" fill="currentColor" opacity="0.3"/></svg></div><span class="font-semibold">Portas de Correr</span><p class="text-xs">Otimizam o espaço.</p></div></label>
+                                    </div>
+                                </div>
+                                <!-- Acabamento Interno -->
+                                <div>
+                                    <h4 class="config-section-title">Acabamento Interno</h4>
+                                    <div class="grid md:grid-cols-2 gap-4">
+                                        <label class="config-card-visual"><input type="radio" name="internal_finish" value="white" class="sr-only peer" checked><div class="config-card-content"><i class="fas fa-paint-roller text-2xl mb-2"></i><span class="font-semibold">Branco Padrão</span><p class="text-xs">Interior branco fosco.</p></div></label>
+                                        <label class="config-card-visual"><input type="radio" name="internal_finish" value="wood" class="sr-only peer"><div class="config-card-content"><i class="fas fa-tree text-2xl mb-2"></i><span class="font-semibold">Madeirado/Texturizado</span><p class="text-xs">Interior com textura de madeira.</p></div></label>
+                                    </div>
+                                </div>
+                                <!-- Componentes -->
+                                <div>
+                                    <h4 class="config-section-title">Componentes Internos</h4>
+                                    <div class="grid grid-cols-2 md:grid-cols-3 gap-4">
+                                        <div><label class="block text-sm font-medium text-gray-700 mb-1">Gavetas</label><input type="number" name="drawers" value="4" min="0" class="form-input-small"></div>
+                                        <div><label class="block text-sm font-medium text-gray-700 mb-1">Prateleiras</label><input type="number" name="extra-shelves" value="5" min="0" class="form-input-small"></div>
+                                        <div><label class="block text-sm font-medium text-gray-700 mb-1">Cabideiros</label><input type="number" name="hanging_rails" value="2" min="0" class="form-input-small"></div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Componentes Cozinha -->
+                            <div id="kitchen-internals" class="hidden space-y-8">
+                                <!-- Módulos da Cozinha -->
+                                <div>
+                                    <h4 class="config-section-title">Módulos da Cozinha</h4>
+                                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                        <label class="config-card-visual"><input type="checkbox" name="modules" value="inferior" class="sr-only peer" checked><div class="config-card-content"><i class="fas fa-layer-group text-2xl mb-2"></i><span class="font-semibold">Armários Inferiores</span></div></label>
+                                        <label class="config-card-visual"><input type="checkbox" name="modules" value="superior" class="sr-only peer" checked><div class="config-card-content"><i class="fas fa-box-open text-2xl mb-2"></i><span class="font-semibold">Armários Superiores</span></div></label>
+                                        <label class="config-card-visual"><input type="checkbox" name="hot_tower" id="hot_tower" class="sr-only peer"><div class="config-card-content"><i class="fas fa-thermometer-three-quarters text-2xl mb-2"></i><span class="font-semibold">Torre Quente</span></div></label>
+                                    </div>
+                                </div>
+
+                                <!-- Configuração dos Módulos -->
+                                <div class="space-y-6">
+                                    <!-- Configuração Inferiores -->
+                                    <div id="inferior_config_body" class="space-y-6">
+                                        <h4 class="config-section-title">Detalhes dos Armários Inferiores</h4>
+                                        <div class="grid md:grid-cols-2 gap-6 p-6 bg-gray-50 rounded-lg border">
+                                            <!-- Gabinete da Pia -->
+                                            <div class="space-y-4">
+                                                <h5 class="font-semibold text-gray-800">Gabinete da Pia</h5>
+                                                <div>
+                                                    <label for="sink_area_width" class="block text-sm font-medium text-gray-700">Largura do Gabinete (m)</label>
+                                                    <input type="number" id="sink_area_width" name="sink_area_width" step="0.1" min="0" value="1.2" class="form-input-small">
+                                                </div>
+                                                <div class="grid grid-cols-2 gap-2">
+                                                    <label class="config-card-visual-small"><input type="radio" name="sink_cabinet_type" value="simple" class="sr-only peer" checked><div class="config-card-content-small"><div class="visual-example-small"><svg viewBox="0 0 100 100"><rect x="20" y="20" width="60" height="60" fill="none" stroke="currentColor" stroke-width="4"/><line x1="50" y1="20" x2="50" y2="80" stroke="currentColor" stroke-width="2" stroke-dasharray="4"/><circle cx="40" cy="50" r="3"/><circle cx="60" cy="50" r="3"/></svg></div><span>Portas</span></div></label>
+                                                    <label class="config-card-visual-small"><input type="radio" name="sink_cabinet_type" value="drawers" class="sr-only peer"><div class="config-card-content-small"><div class="visual-example-small"><svg viewBox="0 0 100 100"><rect x="20" y="20" width="60" height="60" fill="none" stroke="currentColor" stroke-width="4"/><line x1="20" y1="40" x2="80" y2="40" stroke="currentColor" stroke-width="2"/><line x1="20" y1="60" x2="80" y2="60" stroke="currentColor" stroke-width="2"/><line x1="45" y1="30" x2="55" y2="30" stroke="currentColor" stroke-width="2"/><line x1="45" y1="50" x2="55" y2="50" stroke="currentColor" stroke-width="2"/><line x1="45" y1="70" x2="55" y2="70" stroke="currentColor" stroke-width="2"/></svg></div><span>Gavetas</span></div></label>
+                                                </div>
+                                                <label class="flex items-center text-sm"><input type="radio" name="sink_cabinet_type" value="none" class="mr-2"><span>Nenhum gabinete (vão livre)</span></label>
+                                            </div>
+                                            <!-- Gavetas no Restante -->
+                                            <div class="space-y-4">
+                                                <h5 class="font-semibold text-gray-800">Restante da Bancada</h5>
+                                                <div>
+                                                    <label for="kitchen_drawers" class="block text-sm font-medium text-gray-700">Número de Gavetas</label>
+                                                    <input type="number" id="kitchen_drawers" name="kitchen_drawers" min="0" max="20" value="3" class="form-input-small">
+                                                    <p class="text-xs text-gray-500 mt-1">Gavetas fora da área da pia.</p>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <!-- Configuração Torre Quente -->
+                                    <div id="hot-tower-dims-container" class="hidden space-y-4">
+                                        <h4 class="config-section-title">Detalhes da Torre Quente</h4>
+                                        <div class="p-6 bg-gray-50 rounded-lg border">
+                                            <p class="text-sm text-gray-600 mb-4">A torre tem largura padrão de 60cm. Informe a altura desejada.</p>
+                                            <div>
+                                                <label for="hot_tower_height" class="block text-sm font-medium text-gray-700">Altura da Torre (m)</label>
+                                                <input type="number" id="hot_tower_height" name="hot_tower_height" step="0.1" min="1.5" max="2.7" value="2.2" class="form-input-small">
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="mt-8 flex justify-between">
+                                <button type="button" class="prev-step-btn"><i class="fas fa-arrow-left mr-2"></i> Anterior</button>
+                                <button type="button" class="next-step-btn">Próximo <i class="fas fa-arrow-right ml-2"></i></button>
+                            </div>
+                        </div>
+
+                        <!-- Step 4: Acabamentos -->
+                        <div class="form-step hidden">
+                            <h3 class="font-montserrat font-bold text-2xl text-charcoal mb-6 text-center">4. Escolha os acabamentos</h3>
+                            <div class="space-y-8">
+                                <!-- Material -->
+                                <div>
+                                    <label class="block text-charcoal font-semibold mb-2">Material *</label>
+                                    <div class="grid md:grid-cols-2 gap-4">
+                                        <label class="relative cursor-pointer">
+                                            <input type="radio" name="material" value="branco" class="sr-only peer" required>
+                                            <div class="border-2 border-gray-300 rounded-xl p-4 peer-checked:border-gold peer-checked:bg-gold/5 hover:border-gold/50">
+                                                <h3 class="font-semibold text-charcoal">MDF Branco</h3>
+                                                <p class="text-gray-600 text-sm">Padrão de mercado, ótimo custo-benefício.</p>
+                                                <span class="text-gold font-bold text-sm">R$ 800/m²</span>
+                                            </div>
+                                        </label>
+                                        <label class="relative cursor-pointer">
+                                            <input type="radio" name="material" value="premium" class="sr-only peer" required>
+                                            <div class="border-2 border-gray-300 rounded-xl p-4 peer-checked:border-gold peer-checked:bg-gold/5 hover:border-gold/50">
+                                                <h3 class="font-semibold text-charcoal">MDF Premium/Colorido</h3>
+                                                <p class="text-gray-600 text-sm">Cores e texturas especiais.</p>
+                                                <span class="text-gold font-bold text-sm">R$ 1.200/m²</span>
+                                            </div>
+                                        </label>
+                                    </div>
+                                </div>
+                                <!-- Puxadores -->
+                                <div>
+                                    <label class="block text-charcoal font-semibold mb-2">Puxadores</label>
+                                    <div class="grid md:grid-cols-2 gap-4">
+                                        <label class="relative cursor-pointer">
+                                            <input type="radio" name="handles" value="padrao" class="sr-only peer" checked>
+                                            <div class="border-2 border-gray-300 rounded-xl p-4 peer-checked:border-gold peer-checked:bg-gold/5 hover:border-gold/50">
+                                                <h3 class="font-semibold text-charcoal">Padrão</h3>
+                                                <p class="text-gray-600 text-sm">Modelos básicos já inclusos.</p>
+                                                <span class="text-green-600 font-bold text-sm">Incluso</span>
+                                            </div>
+                                        </label>
+                                        <label class="relative cursor-pointer">
+                                            <input type="radio" name="handles" value="premium" class="sr-only peer">
+                                            <div class="border-2 border-gray-300 rounded-xl p-4 peer-checked:border-gold peer-checked:bg-gold/5 hover:border-gold/50">
+                                                <h3 class="font-semibold text-charcoal">Premium</h3>
+                                                <p class="text-gray-600 text-sm">Design exclusivo e maior qualidade.</p>
+                                                <span class="text-gold font-bold text-sm">+R$ 150/chapa</span>
+                                            </div>
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="mt-8 flex justify-between items-center">
+                                <button type="button" class="prev-step-btn">
+                                    <i class="fas fa-arrow-left mr-2"></i> Anterior
+                                </button>
+                                <button type="submit" class="w-auto bg-gradient-to-r from-gold to-yellow-600 text-white py-3 px-8 rounded-lg font-montserrat font-bold text-lg hover:shadow-xl transform hover:-translate-y-1">
+                                    <i class="fas fa-calculator mr-2"></i> Calcular Preço
+                                </button>
+                            </div>
                         </div>
                     </form>
 
@@ -764,33 +907,23 @@
                 <!-- Formulário -->
                 <div class="bg-white rounded-2xl shadow-2xl p-8">
                     <form action="https://formspree.io/f/SEU_ID_AQUI" method="POST" id="contact-form" class="space-y-6">
-                        <div>
-                            <label for="name" class="block text-charcoal font-semibold mb-2">Nome Completo *</label>
-                            <input type="text" id="name" name="name" required 
-                                   class="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-gold focus:outline-none transition-colors duration-300" 
-                                   placeholder="Seu nome completo">
+                        <div class="relative">
+                            <input type="text" id="name" name="name" required class="form-input peer" placeholder=" ">
+                            <label for="name" class="form-label">Nome Completo *</label>
                         </div>
-                        
-                        <div class="grid md:grid-cols-2 gap-4">
-                            <div>
-                                <label for="email" class="block text-charcoal font-semibold mb-2">E-mail *</label>
-                                <input type="email" id="email" name="email" required 
-                                       class="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-gold focus:outline-none transition-colors duration-300" 
-                                       placeholder="seu@email.com">
+                        <div class="grid md:grid-cols-2 gap-6">
+                            <div class="relative">
+                                <input type="email" id="email" name="email" required class="form-input peer" placeholder=" ">
+                                <label for="email" class="form-label">E-mail *</label>
                             </div>
-                            <div>
-                                <label for="phone" class="block text-charcoal font-semibold mb-2">Telefone</label>
-                                <input type="tel" id="phone" name="phone" 
-                                       class="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-gold focus:outline-none transition-colors duration-300" 
-                                       placeholder="(11) 99999-9999">
+                            <div class="relative">
+                                <input type="tel" id="phone" name="phone" class="form-input peer" placeholder=" " oninput="maskPhone(event)">
+                                <label for="phone" class="form-label">Telefone</label>
                             </div>
                         </div>
-                        
-                        <div>
-                            <label for="subject" class="block text-charcoal font-semibold mb-2">Tipo de Móvel</label>
-                            <select id="subject" name="subject" 
-                                    class="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-gold focus:outline-none transition-colors duration-300">
-                                <option value="">Selecione o tipo de móvel</option>
+                        <div class="relative">
+                             <select id="subject" name="subject" required class="form-input peer">
+                                <option value="">Selecione o tipo de móvel *</option>
                                 <option value="cozinha">Cozinha Planejada</option>
                                 <option value="guarda-roupa">Guarda-Roupa Planejado</option>
                                 <option value="home-theater">Home Theater</option>
@@ -800,16 +933,30 @@
                                 <option value="outro">Outro</option>
                             </select>
                         </div>
-                        
-                        <div>
-                            <label for="message" class="block text-charcoal font-semibold mb-2">Mensagem *</label>
-                            <textarea id="message" name="message" rows="5" required 
-                                      class="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-gold focus:outline-none transition-colors duration-300 resize-none" 
-                                      placeholder="Descreva seu projeto, dimensões do ambiente, preferências de estilo, etc."></textarea>
+                         <div class="relative">
+                            <select id="style" name="style" class="form-input peer">
+                                <option value="">Qual seu estilo preferido?</option>
+                                <option value="moderno">Moderno / Minimalista</option>
+                                <option value="classico">Clássico / Tradicional</option>
+                                <option value="rustico">Rústico / Industrial</option>
+                                <option value="nao-sei">Não sei / Preciso de ajuda</option>
+                            </select>
                         </div>
-                        
-                        <button type="submit" 
-                                class="w-full bg-gradient-to-r from-gold to-yellow-600 text-white py-4 rounded-lg font-montserrat font-bold text-lg hover:shadow-xl transform hover:-translate-y-1 transition-all duration-300">
+                        <div class="relative">
+                            <textarea id="message" name="message" rows="5" required class="form-input peer" placeholder=" "></textarea>
+                            <label for="message" class="form-label">Sua Mensagem *</label>
+                        </div>
+                        <div class="relative">
+                            <label for="attachment" class="block text-sm font-medium text-gray-700 mb-2">Anexar arquivo (opcional)</label>
+                            <label for="attachment" class="file-input-label">
+                                <i class="fas fa-paperclip mr-2"></i>
+                                <span id="file-name">Escolher arquivo (planta, foto, etc.)</span>
+                            </label>
+                            <input type="file" id="attachment" name="attachment" class="sr-only">
+                            <p class="text-xs text-gray-500 mt-1">Tamanho máximo: 5MB. Tipos: JPG, PNG, PDF.</p>
+                        </div>
+
+                        <button type="submit" class="w-full bg-gradient-to-r from-gold to-yellow-600 text-white py-3 rounded-lg font-montserrat font-bold text-lg hover:shadow-xl transform hover:-translate-y-1 transition-all duration-300">
                             <i class="fas fa-paper-plane mr-2"></i>
                             Enviar Mensagem
                         </button>
