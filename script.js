@@ -648,6 +648,7 @@ function setupSimulator() {
         'Porta-temperos': 350, // fixed price
         'Lixeira Embutida': 400, // fixed price
         'SINK_CABINET_PER_METER': 450, // Special cost for sink cabinet
+        'HOT_TOWER_PER_METER': 600, // Cost per linear meter of height
         'PROJECT_3D': 350, // Fixed cost for 3D project design
     };
     const MDF_SHEET_SIZE = 5.88; // 2.80m * 2.10m
@@ -664,6 +665,9 @@ function setupSimulator() {
         closetHasDoors: true, // for closets
         kitchenHasSinkCabinet: true,
         sinkStoneWidth: 1.8,
+        hasHotTower: false,
+        stoveType: 'cooktop', // 'cooktop' or 'piso'
+        cooktopLocation: 'pia', // 'pia' or 'separado'
         handleType: 'aluminio',
         projectOption: 'create', // 'create', 'upload', 'none'
         projectFile: null,
@@ -742,6 +746,28 @@ function setupSimulator() {
             radio.addEventListener('change', (e) => {
                 state.kitchenHasSinkCabinet = e.target.value === 'sim';
                 updateKitchenSubSteps();
+            });
+        });
+
+        // Step 2: Kitchen Hot Tower
+        document.querySelectorAll('input[name="hasHotTower"]').forEach(radio => {
+            radio.addEventListener('change', (e) => {
+                state.hasHotTower = e.target.value === 'sim';
+            });
+        });
+
+        // Step 2: Kitchen Stove Type
+        document.querySelectorAll('input[name="stoveType"]').forEach(radio => {
+            radio.addEventListener('change', (e) => {
+                state.stoveType = e.target.value;
+                document.getElementById('cooktop-location-step').classList.toggle('hidden', e.target.value !== 'cooktop');
+            });
+        });
+
+        // Step 2: Cooktop Location
+        document.querySelectorAll('input[name="cooktopLocation"]').forEach(radio => {
+            radio.addEventListener('change', (e) => {
+                state.cooktopLocation = e.target.value;
             });
         });
 
@@ -995,18 +1021,11 @@ function setupSimulator() {
             totalMaterialArea = doorsArea + carcassArea + internalArea;
             basePrice = frontArea * materialPrice; // Base price remains on front area as per industry standard
         } else { // Cozinha
-            const otherWallsWidth = state.dimensions.walls.reduce((a, b) => a + b, 0);
+            let otherWallsWidth = state.dimensions.walls.reduce((a, b) => a + b, 0);
             const lowerCabinetHeight = 0.9;
             const upperCabinetHeight = 0.7;
             const cabinetDepth = 0.6; // Average depth
-
-            // Calculate standard cabinets area
-            const standardFrontArea = otherWallsWidth * (lowerCabinetHeight + upperCabinetHeight);
-            const standardDoorsArea = standardFrontArea;
-            const standardCarcassArea = (otherWallsWidth * cabinetDepth * 2) + (standardFrontArea);
-            const standardInternalArea = standardFrontArea * 1.2;
-            totalMaterialArea += standardDoorsArea + standardCarcassArea + standardInternalArea;
-            frontArea += standardFrontArea;
+            let totalFrontArea = 0;
 
             // Calculate sink cabinet if it exists
             if (state.kitchenHasSinkCabinet && state.sinkStoneWidth > 0) {
@@ -1014,11 +1033,37 @@ function setupSimulator() {
                 const sinkFrontArea = sinkCabinetWidth * lowerCabinetHeight;
                 const sinkCarcassArea = (sinkCabinetWidth * cabinetDepth) + (sinkFrontArea); // 1 bottom, 1 back
                 totalMaterialArea += sinkFrontArea + sinkCarcassArea;
-                frontArea += sinkFrontArea;
+                totalFrontArea += sinkFrontArea;
                 extrasPrice += sinkCabinetWidth * EXTRAS_COST.SINK_CABINET_PER_METER;
             }
 
-            basePrice = frontArea * materialPrice;
+            // Calculate hot tower if it exists
+            if (state.hasHotTower) {
+                const towerWidth = 0.6;
+                const towerFrontArea = towerWidth * state.dimensions.height;
+                const towerCarcassArea = (2 * state.dimensions.height * cabinetDepth) + towerFrontArea;
+                totalMaterialArea += towerFrontArea + towerCarcassArea;
+                totalFrontArea += towerFrontArea;
+                extrasPrice += state.dimensions.height * EXTRAS_COST.HOT_TOWER_PER_METER;
+            }
+
+            // Calculate remaining cabinets
+            let otherLowerWidth = otherWallsWidth;
+            if (state.stoveType === 'piso') {
+                otherLowerWidth -= 0.75; // Subtract standard freestanding stove width
+            }
+            otherLowerWidth = Math.max(0, otherLowerWidth);
+            const otherUpperWidth = otherWallsWidth;
+
+            const otherLowerFrontArea = otherLowerWidth * lowerCabinetHeight;
+            const otherUpperFrontArea = otherUpperWidth * upperCabinetHeight;
+            const otherFrontArea = otherLowerFrontArea + otherUpperFrontArea;
+            const otherCarcassArea = (otherWallsWidth * cabinetDepth * 2) + otherFrontArea;
+            const otherInternalArea = otherFrontArea * 1.2;
+            totalMaterialArea += otherFrontArea + otherCarcassArea + otherInternalArea;
+            totalFrontArea += otherFrontArea;
+
+            basePrice = totalFrontArea * materialPrice;
         }
 
         // Add cost for 3D project
@@ -1067,6 +1112,9 @@ function setupSimulator() {
             closetHasDoors: true,
             kitchenHasSinkCabinet: true,
             sinkStoneWidth: 1.8,
+            hasHotTower: false,
+            stoveType: 'cooktop',
+            cooktopLocation: 'pia',
             handleType: 'aluminio',
             projectOption: 'create',
             projectFile: null,
@@ -1086,7 +1134,11 @@ function setupSimulator() {
         document.getElementById('add-wardrobe-wall-btn').classList.remove('hidden');
         document.querySelector('input[name="kitchenSink"][value="sim"]').checked = true; // Reset kitchen sink option
         document.getElementById('sinkStoneWidth').value = 1.8; // Reset sink stone width
-        document.getElementById('kitchen-wall1').value = 2.2; // Reset kitchen wall width
+        document.querySelector('input[name="hasHotTower"][value="nao"]').checked = true;
+        document.querySelector('input[name="stoveType"][value="cooktop"]').checked = true;
+        document.getElementById('cooktop-location-step').classList.remove('hidden');
+        document.querySelector('input[name="cooktopLocation"][value="pia"]').checked = true;
+        document.getElementById('kitchen-wall1').value = 2.2;
         document.getElementById('kitchenHeight').value = 2.7;
         const kitchenWallsContainer = document.getElementById('kitchen-walls-container');
         Array.from(kitchenWallsContainer.children).slice(1).forEach(wall => wall.remove());
@@ -1145,6 +1197,15 @@ function setupSimulator() {
         } else { // Cozinha
             if (state.kitchenHasSinkCabinet) {
                 kitchenDetails = `\n*Armário de Pia:* Sim (para pedra de ${state.sinkStoneWidth}m)`;
+            }
+            if (state.hasHotTower) {
+                kitchenDetails += `\n*Torre Quente:* Sim`;
+            }
+            if (state.stoveType === 'cooktop') {
+                const location = state.cooktopLocation === 'pia' ? 'na pedra da pia' : 'em bancada separada';
+                kitchenDetails += `\n*Tipo de Fogão:* Cooktop (${location})`;
+            } else {
+                kitchenDetails += `\n*Tipo de Fogão:* De Piso`;
             }
         }
 
