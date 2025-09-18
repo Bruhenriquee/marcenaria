@@ -196,170 +196,6 @@ textarea.form-input:not(:placeholder-shown) + .form-label {
     transform: translateY(-1.25rem) scale(0.75);
 }
 
-/* Estilos para o formulário de múltiplos passos */
-.form-step {
-    animation: fadeInUp 0.5s ease-in-out;
-}
-.progress-step {
-    width: 2.5rem; height: 2.5rem; display: flex; align-items: center; justify-content: center; border-radius: 9999px; border-width: 2px; border-color: #d1d5db; background-color: #fff; color: #6b7280; font-weight: 700; transition: all 300ms;
-}
-.progress-step.active {
-    border-color: #D4AF37; background-color: #D4AF37; color: #fff;
-}
-.progress-bar-line {
-    border-color: #d1d5db; transition: all 300ms;
-}
-.progress-bar-line.active {
-    border-color: #D4AF37;
-}
-.next-step-btn, .prev-step-btn {
-    background-color: #D4AF37; color: #fff; padding: 0.5rem 1.5rem; border-radius: 0.5rem; font-weight: 600; transition: opacity 150ms cubic-bezier(0.4, 0, 0.2, 1);
-}
-.next-step-btn:hover, .prev-step-btn:hover {
-    opacity: 0.9;
-}
-.prev-step-btn {
-    background-color: #d1d5db; color: #2F2F2F;
-}
-
-.config-section-title {
-    font-family: 'Montserrat', sans-serif;
-    font-weight: 600;
-    font-size: 1.125rem; /* text-lg */
-    color: #2F2F2F;
-    margin-bottom: 1rem;
-    padding-bottom: 0.5rem;
-    border-bottom: 2px solid #f3f4f6;
-}
-
-.form-input-small {
-    width: 100%; padding: 0.5rem 0.75rem; border: 2px solid #d1d5db; border-radius: 0.5rem; background-color: #f9fafb;
-}
-
-/* Estilos para os novos cards visuais do simulador */
-.config-card-visual {
-    display: block;
-    cursor: pointer;
-}
-
-.config-card-visual .peer:checked ~ .config-card-content {
-    border-color: #D4AF37;
-    background-color: #fefce8; /* gold-50 */
-    color: #2F2F2F;
-    transform: translateY(-2px);
-    box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
-}
-
-.config-card-visual .config-card-content {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    text-align: center;
-    padding: 1rem;
-    border: 2px solid #e5e7eb;
-    border-radius: 0.75rem;
-    transition: all 0.2s ease-in-out;
-    color: #4b5563;
-    height: 100%;
-}
-.config-card-visual .peer:checked ~ .config-card-content {
-    border-color: #D4AF37;
-    background-color: #fefce8; /* gold-50 */
-    box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
-}
-
-.peer:checked ~ .config-card-content .visual-example {
-    color: #D4AF37;
-}
-
-.visual-example {
-    height: 60px;
-    width: 80px;
-    margin-bottom: 0.5rem;
-    color: #9ca3af;
-}
-
-.config-card-visual-small .peer:checked ~ .config-card-content-small {
-    border-color: #D4AF37;
-    background-color: #fefce8; /* gold-50 */
-}
-
-.config-card-visual-small {
-    display: block;
-    cursor: pointer;
-}
-
-.config-card-visual-small .peer:checked ~ .config-card-content-small {
-    border-color: #D4AF37;
-    background-color: #fefce8; /* gold-50 */
-    color: #2F2F2F;
-    transform: translateY(-2px);
-    box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
-}
-
-.config-card-visual-small .config-card-content-small {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    text-align: center;
-    padding: 0.5rem;
-    border: 2px solid #e5e7eb;
-    border-radius: 0.75rem;
-    transition: all 0.2s ease-in-out;
-    color: #4b5563;
-    height: 100%;
-}
-
-.visual-example-small {
-    height: 40px;
-    width: 50px;
-    color: #9ca3af;
-}
-.peer:checked ~ .config-card-content-small .visual-example-small {
-    color: #D4AF37;
-}
-
-
-
-/* Estilos para os sliders do simulador */
-.styled-slider {
-    -webkit-appearance: none;
-    appearance: none;
-    width: 100%;
-    height: 8px;
-    background: #e5e7eb;
-    border-radius: 5px;
-    outline: none;
-    opacity: 0.7;
-    transition: opacity .2s;
-}
-
-.styled-slider:hover {
-    opacity: 1;
-}
-
-.styled-slider::-webkit-slider-thumb {
-    -webkit-appearance: none;
-    appearance: none;
-    width: 20px;
-    height: 20px;
-    background: #D4AF37;
-    cursor: pointer;
-    border-radius: 50%;
-    border: 2px solid white;
-    box-shadow: 0 0 5px rgba(0,0,0,0.2);
-}
-
-.styled-slider::-moz-range-thumb {
-    width: 20px;
-    height: 20px;
-    background: #D4AF37;
-    cursor: pointer;
-    border-radius: 50%;
-}
-
 .spinner {
     border: 2px solid #f3f3f3;
     border-top: 2px solid #D4AF37;
@@ -630,4 +466,169 @@ input[type="radio"]:checked::after {
 .tooltip:hover::after {
     opacity: 1;
     visibility: visible;
+}
+
+/* === SIMULATOR STYLES === */
+.step-title {
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 700;
+    font-size: 1.5rem; /* text-2xl */
+    text-align: center;
+    margin-bottom: 2rem;
+    color: #2F2F2F;
+}
+.form-step {
+    display: none;
+    animation: fadeIn 0.5s ease-in-out;
+}
+.form-step.active {
+    display: block;
+}
+.step-card {
+    display: block;
+    cursor: pointer;
+    background-color: white;
+    padding: 1.5rem;
+    border-radius: 1rem;
+    border-width: 2px;
+    border-color: #e5e7eb;
+    transition: all 0.3s;
+    box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
+}
+.step-card:hover {
+    box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+    transform: translateY(-0.25rem);
+}
+.step-card .card-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    color: #2F2F2F;
+}
+.peer:checked ~ .card-content {
+    color: #D4AF37;
+}
+.peer:checked ~ .card-content h4 {
+    font-weight: 700;
+}
+.peer:checked + .step-card, .step-card:has(.peer:checked) {
+    border-color: #D4AF37;
+    background-color: rgba(212, 175, 55, 0.05);
+}
+.slider-group {
+    background-color: white;
+    padding: 1.5rem;
+    border-radius: 1rem;
+    box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
+}
+.slider-group input[type="range"] {
+    width: 100%;
+    height: 0.5rem;
+    background-color: #e5e7eb;
+    border-radius: 9999px;
+    -webkit-appearance: none;
+    appearance: none;
+    cursor: pointer;
+}
+.slider-group input[type="range"]::-webkit-slider-thumb {
+    width: 1.25rem;
+    height: 1.25rem;
+    background-color: #D4AF37;
+    border-radius: 9999px;
+    -webkit-appearance: none;
+    appearance: none;
+}
+.extra-option-card {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    background-color: white;
+    padding: 1rem;
+    border-radius: 1rem;
+    border-width: 2px;
+    border-color: #e5e7eb;
+    cursor: pointer;
+    transition: all 0.3s;
+}
+.extra-option-card:has(input:checked) {
+    border-color: #D4AF37;
+    background-color: rgba(212, 175, 55, 0.05);
+}
+.action-btn {
+    width: 100%;
+    color: white;
+    font-weight: 600;
+    padding-top: 0.75rem;
+    padding-bottom: 0.75rem;
+    border-radius: 0.5rem;
+    box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+    transition: all 0.3s;
+}
+.action-btn:hover {
+    box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+    transform: translateY(-2px);
+}
+.nav-btn {
+    background-color: #D4AF37;
+    color: white;
+    padding-left: 2rem;
+    padding-right: 2rem;
+    padding-top: 0.75rem;
+    padding-bottom: 0.75rem;
+    border-radius: 0.5rem;
+    font-weight: 600;
+    transition: all 0.2s;
+}
+.nav-btn:hover {
+    opacity: 0.9;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+}
+.nav-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+.progress-step {
+    width: 3rem;
+    height: 3rem;
+    border-radius: 9999px;
+    border-width: 2px;
+    border-color: #d1d5db;
+    background-color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #9ca3af;
+    font-size: 1.25rem;
+    transition: all 0.3s;
+}
+.progress-step.active {
+    border-color: #D4AF37;
+    background-color: #D4AF37;
+    color: white;
+    transform: scale(1.1);
+}
+.progress-line {
+    flex: 1 1 0%;
+    height: 0.25rem;
+    background-color: #d1d5db;
+    transition: all 0.3s;
+}
+.progress-line.active {
+    background-color: #D4AF37;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+#simulator-overlay {
+    transition: opacity 0.3s ease-in-out, visibility 0.3s ease-in-out;
+}
+#simulator-overlay.is-hidden {
+    opacity: 0;
+    visibility: hidden;
 }
