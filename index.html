@@ -500,7 +500,9 @@
                         <div class="progress-line"></div>
                         <div class="progress-step" data-step="4"><i class="fas fa-plus-circle"></i></div>
                         <div class="progress-line"></div>
-                        <div class="progress-step" data-step="5"><i class="fas fa-file-invoice-dollar"></i></div>
+                        <div class="progress-step" data-step="5"><i class="fas fa-cube"></i></div>
+                        <div class="progress-line"></div>
+                        <div class="progress-step" data-step="6"><i class="fas fa-file-invoice-dollar"></i></div>
                     </div>
                 </div>
         
@@ -544,7 +546,7 @@
                             <!-- Sub-step 2.3: Dimensions -->
                             <div id="wardrobe-dimension-inputs" class="space-y-6">
                                 <div id="wardrobe-walls-container" class="space-y-4">
-                                    <div><label for="wardrobe-width1" class="block mb-2 font-semibold">Largura Parede 1 (m)</label><input type="number" id="wardrobe-width1" step="0.1" min="1" max="10" value="3.0" class="form-input"></div>
+                                    <div><label for="wardrobe-width1" class="block mb-2 font-semibold">Largura Parede 1 (m)</label><input type="number" id="wardrobe-width1" name="wardrobe-width" step="0.1" min="1" max="10" value="3.0" class="form-input"></div>
                                 </div>
                                 <button type="button" id="add-wardrobe-wall-btn" class="border-2 border-dashed border-gold text-gold px-4 py-2 rounded-lg hover:bg-gold/10 w-full hidden"><i class="fas fa-plus mr-2"></i>Adicionar Parede</button>
                                 <div><label for="wardrobe-height" class="block mb-2 font-semibold">Altura (m)</label><input type="number" id="wardrobe-height" step="0.1" min="1.5" max="4" value="2.7" class="form-input"></div>
@@ -571,7 +573,7 @@
                                     <input type="number" id="sinkStoneWidth" step="0.1" min="0.6" value="1.8" class="form-input">
                                 </div>
                                 <div id="kitchen-walls-container" class="space-y-4">
-                                    <div><label for="wall1" class="block mb-2 font-semibold">Largura das outras paredes com armários (m)</label><input type="number" id="wall1" step="0.1" min="0" value="2.2" class="form-input"></div>
+                                    <div><label for="kitchen-wall1" class="block mb-2 font-semibold">Largura das outras paredes com armários (m)</label><input type="number" id="kitchen-wall1" name="kitchen-wall" step="0.1" min="0" value="2.2" class="form-input"></div>
                                 </div>
                                 <button id="add-wall-btn" class="border-2 border-dashed border-gold text-gold px-4 py-2 rounded-lg hover:bg-gold/10 w-full"><i class="fas fa-plus mr-2"></i>Adicionar outra parede</button>
                                 <div><label for="kitchenHeight" class="block mb-2 font-semibold">Altura / Pé-direito (m)</label><input type="number" id="kitchenHeight" step="0.1" min="1.5" max="4" value="2.7" class="form-input"></div>
@@ -591,7 +593,15 @@
                             <label class="step-card"><input type="radio" name="material" value="Premium" class="sr-only peer"><div class="card-content"><h4 class="font-semibold text-lg">MDF Premium/Colorido</h4><p class="text-sm text-gray-500">Cores e texturas especiais</p><span class="font-bold text-gold mt-2">R$ 1200/m²</span></div></label>
                         </div>
                         <div id="premium-options" class="mt-6 space-y-4 hidden">
-                            <p class="text-center">Veja os catálogos de nossos fornecedores: <a href="#" class="text-gold underline">Guararapes</a>, <a href="#" class="text-gold underline">Duratex</a>.</p>
+                            <div class="text-center">
+                                <p class="text-gray-600 mb-4">Veja os catálogos de nossos fornecedores:</p>
+                                <div class="grid sm:grid-cols-2 gap-4 max-w-md mx-auto">
+                                    <button type="button" data-pdf-src="assets/catalogo_guararapes.pdf" data-pdf-title="Catálogo Guararapes" class="w-full bg-white border-2 border-gray-200 text-charcoal font-semibold py-3 px-4 rounded-lg flex items-center justify-center hover:bg-gray-50 hover:border-gold transition-all duration-300">
+                                        <i class="fas fa-file-pdf mr-2 text-red-500"></i>Catálogo Guararapes</button>
+                                    <button type="button" data-pdf-src="assets/catalogo_duratex.pdf" data-pdf-title="Catálogo Duratex" class="w-full bg-white border-2 border-gray-200 text-charcoal font-semibold py-3 px-4 rounded-lg flex items-center justify-center hover:bg-gray-50 hover:border-gold transition-all duration-300">
+                                        <i class="fas fa-file-pdf mr-2 text-red-500"></i>Catálogo Duratex</button>
+                                </div>
+                            </div>
                             <div><label for="customColor" class="block mb-2 font-semibold">Gostou de alguma cor? Digite o nome aqui:</label><input type="text" id="customColor" placeholder="Ex: Cinza Sagrado" class="form-input"></div>
                         </div>
                         <div class="flex justify-between mt-12">
@@ -652,8 +662,36 @@
                         </div>
                     </div>
         
-                    <!-- Step 5: Lead Capture & Result -->
+                    <!-- Step 5: 3D Project -->
                     <div class="form-step" data-step="5">
+                        <h3 class="step-title">5. E o projeto 3D?</h3>
+                        <div class="grid md:grid-cols-3 gap-6">
+                            <label class="step-card">
+                                <input type="radio" name="projectOption" value="create" class="sr-only peer" checked>
+                                <div class="card-content"><i class="fas fa-drafting-compass text-3xl mb-3"></i><h4 class="font-semibold text-lg">Quero um projeto 3D</h4><p class="text-sm text-gray-500">Nossa equipe cria para você.</p><span class="font-bold text-gold mt-2">+ R$ 350</span></div>
+                            </label>
+                            <label class="step-card">
+                                <input type="radio" name="projectOption" value="upload" class="sr-only peer">
+                                <div class="card-content"><i class="fas fa-file-upload text-3xl mb-3"></i><h4 class="font-semibold text-lg">Já tenho o projeto</h4><p class="text-sm text-gray-500">Anexe seu arquivo.</p></div>
+                            </label>
+                            <label class="step-card">
+                                <input type="radio" name="projectOption" value="none" class="sr-only peer">
+                                <div class="card-content"><i class="fas fa-times text-3xl mb-3"></i><h4 class="font-semibold text-lg">Não preciso agora</h4><p class="text-sm text-gray-500">Apenas o orçamento.</p></div>
+                            </label>
+                        </div>
+                        <div id="project-upload-container" class="mt-8 text-center hidden">
+                            <label for="project-file-input" class="file-input-label"><i class="fas fa-paperclip mr-2"></i><span id="project-file-name">Escolher arquivo do projeto</span></label>
+                            <input type="file" id="project-file-input" class="sr-only">
+                            <p class="text-xs text-gray-500 mt-1">Tamanho máximo: 5MB. Tipos: JPG, PNG, PDF.</p>
+                        </div>
+                        <div class="flex justify-between mt-12">
+                            <button class="prev-btn hidden bg-transparent border-2 border-gray-300 text-gray-500 font-bold py-3 px-6 rounded-lg hover:bg-gray-100 hover:border-gray-400 transition-all duration-300"><i class="fas fa-arrow-left mr-2"></i>Anterior</button>
+                            <button class="next-btn ml-auto bg-gradient-to-r from-gold to-yellow-600 text-white font-bold py-3 px-8 rounded-lg shadow-md hover:shadow-xl transform hover:-translate-y-1 transition-all duration-300">Próximo<i class="fas fa-arrow-right ml-2"></i></button>
+                        </div>
+                    </div>
+
+                    <!-- Step 6: Lead Capture & Result -->
+                    <div class="form-step" data-step="6">
                         <!-- Lead Capture Form -->
                         <div id="lead-capture-form" class="text-center">
                             <h3 class="step-title">Falta pouco! Preencha para ver seu orçamento.</h3>
@@ -1040,6 +1078,21 @@
         </button>
     </div>
 
+    <!-- PDF Viewer Modal -->
+    <div id="pdf-viewer-modal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-[100] flex items-center justify-center p-4 hidden" role="dialog" aria-modal="true" aria-hidden="true">
+        <div class="bg-white rounded-lg w-full max-w-4xl h-[90vh] flex flex-col shadow-2xl">
+            <div class="flex justify-between items-center p-4 border-b">
+                <h3 id="pdf-viewer-title" class="font-montserrat font-bold text-xl text-charcoal">Catálogo</h3>
+                <button id="pdf-viewer-close" class="text-charcoal text-2xl hover:text-gold transition-colors">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="flex-1 p-2 bg-gray-200">
+                <iframe id="pdf-viewer-iframe" src="" class="w-full h-full border-0 rounded-b-lg"></iframe>
+            </div>
+        </div>
+    </div>
+
     <!-- Hidden Template for PDF Generation -->
     <div id="pdf-template" class="hidden">
         <div class="p-10 font-sans">
@@ -1068,6 +1121,7 @@
                         <tr class="border-b"><td class="p-2">Dimensões</td><td id="pdf-dims" class="p-2 text-right"></td></tr>
                         <tr class="border-b"><td class="p-2">Material</td><td id="pdf-material" class="p-2 text-right"></td></tr>
                         <tr class="border-b"><td class="p-2">Cor Personalizada</td><td id="pdf-color" class="p-2 text-right"></td></tr>
+                        <tr class="border-b"><td class="p-2">Projeto 3D</td><td id="pdf-project" class="p-2 text-right"></td></tr>
                         <tr class="border-b"><td class="p-2">Extras</td><td id="pdf-extras" class="p-2 text-right"></td></tr>
                     </tbody>
                 </table>

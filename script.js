@@ -26,6 +26,7 @@ function initializeApp() {
     setupContactForm();
     setupScrollAnimations();
     setupGalleryLightbox();
+    setupPdfViewer();
     setupSimulator();
     setupLazyLoading();
     
@@ -433,6 +434,51 @@ function setupGalleryLightbox() {
     });
 }
 
+// PDF Viewer Modal Logic
+function setupPdfViewer() {
+    const pdfModal = document.getElementById('pdf-viewer-modal');
+    const closeBtn = document.getElementById('pdf-viewer-close');
+    const pdfIframe = document.getElementById('pdf-viewer-iframe');
+    const pdfTitle = document.getElementById('pdf-viewer-title');
+
+    if (!pdfModal || !closeBtn || !pdfIframe || !pdfTitle) return;
+
+    const openPdfViewer = (url, title) => {
+        if (!url) {
+            console.error('PDF URL is missing.');
+            alert('Desculpe, o catálogo não está disponível no momento.');
+            return;
+        }
+        pdfIframe.src = url;
+        pdfTitle.textContent = title || 'Catálogo';
+        pdfModal.classList.remove('hidden');
+        document.body.style.overflow = 'hidden';
+    };
+
+    const closePdfViewer = () => {
+        pdfModal.classList.add('hidden');
+        pdfIframe.src = ''; // Stop loading PDF to save resources
+        document.body.style.overflow = 'auto';
+    };
+
+    // Use event delegation on the document body
+    document.body.addEventListener('click', (e) => {
+        const trigger = e.target.closest('[data-pdf-src]');
+        if (trigger) {
+            const url = trigger.dataset.pdfSrc;
+            const title = trigger.dataset.pdfTitle;
+            openPdfViewer(url, title);
+        }
+    });
+
+    closeBtn.addEventListener('click', closePdfViewer);
+    pdfModal.addEventListener('click', (e) => {
+        if (e.target === pdfModal) {
+            closePdfViewer();
+        }
+    });
+}
+
 // Lazy loading for images
 function setupLazyLoading() {
     const images = document.querySelectorAll('img[loading="lazy"]');
@@ -602,12 +648,13 @@ function setupSimulator() {
         'Porta-temperos': 350, // fixed price
         'Lixeira Embutida': 400, // fixed price
         'SINK_CABINET_PER_METER': 450, // Special cost for sink cabinet
+        'PROJECT_3D': 350, // Fixed cost for 3D project design
     };
     const MDF_SHEET_SIZE = 5.88; // 2.80m * 2.10m
 
     // --- STATE ---
     let currentStep = 1;
-    const totalSteps = 5;
+    const totalSteps = 6;
     const state = {
         furnitureType: null,
         dimensions: { width: 3, height: 2.7, depth: 60, walls: [4] },
@@ -618,6 +665,8 @@ function setupSimulator() {
         kitchenHasSinkCabinet: true,
         sinkStoneWidth: 1.8,
         handleType: 'aluminio',
+        projectOption: 'create', // 'create', 'upload', 'none'
+        projectFile: null,
         customColor: '',
         extras: [],
         customer: { name: '', email: '', phone: '' },
@@ -696,6 +745,27 @@ function setupSimulator() {
             });
         });
 
+        // Step 5: 3D Project
+        document.querySelectorAll('input[name="projectOption"]').forEach(radio => {
+            radio.addEventListener('change', (e) => {
+                state.projectOption = e.target.value;
+                document.getElementById('project-upload-container').classList.toggle('hidden', e.target.value !== 'upload');
+            });
+        });
+        document.getElementById('project-file-input').addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (file) {
+                const MAX_SIZE = 5 * 1024 * 1024; // 5MB
+                if (file.size > MAX_SIZE) {
+                    alert('O arquivo é muito grande. O tamanho máximo é 5MB.');
+                    e.target.value = ''; // Clear the input
+                    return;
+                }
+                state.projectFile = file;
+                document.getElementById('project-file-name').textContent = file.name;
+            }
+        });
+
         // Step 3: Material
         document.querySelectorAll('input[name="material"]').forEach(radio => {
             radio.addEventListener('change', (e) => {
@@ -726,7 +796,7 @@ function setupSimulator() {
             });
         });
         
-        // Step 5: Lead Capture & Result
+        // Step 6: Lead Capture & Result
         document.getElementById('view-quote-btn').addEventListener('click', handleViewQuote);
         document.getElementById('pdf-btn').addEventListener('click', generatePDF);
         document.getElementById('whatsapp-btn').addEventListener('click', generateWhatsAppLink);
@@ -777,8 +847,8 @@ function setupSimulator() {
                 prevButton.classList.toggle('hidden', currentStep === 1);
             }
 
-            // When returning to step 5, show the lead form again
-            if (stepNumber === 5 && isActive) {
+            // When returning to the last step, show the lead form again
+            if (stepNumber === totalSteps && isActive) {
                 document.getElementById('lead-capture-form').classList.remove('hidden');
                 document.getElementById('result-container').classList.add('hidden');
             }
@@ -827,7 +897,7 @@ function setupSimulator() {
         const wallCount = container.children.length + 1;
         if (wallCount > 3) return; // Max 3 walls for a closet (U-shape)
         const newWall = document.createElement('div');
-        newWall.innerHTML = `<label for="wardrobe-width${wallCount}" class="block mb-2 font-semibold">Largura Parede ${wallCount} (m)</label><input type="number" id="wardrobe-width${wallCount}" step="0.1" min="0" value="0" class="form-input">`;
+        newWall.innerHTML = `<label for="wardrobe-width${wallCount}" class="block mb-2 font-semibold">Largura Parede ${wallCount} (m)</label><input type="number" id="wardrobe-width${wallCount}" name="wardrobe-width" step="0.1" min="0" value="0" class="form-input">`;
         container.appendChild(newWall);
         newWall.querySelector('input').addEventListener('input', updateDimensionsState);
         if (wallCount === 3) {
@@ -840,7 +910,7 @@ function setupSimulator() {
         const wallCount = container.children.length + 1;
         if (wallCount > 3) return;
         const newWall = document.createElement('div');
-        newWall.innerHTML = `<label for="wall${wallCount}" class="block mb-2 font-semibold">Largura Parede ${wallCount} (m)</label><input type="number" id="wall${wallCount}" step="0.1" min="0" value="0" class="form-input">`;
+        newWall.innerHTML = `<label for="kitchen-wall${wallCount}" class="block mb-2 font-semibold">Largura Parede ${wallCount} (m)</label><input type="number" id="kitchen-wall${wallCount}" name="kitchen-wall" step="0.1" min="0" value="0" class="form-input">`;
         container.appendChild(newWall);
         newWall.querySelector('input').addEventListener('input', updateDimensionsState);
         if (wallCount === 3) {
@@ -951,6 +1021,11 @@ function setupSimulator() {
             basePrice = frontArea * materialPrice;
         }
 
+        // Add cost for 3D project
+        if (state.projectOption === 'create') {
+            extrasPrice += EXTRAS_COST.PROJECT_3D;
+        }
+
         // Add cost for sliding doors
         if (state.furnitureType === 'Guarda-Roupa' && state.doorType === 'correr' && state.closetHasDoors) {
             extrasPrice += EXTRAS_COST['Portas de Correr'] * frontArea;
@@ -993,6 +1068,8 @@ function setupSimulator() {
             kitchenHasSinkCabinet: true,
             sinkStoneWidth: 1.8,
             handleType: 'aluminio',
+            projectOption: 'create',
+            projectFile: null,
             customColor: '',
             extras: [],
             customer: { name: '', email: '', phone: '' },
@@ -1007,9 +1084,9 @@ function setupSimulator() {
         const wardrobeWallsContainer = document.getElementById('wardrobe-walls-container');
         Array.from(wardrobeWallsContainer.children).slice(1).forEach(wall => wall.remove());
         document.getElementById('add-wardrobe-wall-btn').classList.remove('hidden');
-        document.querySelector('input[name="kitchenSink"][value="sim"]').checked = true;
-        document.getElementById('sinkStoneWidth').value = 1.8;
-        document.getElementById('wall1').value = 2.2;
+        document.querySelector('input[name="kitchenSink"][value="sim"]').checked = true; // Reset kitchen sink option
+        document.getElementById('sinkStoneWidth').value = 1.8; // Reset sink stone width
+        document.getElementById('kitchen-wall1').value = 2.2; // Reset kitchen wall width
         document.getElementById('kitchenHeight').value = 2.7;
         const kitchenWallsContainer = document.getElementById('kitchen-walls-container');
         Array.from(kitchenWallsContainer.children).slice(1).forEach(wall => wall.remove());
@@ -1020,6 +1097,10 @@ function setupSimulator() {
         document.querySelector('input[name="doorType"][value="abrir"]').checked = true;
         document.querySelector('input[name="wardrobeFormat"][value="reto"]').checked = true;
         document.querySelector('input[name="closetDoors"][value="sim"]').checked = true;
+        document.querySelector('input[name="projectOption"][value="create"]').checked = true;
+        document.getElementById('project-upload-container').classList.add('hidden');
+        document.getElementById('project-file-input').value = '';
+        document.getElementById('project-file-name').textContent = 'Escolher arquivo do projeto';
         document.querySelector('input[name="handleType"][value="aluminio"]').checked = true;
         document.querySelectorAll('input[name="extras"]').forEach(cb => cb.checked = false);
         document.getElementById('leadName').value = '';
@@ -1066,15 +1147,21 @@ function setupSimulator() {
                 kitchenDetails = `\n*Armário de Pia:* Sim (para pedra de ${state.sinkStoneWidth}m)`;
             }
         }
+
+        let projectDetails = '';
+        if (state.projectOption === 'create') projectDetails = '\n*Projeto 3D:* Sim (incluso no valor)';
+        if (state.projectOption === 'upload' && state.projectFile) projectDetails = '\n*Projeto 3D:* Cliente anexou o arquivo.';
+        if (state.projectOption === 'upload' && !state.projectFile) projectDetails = '\n*Projeto 3D:* Cliente informou que tem o projeto (não anexado).';
+
         const handleName = state.handleType.charAt(0).toUpperCase() + state.handleType.slice(1);
 
-        return `*Orçamento de Móveis Planejados*\n---------------------------------\n*Cliente:* ${state.customer.name}\n*Móvel:* ${state.furnitureType}${formatDetails}${kitchenDetails}\n${details}\n*Material:* ${state.material} ${state.customColor ? `(Cor: ${state.customColor})` : ''}\n*Puxador:* Perfil ${handleName}\n*Extras:* ${state.extras.join(', ') || 'Nenhum'}\n---------------------------------\n*Total Estimado: ${document.getElementById('result-total').textContent}*\n\n_Este é um orçamento informativo. O valor final será definido após visita técnica._`;
+        return `*Orçamento de Móveis Planejados*\n---------------------------------\n*Cliente:* ${state.customer.name}\n*Móvel:* ${state.furnitureType}${formatDetails}${kitchenDetails}\n${details}${projectDetails}\n*Material:* ${state.material} ${state.customColor ? `(Cor: ${state.customColor})` : ''}\n*Puxador:* Perfil ${handleName}\n*Extras:* ${state.extras.join(', ') || 'Nenhum'}\n---------------------------------\n*Total Estimado: ${document.getElementById('result-total').textContent}*\n\n_Este é um orçamento informativo. O valor final será definido após visita técnica._`;
     }
 
     async function generatePDF() {
         const { jsPDF } = window.jspdf;
         const pdfTemplate = document.getElementById('pdf-template');
-        ['date', 'quote-id', 'name', 'email', 'phone', 'furniture', 'dims', 'material', 'color', 'extras', 'total'].forEach(id => {
+        ['date', 'quote-id', 'name', 'email', 'phone', 'furniture', 'dims', 'material', 'color', 'project', 'extras', 'total'].forEach(id => {
             const el = document.getElementById(`pdf-${id}`);
             if(el) el.textContent = {
                 date: new Date().toLocaleDateString('pt-BR'),
@@ -1086,6 +1173,7 @@ function setupSimulator() {
                 dims: document.getElementById('result-dims').textContent,
                 material: state.material,
                 color: state.customColor || 'N/A',
+                project: state.projectOption === 'create' ? 'Sim' : (state.projectOption === 'upload' ? 'Fornecido pelo cliente' : 'Não'),
                 extras: state.extras.join(', ') || 'Nenhum',
                 total: document.getElementById('result-total').textContent
             }[id];
@@ -1100,7 +1188,11 @@ function setupSimulator() {
     }
 
     function generateWhatsAppLink() {
-        window.open(`https://wa.me/5511999999999?text=${encodeURIComponent(getQuoteAsText())}`, '_blank');
+        let text = getQuoteAsText();
+        if (state.projectOption === 'upload' && state.projectFile) {
+            text += '\n\n*(Anexei o arquivo do meu projeto no simulador. Por favor, me informe como posso enviá-lo.)*';
+        }
+        window.open(`https://wa.me/5518981558125?text=${encodeURIComponent(text)}`, '_blank');
     }
 
     function generateEmailLink() {
