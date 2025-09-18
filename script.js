@@ -21,20 +21,19 @@ document.addEventListener('DOMContentLoaded', function() {
 
 // Main initialization function
 function initializeApp() {
+    // Setup all interactive components of the site
     setupMobileMenu();
     setupScrollEffects();
-    setupContactForm();
-    setupScrollAnimations();    setupGalleryLightbox();
-    setupPdfViewer();
-    setupSimulator();
-    setupLazyLoading();
-    
     // Add smooth scrolling to all anchor links
     setupSmoothScrolling();
-    
+    setupContactForm();
     // Initialize AOS-like animations
     observeElements();
-    
+    setupGalleryLightbox();
+    setupPdfViewer();
+    setupSimulator(); // This was the missing call
+    setupLazyLoading();
+
     console.log('Roni Marceneiro website initialized successfully!');
 }
 
@@ -644,6 +643,7 @@ function setupSimulator() {
         'Lixeira Embutida': 400, // fixed price
         'SINK_CABINET_PER_METER': 450, // Special cost for sink cabinet
         'HOT_TOWER_PER_METER': 600, // Cost per linear meter of height
+        'HARDWARE_SOFT_CLOSE_PER_UNIT': 80, // Per door or drawer
         'PROJECT_3D': 350, // Fixed cost for 3D project design
     };
     const MDF_SHEET_SIZE = 5.88; // 2.80m * 2.10m
@@ -663,6 +663,7 @@ function setupSimulator() {
         hasHotTower: false,
         stoveType: 'cooktop', // 'cooktop' or 'piso'
         cooktopLocation: 'pia', // 'pia' or 'separado'
+        hardwareType: 'padrao', // 'padrao' or 'softclose'
         handleType: 'aluminio',
         projectOption: 'create', // 'create', 'upload', 'none'
         projectFile: null,
@@ -800,6 +801,13 @@ function setupSimulator() {
         document.querySelectorAll('input[name="doorType"]').forEach(radio => {
             radio.addEventListener('change', (e) => {
                 state.doorType = e.target.value;
+            });
+        });
+
+        // Step 4: Hardware Type
+        document.querySelectorAll('input[name="hardwareType"]').forEach(radio => {
+            radio.addEventListener('change', (e) => {
+                state.hardwareType = e.target.value;
             });
         });
 
@@ -1061,6 +1069,29 @@ function setupSimulator() {
             basePrice = totalFrontArea * materialPrice;
         }
 
+        // Calculate hardware cost
+        if (state.hardwareType === 'softclose') {
+            let hardwareUnits = 0;
+            if (state.furnitureType === 'Guarda-Roupa') {
+                const width = state.dimensions.walls.reduce((a, b) => a + b, 0);
+                const hasDoors = !(state.wardrobeFormat === 'closet' && !state.closetHasDoors);
+                if (hasDoors) {
+                    if (state.doorType === 'correr') {
+                        hardwareUnits += Math.max(2, Math.round(width / 1.0)); // Sliding doors
+                    } else {
+                        hardwareUnits += Math.max(2, Math.round(width / 0.5)); // Hinged doors
+                    }
+                }
+                hardwareUnits += Math.floor(width * 2); // Estimate 2 drawers per meter of width
+            } else { // Cozinha
+                // Estimate doors/drawers based on front area. Assume average unit size is 0.5m²
+                if (frontArea > 0) {
+                    hardwareUnits += Math.ceil(frontArea / 0.5);
+                }
+            }
+            extrasPrice += hardwareUnits * EXTRAS_COST.HARDWARE_SOFT_CLOSE_PER_UNIT;
+        }
+
         // Add cost for 3D project
         if (state.projectOption === 'create') {
             extrasPrice += EXTRAS_COST.PROJECT_3D;
@@ -1110,6 +1141,7 @@ function setupSimulator() {
             hasHotTower: false,
             stoveType: 'cooktop',
             cooktopLocation: 'pia',
+            hardwareType: 'padrao',
             handleType: 'aluminio',
             projectOption: 'create',
             projectFile: null,
@@ -1144,6 +1176,7 @@ function setupSimulator() {
         document.querySelector('input[name="doorType"][value="abrir"]').checked = true;
         document.querySelector('input[name="wardrobeFormat"][value="reto"]').checked = true;
         document.querySelector('input[name="closetDoors"][value="sim"]').checked = true;
+        document.querySelector('input[name="hardwareType"][value="padrao"]').checked = true;
         document.querySelector('input[name="projectOption"][value="create"]').checked = true;
         document.getElementById('project-upload-container').classList.add('hidden');
         document.getElementById('project-file-input').value = '';
@@ -1208,10 +1241,11 @@ function setupSimulator() {
         if (state.projectOption === 'create') projectDetails = '\n*Projeto 3D:* Sim (incluso no valor)';
         if (state.projectOption === 'upload' && state.projectFile) projectDetails = '\n*Projeto 3D:* Cliente anexou o arquivo.';
         if (state.projectOption === 'upload' && !state.projectFile) projectDetails = '\n*Projeto 3D:* Cliente informou que tem o projeto (não anexado).';
+        const hardwareDetails = `\n*Acabamento Interno:* ${state.hardwareType === 'padrao' ? 'Padrão' : 'Com Amortecimento (Soft-close)'}`;
 
         const handleName = state.handleType.charAt(0).toUpperCase() + state.handleType.slice(1);
 
-        return `*Orçamento de Móveis Planejados*\n---------------------------------\n*Cliente:* ${state.customer.name}\n*Móvel:* ${state.furnitureType}${formatDetails}${kitchenDetails}\n${details}${projectDetails}\n*Material:* ${state.material} ${state.customColor ? `(Cor: ${state.customColor})` : ''}\n*Puxador:* Perfil ${handleName}\n*Extras:* ${state.extras.join(', ') || 'Nenhum'}\n---------------------------------\n*Total Estimado: ${document.getElementById('result-total').textContent}*\n\n_Este é um orçamento informativo. O valor final será definido após visita técnica._`;
+        return `*Orçamento de Móveis Planejados*\n---------------------------------\n*Cliente:* ${state.customer.name}\n*Móvel:* ${state.furnitureType}${formatDetails}${kitchenDetails}\n${details}${projectDetails}\n*Material:* ${state.material} ${state.customColor ? `(Cor: ${state.customColor})` : ''}\n*Puxador:* Perfil ${handleName}${hardwareDetails}\n*Extras:* ${state.extras.join(', ') || 'Nenhum'}\n---------------------------------\n*Total Estimado: ${document.getElementById('result-total').textContent}*\n\n_Este é um orçamento informativo. O valor final será definido após visita técnica._`;
     }
 
     async function generatePDF() {

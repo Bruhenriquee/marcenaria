@@ -397,8 +397,8 @@ a:focus {
 .reveal.revealed .reveal-child-3 { transition-delay: 0.3s; }
 .reveal.revealed .reveal-child-4 { transition-delay: 0.4s; }
 /* Custom checkbox and radio styles */
-input[type="checkbox"],
-input[type="radio"] {
+input[type="checkbox"]:not(.sr-only),
+input[type="radio"]:not(.sr-only) {
     appearance: none;
     width: 20px;
     height: 20px;
@@ -408,12 +408,12 @@ input[type="radio"] {
     cursor: pointer;
 }
 
-input[type="radio"] {
+input[type="radio"]:not(.sr-only) {
     border-radius: 50%;
 }
 
-input[type="checkbox"]:checked::after,
-input[type="radio"]:checked::after {
+input[type="checkbox"]:not(.sr-only):checked::after,
+input[type="radio"]:not(.sr-only):checked::after {
     content: '';
     position: absolute;
     width: 12px;
@@ -485,7 +485,11 @@ input[type="radio"]:checked::after {
     display: block;
 }
 .step-card {
-    display: block;
+    position: relative; /* Necessário para posicionar o ícone de check */
+    display: flex; /* Alterado para flex */
+    align-items: center; /* Centraliza o conteúdo verticalmente */
+    justify-content: center; /* Centraliza o conteúdo horizontalmente */
+    height: 100%; /* Garante que todos os cards na mesma linha tenham a mesma altura */
     cursor: pointer;
     background-color: white;
     padding: 1.25rem;
