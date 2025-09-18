@@ -588,14 +588,20 @@ function setupSimulator() {
         'Branco': 800,
         'Premium': 1200,
     };
+    const HANDLE_PRICES_PER_METER = {
+        'aluminio': 0, // Padrão, já incluso
+        'inox': 90,
+        'preto': 100,
+        'dourado': 150,
+    };
     const EXTRAS_COST = {
-        'Puxadores Premium': 450,
         'Iluminação LED': 350,   // per meter
         'Portas de Correr': 250, // per m² of front area
         'Porta com Espelho': 700, // fixed price per door/unit
         'Gaveteiro com Chave': 200, // fixed price
         'Porta-temperos': 350, // fixed price
         'Lixeira Embutida': 400, // fixed price
+        'SINK_CABINET_PER_METER': 450, // Special cost for sink cabinet
     };
     const MDF_SHEET_SIZE = 5.88; // 2.80m * 2.10m
 
@@ -607,6 +613,11 @@ function setupSimulator() {
         dimensions: { width: 3, height: 2.7, depth: 60, walls: [4] },
         material: 'Branco',
         doorType: 'abrir', // 'abrir' or 'correr'
+        wardrobeFormat: 'reto', // 'reto' or 'closet'
+        closetHasDoors: true, // for closets
+        kitchenHasSinkCabinet: true,
+        sinkStoneWidth: 1.8,
+        handleType: 'aluminio',
         customColor: '',
         extras: [],
         customer: { name: '', email: '', phone: '' },
@@ -659,6 +670,31 @@ function setupSimulator() {
             input.addEventListener('input', updateDimensionsState);
         });
         document.getElementById('add-wall-btn').addEventListener('click', addKitchenWall);
+        document.getElementById('add-wardrobe-wall-btn').addEventListener('click', addWardrobeWall);
+
+        // Step 2.1: Wardrobe Format
+        document.querySelectorAll('input[name="wardrobeFormat"]').forEach(radio => {
+            radio.addEventListener('change', (e) => {
+                state.wardrobeFormat = e.target.value;
+                updateWardrobeSubSteps();
+            });
+        });
+
+        // Step 2.2: Closet Doors
+        document.querySelectorAll('input[name="closetDoors"]').forEach(radio => {
+            radio.addEventListener('change', (e) => {
+                state.closetHasDoors = e.target.value === 'sim';
+                updateWardrobeRecommendation();
+            });
+        });
+
+        // Step 2: Kitchen Sink
+        document.querySelectorAll('input[name="kitchenSink"]').forEach(radio => {
+            radio.addEventListener('change', (e) => {
+                state.kitchenHasSinkCabinet = e.target.value === 'sim';
+                updateKitchenSubSteps();
+            });
+        });
 
         // Step 3: Material
         document.querySelectorAll('input[name="material"]').forEach(radio => {
@@ -673,6 +709,13 @@ function setupSimulator() {
         document.querySelectorAll('input[name="doorType"]').forEach(radio => {
             radio.addEventListener('change', (e) => {
                 state.doorType = e.target.value;
+            });
+        });
+
+        // Step 4: Handle Type
+        document.querySelectorAll('input[name="handleType"]').forEach(radio => {
+            radio.addEventListener('change', (e) => {
+                state.handleType = e.target.value;
             });
         });
 
@@ -754,6 +797,42 @@ function setupSimulator() {
         document.getElementById('kitchen-dims').classList.toggle('hidden', isWardrobe);
         document.getElementById('wardrobe-options').classList.toggle('hidden', !isWardrobe);
         document.getElementById('kitchen-options').classList.toggle('hidden', isWardrobe);
+
+        if (isWardrobe) {
+            updateWardrobeRecommendation();
+        } else {
+            const recommendationDiv = document.getElementById('wardrobe-recommendation');
+            if (recommendationDiv) recommendationDiv.classList.add('hidden');
+        }
+    }
+
+    function updateWardrobeSubSteps() {
+        const isCloset = state.wardrobeFormat === 'closet';
+        document.getElementById('closet-door-step').classList.toggle('hidden', !isCloset);
+        document.getElementById('add-wardrobe-wall-btn').classList.toggle('hidden', !isCloset);
+        
+        // Hide door type selection if it's an open closet
+        const doorTypeSection = document.getElementById('door-type-section');
+        const isClosetOpen = isCloset && !state.closetHasDoors;
+        doorTypeSection.classList.toggle('hidden', isClosetOpen);
+    }
+
+    function updateKitchenSubSteps() {
+        const hasSinkCabinet = state.kitchenHasSinkCabinet;
+        document.getElementById('sink-stone-width-container').classList.toggle('hidden', !hasSinkCabinet);
+    }
+
+    function addWardrobeWall() {
+        const container = document.getElementById('wardrobe-walls-container');
+        const wallCount = container.children.length + 1;
+        if (wallCount > 3) return; // Max 3 walls for a closet (U-shape)
+        const newWall = document.createElement('div');
+        newWall.innerHTML = `<label for="wardrobe-width${wallCount}" class="block mb-2 font-semibold">Largura Parede ${wallCount} (m)</label><input type="number" id="wardrobe-width${wallCount}" step="0.1" min="0" value="0" class="form-input">`;
+        container.appendChild(newWall);
+        newWall.querySelector('input').addEventListener('input', updateDimensionsState);
+        if (wallCount === 3) {
+            document.getElementById('add-wardrobe-wall-btn').classList.add('hidden');
+        }
     }
 
     function addKitchenWall() {
@@ -771,11 +850,12 @@ function setupSimulator() {
 
     function updateDimensionsState() {
         if (state.furnitureType === 'Guarda-Roupa') {
-            state.dimensions.width = parseFloat(document.getElementById('width').value) || 0;
-            state.dimensions.height = parseFloat(document.getElementById('height').value) || 0;
-            state.dimensions.depth = parseFloat(document.getElementById('depth').value) || 0;
+            state.dimensions.walls = Array.from(document.querySelectorAll('#wardrobe-walls-container input')).map(input => parseFloat(input.value) || 0);
+            state.dimensions.height = parseFloat(document.getElementById('wardrobe-height').value) || 0;
+            updateWardrobeRecommendation();
         } else {
             state.dimensions.walls = Array.from(document.querySelectorAll('#kitchen-walls-container input')).map(input => parseFloat(input.value) || 0);
+            state.sinkStoneWidth = parseFloat(document.getElementById('sinkStoneWidth').value) || 0;
             state.dimensions.height = parseFloat(document.getElementById('kitchenHeight').value) || 0;
         }
     }
@@ -786,16 +866,40 @@ function setupSimulator() {
             return false;
         }
         if (step === 2) {
-            if (state.furnitureType === 'Guarda-Roupa' && (state.dimensions.width <= 0 || state.dimensions.height <= 0)) {
+            if (state.furnitureType === 'Guarda-Roupa' && (state.dimensions.walls.reduce((a, b) => a + b, 0) <= 0 || state.dimensions.height <= 0)) {
                 alert('Por favor, preencha a largura e altura.');
                 return false;
             }
-            if (state.furnitureType === 'Cozinha' && (state.dimensions.walls.reduce((a, b) => a + b, 0) <= 0 || state.dimensions.height <= 0)) {
+            if (state.furnitureType === 'Cozinha' && ((state.dimensions.walls.reduce((a, b) => a + b, 0) <= 0 && !state.kitchenHasSinkCabinet) || state.dimensions.height <= 0)) {
                 alert('Por favor, preencha a largura de pelo menos uma parede e a altura.');
                 return false;
             }
         }
         return true;
+    }
+
+    function updateWardrobeRecommendation() {
+        const recommendationDiv = document.getElementById('wardrobe-recommendation');
+        const recommendationText = document.getElementById('recommendation-text');
+        const width = state.dimensions.walls.reduce((a, b) => a + b, 0);
+
+        if (!recommendationDiv || !recommendationText || width <= 0) {
+            if (recommendationDiv) recommendationDiv.classList.add('hidden');
+            return;
+        }
+
+        const hasDoors = !(state.wardrobeFormat === 'closet' && !state.closetHasDoors);
+        if (!hasDoors) {
+            recommendationDiv.classList.add('hidden');
+            return;
+        }
+
+        // Simple logic: hinged doors ~50cm, sliding doors ~100cm. Minimum of 2 doors.
+        const hingedDoors = Math.max(2, Math.round(width / 0.5));
+        const slidingDoors = Math.max(2, Math.round(width / 1.0));
+
+        recommendationText.textContent = `Para esta largura, recomendamos aproximadamente ${hingedDoors} portas de abrir ou ${slidingDoors} portas de correr.`;
+        recommendationDiv.classList.remove('hidden');
     }
 
     function calculateQuote() {
@@ -806,42 +910,70 @@ function setupSimulator() {
         const materialPrice = PRICING[state.material];
 
         if (state.furnitureType === 'Guarda-Roupa') {
-            const { width, height, depth } = state.dimensions;
+            const { height, depth } = state.dimensions;
+            const width = state.dimensions.walls.reduce((a, b) => a + b, 0);
             const depthM = depth / 100;
             frontArea = width * height;
 
+            const hasDoors = !(state.wardrobeFormat === 'closet' && !state.closetHasDoors);
+
             // Calculation based on components
-            const doorsArea = frontArea;
+            const doorsArea = hasDoors ? frontArea : 0;
             const carcassArea = (2 * height * depthM) + (width * depthM) + (width * height); // 2 sides, 1 bottom, 1 back
             const internalArea = frontArea * 1.5; // Estimate for shelves and dividers
 
             totalMaterialArea = doorsArea + carcassArea + internalArea;
             basePrice = frontArea * materialPrice; // Base price remains on front area as per industry standard
         } else { // Cozinha
-            const totalWidth = state.dimensions.walls.reduce((a, b) => a + b, 0);
+            const otherWallsWidth = state.dimensions.walls.reduce((a, b) => a + b, 0);
             const lowerCabinetHeight = 0.9;
             const upperCabinetHeight = 0.7;
             const cabinetDepth = 0.6; // Average depth
 
-            frontArea = totalWidth * (lowerCabinetHeight + upperCabinetHeight);
+            // Calculate standard cabinets area
+            const standardFrontArea = otherWallsWidth * (lowerCabinetHeight + upperCabinetHeight);
+            const standardDoorsArea = standardFrontArea;
+            const standardCarcassArea = (otherWallsWidth * cabinetDepth * 2) + (standardFrontArea);
+            const standardInternalArea = standardFrontArea * 1.2;
+            totalMaterialArea += standardDoorsArea + standardCarcassArea + standardInternalArea;
+            frontArea += standardFrontArea;
 
-            const doorsArea = frontArea;
-            const carcassArea = (totalWidth * cabinetDepth * 2) + (frontArea); // Bottoms/Tops + Backs
-            const internalArea = frontArea * 1.2; // Estimate for shelves and dividers
+            // Calculate sink cabinet if it exists
+            if (state.kitchenHasSinkCabinet && state.sinkStoneWidth > 0) {
+                const sinkCabinetWidth = Math.max(0, state.sinkStoneWidth - 0.05); // 2.5cm gutter on each side
+                const sinkFrontArea = sinkCabinetWidth * lowerCabinetHeight;
+                const sinkCarcassArea = (sinkCabinetWidth * cabinetDepth) + (sinkFrontArea); // 1 bottom, 1 back
+                totalMaterialArea += sinkFrontArea + sinkCarcassArea;
+                frontArea += sinkFrontArea;
+                extrasPrice += sinkCabinetWidth * EXTRAS_COST.SINK_CABINET_PER_METER;
+            }
 
-            totalMaterialArea = doorsArea + carcassArea + internalArea;
             basePrice = frontArea * materialPrice;
         }
 
         // Add cost for sliding doors
-        if (state.furnitureType === 'Guarda-Roupa' && state.doorType === 'correr') {
+        if (state.furnitureType === 'Guarda-Roupa' && state.doorType === 'correr' && state.closetHasDoors) {
             extrasPrice += EXTRAS_COST['Portas de Correr'] * frontArea;
+        }
+
+        // Calculate handle cost
+        const handlePricePerMeter = HANDLE_PRICES_PER_METER[state.handleType] || 0;
+        const hasHandles = !(state.wardrobeFormat === 'closet' && !state.closetHasDoors);
+
+        if (handlePricePerMeter > 0 && hasHandles) {
+            let handleLength = 0;
+            if (state.furnitureType === 'Guarda-Roupa') {
+                handleLength = state.dimensions.walls.reduce((a, b) => a + b, 0) * 2; // Simplified: assumes two horizontal profiles
+            } else { // Cozinha
+                handleLength = state.dimensions.walls.reduce((a, b) => a + b, 0) * 2; // Lower and upper cabinets
+            }
+            extrasPrice += handleLength * handlePricePerMeter;
         }
 
         state.extras.forEach(extra => {
             const cost = EXTRAS_COST[extra] || 0;
             if (extra === 'Iluminação LED') {
-                const length = state.furnitureType === 'Guarda-Roupa' ? state.dimensions.width : state.dimensions.walls.reduce((a, b) => a + b, 0);
+                const length = state.furnitureType === 'Guarda-Roupa' ? state.dimensions.walls.reduce((a, b) => a + b, 0) : state.dimensions.walls.reduce((a, b) => a + b, 0);
                 extrasPrice += cost * length;
             } else {
                 extrasPrice += cost;
@@ -856,6 +988,11 @@ function setupSimulator() {
             dimensions: { width: 3, height: 2.7, depth: 60, walls: [4] },
             material: 'Branco',
             doorType: 'abrir',
+            wardrobeFormat: 'reto',
+            closetHasDoors: true,
+            kitchenHasSinkCabinet: true,
+            sinkStoneWidth: 1.8,
+            handleType: 'aluminio',
             customColor: '',
             extras: [],
             customer: { name: '', email: '', phone: '' },
@@ -865,10 +1002,14 @@ function setupSimulator() {
 
     function resetFormUI() {
         document.querySelectorAll('input[name="furnitureType"]').forEach(radio => radio.checked = false);
-        document.getElementById('width').value = 3.0;
-        document.getElementById('height').value = 2.7;
-        document.getElementById('depth').value = 60;
-        document.getElementById('wall1').value = 4.0;
+        document.getElementById('wardrobe-width1').value = 3.0;
+        document.getElementById('wardrobe-height').value = 2.7;
+        const wardrobeWallsContainer = document.getElementById('wardrobe-walls-container');
+        Array.from(wardrobeWallsContainer.children).slice(1).forEach(wall => wall.remove());
+        document.getElementById('add-wardrobe-wall-btn').classList.remove('hidden');
+        document.querySelector('input[name="kitchenSink"][value="sim"]').checked = true;
+        document.getElementById('sinkStoneWidth').value = 1.8;
+        document.getElementById('wall1').value = 2.2;
         document.getElementById('kitchenHeight').value = 2.7;
         const kitchenWallsContainer = document.getElementById('kitchen-walls-container');
         Array.from(kitchenWallsContainer.children).slice(1).forEach(wall => wall.remove());
@@ -877,6 +1018,9 @@ function setupSimulator() {
         document.getElementById('premium-options').classList.add('hidden');
         document.getElementById('customColor').value = '';
         document.querySelector('input[name="doorType"][value="abrir"]').checked = true;
+        document.querySelector('input[name="wardrobeFormat"][value="reto"]').checked = true;
+        document.querySelector('input[name="closetDoors"][value="sim"]').checked = true;
+        document.querySelector('input[name="handleType"][value="aluminio"]').checked = true;
         document.querySelectorAll('input[name="extras"]').forEach(cb => cb.checked = false);
         document.getElementById('leadName').value = '';
         document.getElementById('leadEmail').value = '';
@@ -899,7 +1043,7 @@ function setupSimulator() {
 
     function renderResult() {
         document.getElementById('result-furniture').textContent = state.furnitureType;
-        const dimsText = state.furnitureType === 'Guarda-Roupa' ? `${state.dimensions.width}m x ${state.dimensions.height}m x ${state.dimensions.depth}cm` : `Paredes: ${state.dimensions.walls.join('m + ')}m | Altura: ${state.dimensions.height}m`;
+        const dimsText = state.furnitureType === 'Guarda-Roupa' ? `Paredes: ${state.dimensions.walls.join('m + ')}m | Altura: ${state.dimensions.height}m` : `Paredes: ${state.dimensions.walls.join('m + ')}m | Altura: ${state.dimensions.height}m`;
         document.getElementById('result-dims').textContent = dimsText;
         document.getElementById('result-sheets').textContent = `${state.quote.sheets} chapas`;
         document.getElementById('result-extras').textContent = state.extras.length > 0 ? state.extras.join(', ') : 'Nenhum';
@@ -908,11 +1052,23 @@ function setupSimulator() {
 
     function getQuoteAsText() {
         let details = `*Dimensões:* ${document.getElementById('result-dims').textContent}`;
+        let kitchenDetails = '';
+        let formatDetails = '';
         if (state.furnitureType === 'Guarda-Roupa') {
-            details += `\n*Tipo de Porta:* ${state.doorType === 'abrir' ? 'De Abrir' : 'De Correr'}`;
+            if (state.wardrobeFormat === 'closet') {
+                formatDetails = `\n*Formato:* Closet ${state.closetHasDoors ? 'Fechado' : 'Aberto'}`;
+            }
+            if (state.closetHasDoors) {
+                formatDetails += `\n*Tipo de Porta:* ${state.doorType === 'abrir' ? 'De Abrir' : 'De Correr'}`;
+            }
+        } else { // Cozinha
+            if (state.kitchenHasSinkCabinet) {
+                kitchenDetails = `\n*Armário de Pia:* Sim (para pedra de ${state.sinkStoneWidth}m)`;
+            }
         }
+        const handleName = state.handleType.charAt(0).toUpperCase() + state.handleType.slice(1);
 
-        return `*Orçamento de Móveis Planejados*\n---------------------------------\n*Cliente:* ${state.customer.name}\n*Móvel:* ${state.furnitureType}\n*Dimensões:* ${document.getElementById('result-dims').textContent}\n*Material:* ${state.material} ${state.customColor ? `(Cor: ${state.customColor})` : ''}\n*Extras:* ${state.extras.join(', ') || 'Nenhum'}\n---------------------------------\n*Total Estimado: ${document.getElementById('result-total').textContent}*\n\n_Este é um orçamento informativo. O valor final será definido após visita técnica._`;
+        return `*Orçamento de Móveis Planejados*\n---------------------------------\n*Cliente:* ${state.customer.name}\n*Móvel:* ${state.furnitureType}${formatDetails}${kitchenDetails}\n${details}\n*Material:* ${state.material} ${state.customColor ? `(Cor: ${state.customColor})` : ''}\n*Puxador:* Perfil ${handleName}\n*Extras:* ${state.extras.join(', ') || 'Nenhum'}\n---------------------------------\n*Total Estimado: ${document.getElementById('result-total').textContent}*\n\n_Este é um orçamento informativo. O valor final será definido após visita técnica._`;
     }
 
     async function generatePDF() {

@@ -510,8 +510,8 @@
                     <div class="form-step active" data-step="1">
                         <h3 class="step-title">1. Qual tipo de móvel você deseja simular?</h3>
                         <div class="grid md:grid-cols-2 gap-6">
-                            <label class="step-card"><input type="radio" name="furnitureType" value="Guarda-Roupa" class="sr-only peer"><div class="card-content"><i class="fas fa-tshirt text-4xl mb-4"></i><h4 class="font-semibold text-lg">Guarda-Roupa</h4></div></label>
-                            <label class="step-card"><input type="radio" name="furnitureType" value="Cozinha" class="sr-only peer"><div class="card-content"><i class="fas fa-utensils text-4xl mb-4"></i><h4 class="font-semibold text-lg">Cozinha</h4></div></label>
+                            <label class="step-card"><input type="radio" name="furnitureType" value="Guarda-Roupa" class="sr-only peer"><div class="card-content"><i class="fas fa-tshirt text-3xl mb-3"></i><h4 class="font-semibold text-lg">Guarda-Roupa</h4></div></label>
+                            <label class="step-card"><input type="radio" name="furnitureType" value="Cozinha" class="sr-only peer"><div class="card-content"><i class="fas fa-utensils text-3xl mb-3"></i><h4 class="font-semibold text-lg">Cozinha</h4></div></label>
                         </div>
                         <div class="flex justify-between mt-12">
                             <button class="prev-btn hidden bg-transparent border-2 border-gray-300 text-gray-500 font-bold py-3 px-6 rounded-lg hover:bg-gray-100 hover:border-gray-400 transition-all duration-300"><i class="fas fa-arrow-left mr-2"></i>Anterior</button>
@@ -522,20 +522,59 @@
                     <!-- Step 2: Dimensions -->
                     <div class="form-step" data-step="2">
                         <h3 class="step-title">2. Informe as dimensões do ambiente</h3>
-                        <div class="bg-white rounded-2xl p-6 md:p-8 shadow-lg">
-                            <div id="wardrobe-dims" class="space-y-6 hidden">
-                                <!-- Wardrobe dimensions inputs -->
-                                <div class="flex items-center justify-between border-b-2 border-gray-200 pb-3"><label for="width" class="flex items-center font-semibold"><i class="fas fa-arrows-alt-h mr-3 text-gold w-5 text-center"></i>Largura (m)</label><input type="number" id="width" step="0.1" min="1" max="10" value="3.0" class="form-input text-right w-24"></div>
-                                <div class="flex items-center justify-between border-b-2 border-gray-200 pb-3"><label for="height" class="flex items-center font-semibold"><i class="fas fa-arrows-alt-v mr-3 text-gold w-5 text-center"></i>Altura (m)</label><input type="number" id="height" step="0.1" min="1.5" max="4" value="2.7" class="form-input text-right w-24"></div>
-                                <div class="flex items-center justify-between border-b-2 border-gray-200 pb-3"><label for="depth" class="flex items-center font-semibold"><i class="fas fa-ruler-horizontal mr-3 text-gold w-5 text-center"></i>Profundidade (cm)</label><input type="number" id="depth" step="1" min="40" max="100" value="60" class="form-input text-right w-24"></div>
-                            </div>
-                            <div id="kitchen-dims" class="space-y-6 hidden">
-                                <!-- Kitchen dimensions inputs -->
-                                <div id="kitchen-walls-container" class="space-y-4">
-                                    <div class="flex items-center justify-between border-b-2 border-gray-200 pb-3"><label for="wall1" class="flex items-center font-semibold"><i class="fas fa-arrows-alt-h mr-3 text-gold w-5 text-center"></i>Largura Parede 1 (m)</label><input type="number" id="wall1" step="0.1" min="1" value="4.0" class="form-input text-right w-24"></div>
+                        <div id="wardrobe-dims" class="space-y-8 hidden">
+                            <!-- Sub-step 2.1: Wardrobe Format -->
+                            <div id="wardrobe-format-step">
+                                <h4 class="font-semibold text-lg mb-4 text-charcoal text-center">Qual o formato do seu projeto?</h4>
+                                <div class="grid md:grid-cols-2 gap-6">
+                                    <label class="step-card"><input type="radio" name="wardrobeFormat" value="reto" class="sr-only peer" checked><div class="card-content"><i class="fas fa-square text-3xl mb-3"></i><h4 class="font-semibold text-lg">Guarda-Roupa Reto</h4><p class="text-sm text-gray-500">Para uma única parede.</p></div></label>
+                                    <label class="step-card"><input type="radio" name="wardrobeFormat" value="closet" class="sr-only peer"><div class="card-content"><i class="fas fa-vector-square text-3xl mb-3"></i><h4 class="font-semibold text-lg">Closet (em L ou U)</h4><p class="text-sm text-gray-500">Para duas ou mais paredes.</p></div></label>
                                 </div>
-                                <button id="add-wall-btn" class="border-2 border-dashed border-gold text-gold px-4 py-2 rounded-lg hover:bg-gold/10 w-full"><i class="fas fa-plus mr-2"></i>Adicionar Parede</button>
-                                <div class="flex items-center justify-between border-b-2 border-gray-200 pb-3"><label for="kitchenHeight" class="flex items-center font-semibold"><i class="fas fa-arrows-alt-v mr-3 text-gold w-5 text-center"></i>Altura / Pé-direito (m)</label><input type="number" id="kitchenHeight" step="0.1" min="1.5" max="4" value="2.7" class="form-input text-right w-24"></div>
+                            </div>
+
+                            <!-- Sub-step 2.2: Closet Doors (conditional) -->
+                            <div id="closet-door-step" class="hidden">
+                                <h4 class="font-semibold text-lg mb-4 text-charcoal text-center">Seu closet terá portas?</h4>
+                                <div class="grid md:grid-cols-2 gap-6">
+                                    <label class="step-card"><input type="radio" name="closetDoors" value="sim" class="sr-only peer" checked><div class="card-content"><i class="fas fa-door-closed text-3xl mb-3"></i><h4 class="font-semibold text-lg">Sim, com Portas</h4><p class="text-sm text-gray-500">Closet fechado.</p></div></label>
+                                    <label class="step-card"><input type="radio" name="closetDoors" value="nao" class="sr-only peer"><div class="card-content"><i class="fas fa-th-large text-3xl mb-3"></i><h4 class="font-semibold text-lg">Não, sem Portas</h4><p class="text-sm text-gray-500">Closet aberto.</p></div></label>
+                                </div>
+                            </div>
+
+                            <!-- Sub-step 2.3: Dimensions -->
+                            <div id="wardrobe-dimension-inputs" class="space-y-6">
+                                <div id="wardrobe-walls-container" class="space-y-4">
+                                    <div><label for="wardrobe-width1" class="block mb-2 font-semibold">Largura Parede 1 (m)</label><input type="number" id="wardrobe-width1" step="0.1" min="1" max="10" value="3.0" class="form-input"></div>
+                                </div>
+                                <button type="button" id="add-wardrobe-wall-btn" class="border-2 border-dashed border-gold text-gold px-4 py-2 rounded-lg hover:bg-gold/10 w-full hidden"><i class="fas fa-plus mr-2"></i>Adicionar Parede</button>
+                                <div><label for="wardrobe-height" class="block mb-2 font-semibold">Altura (m)</label><input type="number" id="wardrobe-height" step="0.1" min="1.5" max="4" value="2.7" class="form-input"></div>
+                                <div id="wardrobe-recommendation" class="mt-4 p-4 bg-blue-50 text-blue-800 rounded-lg text-center hidden">
+                                    <i class="fas fa-info-circle mr-2"></i>
+                                    <span id="recommendation-text"></span>
+                                </div>
+                            </div>
+                        </div>
+                        <div id="kitchen-dims" class="space-y-8 hidden">
+                            <!-- Sub-step 2.1: Sink Cabinet -->
+                            <div id="kitchen-sink-step">
+                                <h4 class="font-semibold text-lg mb-4 text-charcoal text-center">Seu projeto incluirá um armário para a pia?</h4>
+                                <div class="grid md:grid-cols-2 gap-6">
+                                    <label class="step-card"><input type="radio" name="kitchenSink" value="sim" class="sr-only peer" checked><div class="card-content"><i class="fas fa-faucet text-3xl mb-3"></i><h4 class="font-semibold text-lg">Sim, incluir armário</h4></div></label>
+                                    <label class="step-card"><input type="radio" name="kitchenSink" value="nao" class="sr-only peer"><div class="card-content"><i class="fas fa-times-circle text-3xl mb-3"></i><h4 class="font-semibold text-lg">Não, apenas bancada</h4></div></label>
+                                </div>
+                            </div>
+
+                            <!-- Sub-step 2.2: Dimensions -->
+                            <div id="kitchen-dimension-inputs" class="space-y-6">
+                                <div id="sink-stone-width-container" class="hidden">
+                                    <label for="sinkStoneWidth" class="block mb-2 font-semibold">Largura da pedra da pia (m)</label>
+                                    <input type="number" id="sinkStoneWidth" step="0.1" min="0.6" value="1.8" class="form-input">
+                                </div>
+                                <div id="kitchen-walls-container" class="space-y-4">
+                                    <div><label for="wall1" class="block mb-2 font-semibold">Largura das outras paredes com armários (m)</label><input type="number" id="wall1" step="0.1" min="0" value="2.2" class="form-input"></div>
+                                </div>
+                                <button id="add-wall-btn" class="border-2 border-dashed border-gold text-gold px-4 py-2 rounded-lg hover:bg-gold/10 w-full"><i class="fas fa-plus mr-2"></i>Adicionar outra parede</button>
+                                <div><label for="kitchenHeight" class="block mb-2 font-semibold">Altura / Pé-direito (m)</label><input type="number" id="kitchenHeight" step="0.1" min="1.5" max="4" value="2.7" class="form-input"></div>
                             </div>
                         </div>
                         <div class="flex justify-between mt-12">
@@ -567,11 +606,11 @@
                         <div class="space-y-8">
                             <!-- Wardrobe Specific Options -->
                             <div id="wardrobe-options" class="hidden space-y-8">
-                                <div>
+                                <div id="door-type-section">
                                     <h4 class="font-semibold text-lg mb-4 text-charcoal">Tipo de Porta</h4>
                                     <div class="grid md:grid-cols-2 gap-6">
-                                        <label class="step-card"><input type="radio" name="doorType" value="abrir" class="sr-only peer" checked><div class="card-content"><i class="fas fa-door-open text-4xl mb-4"></i><h4 class="font-semibold text-lg">Portas de Abrir</h4><p class="text-sm text-gray-500">Sistema tradicional</p></div></label>
-                                        <label class="step-card"><input type="radio" name="doorType" value="correr" class="sr-only peer"><div class="card-content"><i class="fas fa-arrows-alt-h text-4xl mb-4"></i><h4 class="font-semibold text-lg">Portas de Correr</h4><p class="text-sm text-gray-500">Otimiza o espaço</p><span class="font-bold text-gold mt-2">+ R$ 250/m²</span></div></label>
+                                        <label class="step-card"><input type="radio" name="doorType" value="abrir" class="sr-only peer" checked><div class="card-content"><i class="fas fa-door-open text-3xl mb-3"></i><h4 class="font-semibold text-lg">Portas de Abrir</h4><p class="text-sm text-gray-500">Sistema tradicional</p></div></label>
+                                        <label class="step-card"><input type="radio" name="doorType" value="correr" class="sr-only peer"><div class="card-content"><i class="fas fa-arrows-alt-h text-3xl mb-3"></i><h4 class="font-semibold text-lg">Portas de Correr</h4><p class="text-sm text-gray-500">Otimiza o espaço</p><span class="font-bold text-gold mt-2">+ R$ 250/m²</span></div></label>
                                     </div>
                                 </div>
                                 <div>
@@ -592,9 +631,17 @@
 
                             <!-- Common Extras -->
                             <div class="mt-8">
-                                <h4 class="font-semibold text-lg mb-4 text-charcoal">Acabamentos Gerais</h4>
+                                <h4 class="font-semibold text-lg mb-4 text-charcoal">Tipo de Puxador (Perfil)</h4>
+                                <div class="grid md:grid-cols-2 gap-6">
+                                    <label class="step-card"><input type="radio" name="handleType" value="aluminio" class="sr-only peer" checked><div class="card-content"><h4 class="font-semibold text-lg">Alumínio</h4><p class="text-sm text-gray-500">Padrão moderno</p><span class="font-bold text-green-600 mt-2">Incluso</span></div></label>
+                                    <label class="step-card"><input type="radio" name="handleType" value="inox" class="sr-only peer"><div class="card-content"><h4 class="font-semibold text-lg">Inox</h4><p class="text-sm text-gray-500">Alta durabilidade</p><span class="font-bold text-gold mt-2">+ R$ 90/m</span></div></label>
+                                    <label class="step-card"><input type="radio" name="handleType" value="preto" class="sr-only peer"><div class="card-content"><h4 class="font-semibold text-lg">Preto</h4><p class="text-sm text-gray-500">Acabamento sofisticado</p><span class="font-bold text-gold mt-2">+ R$ 100/m</span></div></label>
+                                    <label class="step-card"><input type="radio" name="handleType" value="dourado" class="sr-only peer"><div class="card-content"><h4 class="font-semibold text-lg">Dourado</h4><p class="text-sm text-gray-500">Toque de luxo</p><span class="font-bold text-gold mt-2">+ R$ 150/m</span></div></label>
+                                </div>
+                            </div>
+                            <div class="mt-8">
+                                <h4 class="font-semibold text-lg mb-4 text-charcoal">Outros Acabamentos</h4>
                                 <div class="space-y-4">
-                                    <label class="extra-option-card"><input type="checkbox" name="extras" value="Puxadores Premium"><div class="flex-grow"><h4>Puxadores Premium</h4><p class="text-sm text-gray-500">Modelos com design exclusivo.</p></div><span class="font-semibold">+ R$ 450</span></label>
                                     <label class="extra-option-card"><input type="checkbox" name="extras" value="Iluminação LED"><div class="flex-grow"><h4>Iluminação em LED</h4><p class="text-sm text-gray-500">Fitas de LED internas ou em nichos.</p></div><span class="font-semibold">+ R$ 350/m</span></label>
                                 </div>
                             </div>
@@ -623,22 +670,22 @@
                         <!-- Result Display -->
                         <div id="result-container" class="hidden">
                             <h3 class="step-title">Seu orçamento estimado está pronto!</h3>
-                            <div class="bg-white rounded-2xl p-6 md:p-8 shadow-lg">
-                                <div class="grid md:grid-cols-2 gap-4 mb-6">
-                                    <div class="flex items-center gap-4 p-4 rounded-lg bg-gray-50"><div class="flex-shrink-0 w-12 h-12 rounded-full flex items-center justify-center text-xl bg-gold/10 text-gold"><i class="fas fa-couch"></i></div><div><h4 class="text-sm text-gray-500">Móvel</h4><p id="result-furniture" class="font-montserrat font-bold text-lg text-charcoal"></p></div></div>
-                                    <div class="flex items-center gap-4 p-4 rounded-lg bg-gray-50"><div class="flex-shrink-0 w-12 h-12 rounded-full flex items-center justify-center text-xl bg-gold/10 text-gold"><i class="fas fa-ruler-combined"></i></div><div><h4 class="text-sm text-gray-500">Dimensões</h4><p id="result-dims" class="font-montserrat font-bold text-lg text-charcoal"></p></div></div>
-                                    <div class="flex items-center gap-4 p-4 rounded-lg bg-gray-50"><div class="flex-shrink-0 w-12 h-12 rounded-full flex items-center justify-center text-xl bg-gold/10 text-gold"><i class="fas fa-layer-group"></i></div><div><h4 class="text-sm text-gray-500">Chapas de MDF</h4><p id="result-sheets" class="font-montserrat font-bold text-lg text-charcoal"></p></div></div>
-                                    <div class="flex items-center gap-4 p-4 rounded-lg bg-gray-50"><div class="flex-shrink-0 w-12 h-12 rounded-full flex items-center justify-center text-xl bg-gold/10 text-gold"><i class="fas fa-plus-circle"></i></div><div><h4 class="text-sm text-gray-500">Extras</h4><p id="result-extras" class="font-montserrat font-bold text-lg text-charcoal">Nenhum</p></div></div>
-                                </div>
-                                <div class="bg-gradient-to-r from-charcoal to-gray-700 text-white p-6 rounded-2xl text-center">
-                                    <h4 class="text-lg text-gold/80">Valor Total Estimado</h4>
-                                    <p id="result-total" class="font-montserrat font-bold text-5xl text-white my-2">R$ 0,00</p>
+                            <div class="bg-white rounded-2xl p-8 shadow-lg mb-8">
+                                <h4 class="font-montserrat font-bold text-xl text-charcoal mb-6 border-b pb-4">Resumo da Simulação</h4>
+                                <div class="space-y-4 text-gray-700">
+                                    <div class="flex justify-between items-center py-2 border-b border-gray-200/80"><span class="flex items-center"><i class="fas fa-couch w-6 text-gold"></i>Móvel</span><span id="result-furniture" class="font-bold text-charcoal text-right"></span></div>
+                                    <div class="flex justify-between items-center py-2 border-b border-gray-200/80"><span class="flex items-center"><i class="fas fa-ruler-combined w-6 text-gold"></i>Dimensões</span><span id="result-dims" class="font-bold text-charcoal text-right"></span></div>
+                                    <div class="flex justify-between items-center py-2 border-b border-gray-200/80"><span class="flex items-center"><i class="fas fa-layer-group w-6 text-gold"></i>Chapas de MDF</span><span id="result-sheets" class="font-bold text-charcoal text-right"></span></div>
+                                    <div class="flex justify-between items-center py-2"><span class="flex items-center"><i class="fas fa-plus-circle w-6 text-gold"></i>Extras</span><span id="result-extras" class="font-bold text-charcoal text-right">Nenhum</span></div>
                                 </div>
                             </div>
-
-                            <div class="bg-yellow-50 border-l-4 border-gold text-yellow-800 p-4 rounded-lg flex items-center gap-4 mt-8">
-                                <i class="fas fa-tags text-2xl text-gold"></i>
-                                <p><strong>Condições Especiais:</strong> Parcelamento em até <strong>12x no cartão</strong> ou <strong>10% de desconto</strong> à vista.</p>
+                            <div class="bg-gradient-to-r from-charcoal to-gray-800 text-white p-8 rounded-2xl text-center shadow-xl mb-8">
+                                <h4 class="text-lg text-gray-300">Valor Total Estimado</h4>
+                                <p id="result-total" class="font-montserrat font-bold text-5xl text-gold my-4">R$ 0,00</p>
+                            </div>
+                            <div class="bg-gold/10 border-l-4 border-gold text-yellow-800 p-6 rounded-lg">
+                                <h4 class="font-bold text-xl mb-4 text-charcoal"><i class="fas fa-tags mr-2 text-gold"></i>Condições Especiais</h4>
+                                <p class="leading-relaxed">Oferecemos parcelamento em até <strong>12x no cartão</strong> ou um <strong>desconto de 10%</strong> para pagamentos à vista. Fale conosco para outras opções!</p>
                             </div>
                             <div class="grid md:grid-cols-3 gap-4 mt-8">
                                 <button id="pdf-btn" class="action-btn bg-red-500 hover:bg-red-600"><i class="fas fa-file-pdf mr-2"></i>Gerar PDF</button>

@@ -488,7 +488,7 @@ input[type="radio"]:checked::after {
     display: block;
     cursor: pointer;
     background-color: white;
-    padding: 1.5rem;
+    padding: 1.25rem;
     border-radius: 1rem;
     border-width: 2px;
     border-color: #e5e7eb;
@@ -568,27 +568,6 @@ input[type="radio"]:checked::after {
 }
 .action-btn:hover {
     box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
-    transform: translateY(-2px);
-}
-.nav-btn {
-    background-color: #D4AF37;
-    color: white;
-    padding-left: 2rem;
-    padding-right: 2rem;
-    padding-top: 0.75rem;
-    padding-bottom: 0.75rem;
-    border-radius: 0.5rem;
-    font-weight: 600;
-    transition: all 0.2s;
-}
-.nav-btn:hover {
-    opacity: 0.9;
-    transform: translateY(-2px);
-    box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
-}
-.nav-btn:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
 }
 .progress-step {
     width: 3rem;
@@ -608,7 +587,6 @@ input[type="radio"]:checked::after {
     border-color: #D4AF37;
     background-color: #D4AF37;
     color: white;
-    transform: scale(1.1);
 }
 .progress-line {
     flex: 1 1 0%;
