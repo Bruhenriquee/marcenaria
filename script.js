@@ -24,8 +24,7 @@ function initializeApp() {
     setupMobileMenu();
     setupScrollEffects();
     setupContactForm();
-    setupScrollAnimations();
-    setupGalleryLightbox();
+    setupScrollAnimations();    setupGalleryLightbox();
     setupPdfViewer();
     setupSimulator();
     setupLazyLoading();
@@ -337,61 +336,77 @@ function observeElements() {
 
 // Gallery Lightbox functionality
 function setupGalleryLightbox() {
-    const galleryItems = document.querySelectorAll('[data-gallery-item]');
+    const projectItems = document.querySelectorAll('[data-gallery-project]');
     const lightbox = document.getElementById('gallery-lightbox');
     const lightboxImage = document.getElementById('lightbox-image');
     const closeButton = document.getElementById('lightbox-close');
     const prevButton = document.getElementById('lightbox-prev');
     const nextButton = document.getElementById('lightbox-next');
+    const lightboxTitle = document.getElementById('lightbox-title');
+    const lightboxDescription = document.getElementById('lightbox-description');
+    const thumbnailsContainer = document.getElementById('lightbox-thumbnails');
 
-    if (!galleryItems.length || !lightbox || !closeButton || !prevButton || !nextButton) return;
+    if (!projectItems.length || !lightbox) return;
 
-    const imageSources = Array.from(galleryItems).map(item => item.querySelector('img').src);
+    let currentProjectImages = [];
     let currentIndex = 0;
 
-    // Elementos focáveis dentro do lightbox
-    const focusableElements = [closeButton, prevButton, nextButton];
+    function updateThumbnails() {
+        thumbnailsContainer.innerHTML = '';
+        currentProjectImages.forEach((src, i) => {
+            const thumb = document.createElement('img');
+            thumb.src = src;
+            thumb.className = `w-16 h-16 object-cover rounded-md cursor-pointer border-2 transition-all ${i === currentIndex ? 'border-gold' : 'border-transparent opacity-60 hover:opacity-100'}`;
+            thumb.onclick = () => showImage(i);
+            thumbnailsContainer.appendChild(thumb);
+        });
+        thumbnailsContainer.classList.toggle('hidden', currentProjectImages.length <= 1);
+    }
 
-    function showImage(index) {
-        if (index < 0 || index >= imageSources.length) return;
+    function showImage(index, isOpening = false) {
+        if (index < 0 || index >= currentProjectImages.length) return;
         currentIndex = index;
-        lightboxImage.src = imageSources[currentIndex];
-        lightbox.classList.remove('hidden');
-        lightbox.setAttribute('aria-hidden', 'false');
-        document.body.style.overflow = 'hidden';
+        lightboxImage.src = currentProjectImages[currentIndex];
+        updateThumbnails();
 
-        // Foca no botão de fechar ao abrir
-        closeButton.focus();
+        if (isOpening) {
+            lightbox.classList.remove('hidden');
+            document.body.style.overflow = 'hidden';
+            closeButton.focus();
+        }
+    }
+
+    function openLightbox(projectElement) {
+        const images = projectElement.dataset.images.split(',').map(s => s.trim());
+        const title = projectElement.dataset.title || '';
+        const description = projectElement.dataset.description || '';
+
+        currentProjectImages = images;
+        lightboxTitle.textContent = title;
+        lightboxDescription.textContent = description;
+
+        showImage(0, true);
     }
 
     function closeLightbox() {
         lightbox.classList.add('hidden');
-        lightbox.setAttribute('aria-hidden', 'true');
         document.body.style.overflow = 'auto';
-
-        // Devolve o foco para o item da galeria que abriu o lightbox
-        const originalItem = galleryItems[currentIndex];
-        if (originalItem) {
-            // Adiciona um pequeno atraso para garantir que o foco seja definido corretamente
-            setTimeout(() => {
-                originalItem.focus();
-            }, 0);
-        }
+        thumbnailsContainer.innerHTML = ''; // Clean up
     }
 
     function showNext() {
-        const nextIndex = (currentIndex + 1) % imageSources.length;
+        const nextIndex = (currentIndex + 1) % currentProjectImages.length;
         showImage(nextIndex);
     }
 
     function showPrev() {
-        const prevIndex = (currentIndex - 1 + imageSources.length) % imageSources.length;
+        const prevIndex = (currentIndex - 1 + currentProjectImages.length) % currentProjectImages.length;
         showImage(prevIndex);
     }
 
-    galleryItems.forEach((item, index) => {
+    projectItems.forEach(item => {
         item.addEventListener('click', () => {
-            showImage(index);
+            openLightbox(item);
         });
     });
 
@@ -399,38 +414,18 @@ function setupGalleryLightbox() {
     nextButton.addEventListener('click', showNext);
     prevButton.addEventListener('click', showPrev);
 
-    // Close on clicking the background
     lightbox.addEventListener('click', (e) => {
         if (e.target === lightbox) {
             closeLightbox();
         }
     });
 
-    // Keyboard navigation
     document.addEventListener('keydown', (e) => {
         if (lightbox.classList.contains('hidden')) return;
 
         if (e.key === 'Escape') closeLightbox();
         if (e.key === 'ArrowRight') showNext();
         if (e.key === 'ArrowLeft') showPrev();
-
-        // Focus trap
-        if (e.key === 'Tab') {
-            const firstFocusable = focusableElements[1]; // prevButton
-            const lastFocusable = focusableElements[2]; // nextButton
-
-            if (e.shiftKey) { // Shift + Tab
-                if (document.activeElement === firstFocusable) {
-                    lastFocusable.focus();
-                    e.preventDefault();
-                }
-            } else { // Tab
-                if (document.activeElement === lastFocusable) {
-                    firstFocusable.focus();
-                    e.preventDefault();
-                }
-            }
-        }
     });
 }
 
