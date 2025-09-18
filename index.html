@@ -469,11 +469,11 @@
             </header>
 
             <!-- Disclaimer Checkbox -->
-            <div class="max-w-4xl mx-auto mb-8 bg-blue-50 border-l-4 border-blue-500 p-4 rounded-r-lg">
-                <label for="accept-disclaimer-checkbox" class="flex items-start cursor-pointer">
-                    <input type="checkbox" id="accept-disclaimer-checkbox" class="mt-1 mr-3 h-5 w-5 text-gold focus:ring-gold">
-                    <span class="text-blue-800">
-                        <strong>Li e concordo</strong> que esta simulação é uma <strong>estimativa inicial</strong>. O valor final será confirmado apenas após visita técnica, podendo sofrer alterações.
+            <div class="max-w-4xl mx-auto mb-8 bg-gold/10 border-l-4 border-gold p-4 rounded-r-lg">
+                <label for="accept-disclaimer-checkbox" class="flex items-center cursor-pointer">
+                    <input type="checkbox" id="accept-disclaimer-checkbox" class="mr-3 h-5 w-5 flex-shrink-0 text-gold focus:ring-gold">
+                    <span class="text-charcoal/90">
+                        Entendo que esta é uma <strong>estimativa inicial</strong> e que o valor final será confirmado após a visita técnica.
                     </span>
                 </label>
             </div>
@@ -877,13 +877,22 @@
                         <!-- Result Display -->
                         <div id="result-container" class="hidden">
                             <h3 class="step-title">Seu orçamento estimado está pronto!</h3>
-                            <div class="bg-white rounded-2xl p-8 shadow-lg mb-8">
-                                <h4 class="font-montserrat font-bold text-xl text-charcoal mb-6 border-b pb-4">Resumo da Simulação</h4>
-                                <div class="space-y-4 text-gray-700">
-                                    <div class="flex justify-between items-center py-2 border-b border-gray-200/80"><span class="flex items-center"><i class="fas fa-couch w-6 text-gold"></i>Móvel</span><span id="result-furniture" class="font-bold text-charcoal text-right"></span></div>
-                                    <div class="flex justify-between items-center py-2 border-b border-gray-200/80"><span class="flex items-center"><i class="fas fa-ruler-combined w-6 text-gold"></i>Dimensões</span><span id="result-dims" class="font-bold text-charcoal text-right"></span></div>
-                                    <div class="flex justify-between items-center py-2 border-b border-gray-200/80"><span class="flex items-center"><i class="fas fa-layer-group w-6 text-gold"></i>Chapas de MDF</span><span id="result-sheets" class="font-bold text-charcoal text-right"></span></div>
-                                    <div class="flex justify-between items-center py-2"><span class="flex items-center"><i class="fas fa-plus-circle w-6 text-gold"></i>Extras</span><span id="result-extras" class="font-bold text-charcoal text-right">Nenhum</span></div>
+                            <div class="bg-white rounded-2xl shadow-lg mb-8 overflow-hidden">
+                                <div class="p-8">
+                                    <h4 class="font-montserrat font-bold text-xl text-charcoal mb-6 border-b pb-4">Resumo da Simulação</h4>
+                                    <div class="space-y-4 text-gray-700">
+                                        <div class="flex justify-between items-center py-2 border-b border-gray-200/80"><span class="flex items-center"><i class="fas fa-couch w-6 text-gold"></i>Móvel</span><span id="result-furniture" class="font-bold text-charcoal text-right"></span></div>
+                                        <div class="flex justify-between items-center py-2 border-b border-gray-200/80"><span class="flex items-center"><i class="fas fa-ruler-combined w-6 text-gold"></i>Dimensões</span><span id="result-dims" class="font-bold text-charcoal text-right"></span></div>
+                                        <div class="flex justify-between items-center py-2 border-b border-gray-200/80"><span class="flex items-center"><i class="fas fa-layer-group w-6 text-gold"></i>Chapas de MDF</span><span id="result-sheets" class="font-bold text-charcoal text-right"></span></div>
+                                        <div class="flex justify-between items-center py-2"><span class="flex items-center"><i class="fas fa-plus-circle w-6 text-gold"></i>Extras</span><span id="result-extras" class="font-bold text-charcoal text-right">Nenhum</span></div>
+                                    </div>
+                                </div>
+                                <div class="bg-gray-50 p-8">
+                                    <h4 class="font-montserrat font-bold text-lg text-charcoal mb-4">Detalhamento de Custos</h4>
+                                    <div class="space-y-2 text-gray-600">
+                                        <div class="flex justify-between items-center"><span class="flex items-center"><i class="fas fa-box-open w-5 mr-2 text-gray-400"></i>Custo Base (Materiais)</span><span id="result-base-price" class="font-semibold text-charcoal">R$ 0,00</span></div>
+                                        <div class="flex justify-between items-center"><span class="flex items-center"><i class="fas fa-star w-5 mr-2 text-gray-400"></i>Adicionais e Acabamentos</span><span id="result-extras-price" class="font-semibold text-charcoal">R$ 0,00</span></div>
+                                    </div>
                                 </div>
                             </div>
                             <div class="bg-gradient-to-r from-charcoal to-gray-800 text-white p-8 rounded-2xl text-center shadow-xl mb-8">

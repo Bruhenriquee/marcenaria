@@ -670,7 +670,7 @@ function setupSimulator() {
         customColor: '',
         extras: [],
         customer: { name: '', email: '', phone: '' },
-        quote: { area: 0, sheets: 0, total: 0 }
+        quote: { area: 0, sheets: 0, total: 0, basePrice: 0, extrasPrice: 0 }
     };
 
     // --- DOM ELEMENTS ---
@@ -1125,7 +1125,13 @@ function setupSimulator() {
                 extrasPrice += cost;
             }
         });
-        state.quote = { area: totalMaterialArea, sheets: Math.ceil(totalMaterialArea / MDF_SHEET_SIZE), total: basePrice + extrasPrice };
+        state.quote = { 
+            area: totalMaterialArea, 
+            sheets: Math.ceil(totalMaterialArea / MDF_SHEET_SIZE), 
+            total: basePrice + extrasPrice,
+            basePrice: basePrice,
+            extrasPrice: extrasPrice
+        };
     }
 
     function resetState() {
@@ -1148,7 +1154,7 @@ function setupSimulator() {
             customColor: '',
             extras: [],
             customer: { name: '', email: '', phone: '' },
-            quote: { area: 0, sheets: 0, total: 0 }
+            quote: { area: 0, sheets: 0, total: 0, basePrice: 0, extrasPrice: 0 }
         });
     }
 
@@ -1209,6 +1215,10 @@ function setupSimulator() {
         document.getElementById('result-sheets').textContent = `${state.quote.sheets} chapas`;
         document.getElementById('result-extras').textContent = state.extras.length > 0 ? state.extras.join(', ') : 'Nenhum';
         document.getElementById('result-total').textContent = `R$ ${state.quote.total.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+ 
+        // Render breakdown
+        document.getElementById('result-base-price').textContent = `R$ ${state.quote.basePrice.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+        document.getElementById('result-extras-price').textContent = `R$ ${state.quote.extrasPrice.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
     }
 
     function getQuoteAsText() {
