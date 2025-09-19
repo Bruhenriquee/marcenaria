@@ -89,43 +89,42 @@ function closeMobileMenu() {
 
 // Scroll effects
 function setupScrollEffects() {
-  let lastScrollY = window.scrollY;
-  const heroImage = document.querySelector('#inicio img');
+    let lastScrollY = window.scrollY;
+    const heroImage = document.querySelector('#inicio img');
+    let isTicking = false;
 
-  const handleHeaderAndScroll = () => {
-    const currentScrollY = window.scrollY;
+    const handleScroll = () => {
+        const currentScrollY = window.scrollY;
 
-    // Header background and shadow
-    if (header) {
-      if (currentScrollY > 50) {
-        header.classList.add('shadow-lg');
-      } else {
-        header.classList.remove('shadow-lg');
-      }
-    }
+        if (!isTicking) {
+            window.requestAnimationFrame(() => {
+                // 1. Header background and shadow
+                if (header) {
+                    header.classList.toggle('shadow-lg', currentScrollY > 50);
+                }
 
-    // Hide/show header on scroll
-    if (header) {
-        if (currentScrollY > lastScrollY && currentScrollY > 100) {
-            header.style.transform = 'translateY(-100%)'; // Scrolling down
-        } else {
-            header.style.transform = 'translateY(0)'; // Scrolling up
+                // 2. Hide/show header on scroll
+                if (header) {
+                    if (currentScrollY > lastScrollY && currentScrollY > 100) {
+                        header.style.transform = 'translateY(-100%)'; // Scrolling down
+                    } else {
+                        header.style.transform = 'translateY(0)'; // Scrolling up
+                    }
+                }
+
+                // 3. Parallax effect for hero image
+                if (heroImage && currentScrollY < window.innerHeight) {
+                    heroImage.style.transform = `translateY(${currentScrollY * 0.3}px)`;
+                }
+
+                lastScrollY = currentScrollY <= 0 ? 0 : currentScrollY;
+                isTicking = false;
+            });
+            isTicking = true;
         }
-    }
-    
-    lastScrollY = currentScrollY <= 0 ? 0 : currentScrollY;
-  };
+    };
 
-  const handleParallax = () => {
-    const currentScrollY = window.scrollY;
-    if (heroImage && currentScrollY < window.innerHeight) {
-      heroImage.style.transform = `translateY(${currentScrollY * 0.3}px)`;
-    }
-    requestAnimationFrame(handleParallax);
-  };
-
-  window.addEventListener('scroll', throttle(handleHeaderAndScroll, 100));
-  requestAnimationFrame(handleParallax);
+    window.addEventListener('scroll', handleScroll);
 }
 
 // Smooth scrolling functionality
@@ -300,16 +299,6 @@ function showNotification(message, type = 'info') {
             }
         }, 300);
     }, 5000);
-}
-
-// Scroll animations
-function setupScrollAnimations() {
-    const animatedElements = document.querySelectorAll('.animate-on-scroll');
-    
-    animatedElements.forEach(element => {
-        element.style.opacity = '0';
-        element.style.transform = 'translateY(50px)';
-    });
 }
 
 // Function to animate numbers
@@ -560,46 +549,6 @@ function maskPhone(event) {
     input.value = value;
 }
 
-// Utility functions
-function debounce(func, wait) {
-    let timeout;
-    return function executedFunction(...args) {
-        const later = () => {
-            clearTimeout(timeout);
-            func(...args);
-        };
-        clearTimeout(timeout);
-        timeout = setTimeout(later, wait);
-    };
-}
-
-function throttle(func, limit) {
-    let inThrottle;
-    return function() {
-        const args = arguments;
-        const context = this;
-        if (!inThrottle) {
-            func.apply(context, args);
-            inThrottle = true;
-            setTimeout(() => inThrottle = false, limit);
-        }
-    }
-}
-
-// Performance optimizations
-const debouncedScrollHandler = debounce(() => {
-    // Handle scroll-based animations
-    const scrolled = window.pageYOffset;
-    const parallax = document.querySelectorAll('.parallax');
-    
-    parallax.forEach(element => {
-        const speed = element.dataset.speed || 0.5;
-        element.style.transform = `translateY(${scrolled * speed}px)`;
-    });
-}, 10);
-
-window.addEventListener('scroll', debouncedScrollHandler);
-
 // Error handling
 window.addEventListener('error', (e) => {
     console.error('JavaScript Error:', e.error);
@@ -657,17 +606,19 @@ document.addEventListener('submit', (e) => {
 });
 
 // Service Worker registration (for PWA capabilities)
-if ('serviceWorker' in navigator) {
-    window.addEventListener('load', () => {
-        navigator.serviceWorker.register('/sw.js')
-            .then(registration => {
-                console.log('SW registered: ', registration);
-            })
-            .catch(registrationError => {
-                console.log('SW registration failed: ', registrationError);
-            });
-    });
-}
+// O arquivo sw.js não existe, então registrar um Service Worker causará um erro 404.
+// Comentado para evitar o erro e melhorar a performance.
+// if ('serviceWorker' in navigator) {
+//     window.addEventListener('load', () => {
+//         navigator.serviceWorker.register('/sw.js')
+//             .then(registration => {
+//                 console.log('SW registered: ', registration);
+//             })
+//             .catch(registrationError => {
+//                 console.log('SW registration failed: ', registrationError);
+//             });
+//     });
+// }
 
 // Export functions for global access
 window.scrollToSection = scrollToSection;
@@ -805,7 +756,7 @@ function setupSimulator() {
     function init() {
         loadStateFromStorage();
         setupEventListeners();
-        // Recalculate height on window resize to handle responsive changes
+        // Recalculate height on window resize to handle responsive changes. Debounce is defined inline.
         window.addEventListener('resize', debounce(updateContainerHeight, 200));
         updateUI(false); // Pass false to prevent scrolling on initial load
         // If loaded state is not on step 1, unlock the simulator
@@ -813,6 +764,19 @@ function setupSimulator() {
             disclaimerCheckbox.checked = true;
             handleDisclaimer();
         }
+    }
+
+    // Utility function for debouncing (used only for resize)
+    function debounce(func, wait) {
+        let timeout;
+        return function executedFunction(...args) {
+            const later = () => {
+                clearTimeout(timeout);
+                func(...args);
+            };
+            clearTimeout(timeout);
+            timeout = setTimeout(later, wait);
+        };
     }
 
     function updateStateAndSave(newState) {
