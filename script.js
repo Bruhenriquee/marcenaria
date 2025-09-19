@@ -33,6 +33,7 @@ function initializeApp() {
     setupPdfViewer();
     setupSimulator(); // This was the missing call
     setupLazyLoading();
+    setupActiveNavLinks(); // Highlight active nav link on scroll
 
     console.log('Roni Marceneiro website initialized successfully!');
 }
@@ -500,6 +501,32 @@ function setupPdfViewer() {
     });
 }
 
+// Active navigation link highlighting on scroll
+function setupActiveNavLinks() {
+    const sections = document.querySelectorAll('section[id]');
+    const navLinks = document.querySelectorAll('header nav a[href^="#"]');
+
+    if (!sections.length || !navLinks.length) return;
+
+    const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                const id = entry.target.getAttribute('id');
+                navLinks.forEach(link => {
+                    const isActive = link.getAttribute('href') === `#${id}`;
+                    link.classList.toggle('text-gold', isActive);
+                    link.classList.toggle('font-semibold', isActive);
+                });
+            }
+        });
+    }, {
+        rootMargin: '-50% 0px -50% 0px', // Trigger when the section is in the middle of the viewport
+    });
+
+    sections.forEach(section => {
+        observer.observe(section);
+    });
+}
 // Lazy loading for images
 function setupLazyLoading() {
     const images = document.querySelectorAll('img[loading="lazy"]');
@@ -1406,20 +1433,38 @@ function setupSimulator() {
     async function handleViewQuote() {
         const viewQuoteBtn = document.getElementById('view-quote-btn');
         const originalBtnText = viewQuoteBtn.innerHTML;
+        const leadNameInput = document.getElementById('leadName');
+        const leadPhoneInput = document.getElementById('leadPhone');
+        const leadEmailInput = document.getElementById('leadEmail');
+
+        // Reset previous validation styles and add listeners to remove them on input
+        [leadNameInput, leadPhoneInput, leadEmailInput].forEach(input => {
+            input.classList.remove('invalid');
+            input.addEventListener('input', () => input.classList.remove('invalid'), { once: true });
+        });
 
         // 1. Validate inputs
-        Object.assign(state.customer, { name: document.getElementById('leadName').value, email: document.getElementById('leadEmail').value, phone: document.getElementById('leadPhone').value });
+        Object.assign(state.customer, { name: leadNameInput.value, email: leadEmailInput.value, phone: leadPhoneInput.value });
 
-        if (!state.customer.name || !state.customer.phone) {
-            showNotification('Por favor, preencha seu nome e WhatsApp para continuar.', 'error');
+        if (!state.customer.name) {
+            showNotification('Por favor, preencha seu nome para continuar.', 'error');
+            leadNameInput.classList.add('invalid');
+            leadNameInput.focus();
+            return;
+        }
+        if (!state.customer.phone) {
+            showNotification('Por favor, preencha seu WhatsApp para continuar.', 'error');
+            leadPhoneInput.classList.add('invalid');
+            leadPhoneInput.focus();
             return;
         }
 
         // --- Validação Avançada de Celular (Brasil) ---
         const phoneDigits = state.customer.phone.replace(/\D/g, '');
-
         if (phoneDigits.length !== 11) {
             showNotification('Por favor, insira um WhatsApp válido com DDD (11 dígitos).', 'error');
+            leadPhoneInput.classList.add('invalid');
+            leadPhoneInput.focus();
             return;
         }
 
@@ -1434,22 +1479,30 @@ function setupSimulator() {
         ];
         if (!validDDDs.includes(ddd)) {
             showNotification('O DDD informado é inválido.', 'error');
+            leadPhoneInput.classList.add('invalid');
+            leadPhoneInput.focus();
             return;
         }
 
         const numberPart = phoneDigits.substring(2);
         if (numberPart[0] !== '9') {
             showNotification('O número de WhatsApp deve começar com 9 após o DDD.', 'error');
+            leadPhoneInput.classList.add('invalid');
+            leadPhoneInput.focus();
             return;
         }
         if (/^(\d)\1+$/.test(numberPart.substring(1))) {
             showNotification('Este número de celular parece inválido (sequência repetida).', 'error');
+            leadPhoneInput.classList.add('invalid');
+            leadPhoneInput.focus();
             return;
         }
 
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
         if (state.customer.email && !emailRegex.test(state.customer.email)) {
             showNotification('Por favor, insira um endereço de e-mail válido.', 'error');
+            leadEmailInput.classList.add('invalid');
+            leadEmailInput.focus();
             return;
         }
 
@@ -1549,24 +1602,35 @@ function setupSimulator() {
     }
 
     async function generatePDF() {
-        const { jsPDF } = window.jspdf;
-        const pdfTemplate = document.getElementById('pdf-template');
-        const pdfData = getPdfData();
+        const pdfBtn = document.getElementById('pdf-btn');
+        const originalBtnHTML = pdfBtn.innerHTML;
+        pdfBtn.disabled = true;
+        pdfBtn.innerHTML = '<div class="spinner mr-2"></div>Gerando...';
 
-        ['date', 'quote-id', 'name', 'email', 'phone', 'furniture', 'dims', 'material', 'color', 'project', 'extras', 'total'].forEach(id => {
-            const el = document.getElementById(`pdf-${id}`);
-            if (el) {
-                el.textContent = pdfData[id];
-            }
-        });
+        try {
+            const { jsPDF } = window.jspdf;
+            const pdfTemplate = document.getElementById('pdf-template');
+            const pdfData = getPdfData();
 
-        pdfTemplate.classList.remove('hidden');
-        const canvas = await html2canvas(pdfTemplate.firstElementChild, { scale: 2 });
-        const imgData = canvas.toDataURL('image/png');
-        const pdf = new jsPDF('p', 'mm', 'a4');
-        pdf.addImage(imgData, 'PNG', 0, 0, pdf.internal.pageSize.getWidth(), (canvas.height * pdf.internal.pageSize.getWidth()) / canvas.width);
-        pdf.save(`orcamento-${state.customer.name.split(' ')[0]}.pdf`);
-        pdfTemplate.classList.add('hidden');
+            ['date', 'quote-id', 'name', 'email', 'phone', 'furniture', 'dims', 'material', 'color', 'project', 'extras', 'total'].forEach(id => {
+                const el = document.getElementById(`pdf-${id}`);
+                if (el) el.textContent = pdfData[id];
+            });
+
+            pdfTemplate.classList.remove('hidden');
+            const canvas = await html2canvas(pdfTemplate.firstElementChild, { scale: 2 });
+            const imgData = canvas.toDataURL('image/png');
+            const pdf = new jsPDF('p', 'mm', 'a4');
+            pdf.addImage(imgData, 'PNG', 0, 0, pdf.internal.pageSize.getWidth(), (canvas.height * pdf.internal.pageSize.getWidth()) / canvas.width);
+            pdf.save(`orcamento-${state.customer.name.split(' ')[0] || 'cliente'}.pdf`);
+            pdfTemplate.classList.add('hidden');
+        } catch (error) {
+            console.error("PDF Generation Error:", error);
+            showNotification("Erro ao gerar o PDF. Tente novamente.", "error");
+        } finally {
+            pdfBtn.disabled = false;
+            pdfBtn.innerHTML = originalBtnHTML;
+        }
     }
 
     function generateWhatsAppLink() {

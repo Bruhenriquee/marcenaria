@@ -174,6 +174,12 @@ html {
     outline-offset: 2px;
     border-color: #D4AF37;
 }
+.form-input.invalid {
+    border-color: #ef4444; /* red-500 */
+}
+.form-input.invalid:focus {
+    border-color: #dc2626; /* red-600 */
+}
 .form-label {
     position: absolute;
     top: 1rem;
@@ -259,6 +265,7 @@ textarea:focus,
 a:focus {
     outline: 2px solid #D4AF37;
     outline-offset: 2px;
+    position: relative; /* Garante que o outline não seja cortado */
 }
 
 /* High contrast mode support */
@@ -502,6 +509,23 @@ input[type="radio"]:not(.sr-only):checked::after {
     visibility: hidden;
 }
 
+/* Banner for "Best Value" card */
+.best-value-banner {
+    width: 100%;
+    background: linear-gradient(to right, #F4D03F, #D4AF37);
+    color: #2F2F2F;
+    text-align: center;
+    padding: 8px 0;
+    font-size: 14px;
+    font-weight: 700;
+    font-family: 'Montserrat', sans-serif;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    border-bottom: 1px solid rgba(0,0,0,0.1);
+}
+
 .form-step.active {
     position: relative;
     opacity: 1;
@@ -540,10 +564,11 @@ input[type="radio"]:not(.sr-only):checked::after {
 .peer:checked ~ .card-content h4 {
     font-weight: 700;
 }
-.peer:checked + .step-card, .step-card:has(.peer:checked) {
+.step-card:has(.peer:checked) {
     border-color: #D4AF37;
     background-color: rgba(212, 175, 55, 0.05);
 }
+
 .slider-group {
     background-color: white;
     padding: 1.5rem;
