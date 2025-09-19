@@ -509,6 +509,11 @@ input[type="radio"]:not(.sr-only):checked::after {
     visibility: hidden;
 }
 
+/* Text shadow for hero title */
+.shadow-text {
+    text-shadow: 2px 2px 8px rgba(0, 0, 0, 0.5);
+}
+
 .form-step.active {
     position: relative;
     opacity: 1;
@@ -656,7 +661,7 @@ input[type="radio"]:not(.sr-only):checked::after {
     transition: all 0.3s;
 }
 .progress-line.active {
-    background-color: #D4AF37;
+    background-color: #D4AF3T;
 }
 
 #simulator-overlay {
