@@ -973,6 +973,7 @@ function setupSimulator() {
         document.getElementById('pdf-btn').addEventListener('click', generatePDF);
         document.getElementById('whatsapp-btn').addEventListener('click', generateWhatsAppLink);
         document.getElementById('email-btn').addEventListener('click', generateEmailLink);
+        document.getElementById('competitor-whatsapp-btn').addEventListener('click', generateCompetitorWhatsAppLink);
     }
 
     // --- UI & NAVIGATION ---
@@ -1693,6 +1694,11 @@ function setupSimulator() {
         if (state.projectOption === 'upload' && state.projectFile) {
             text += '\n\n*(Anexei o arquivo do meu projeto no simulador. Por favor, me informe como posso enviá-lo.)*';
         }
+        window.open(`https://wa.me/5518981558125?text=${encodeURIComponent(text)}`, '_blank');
+    }
+
+    function generateCompetitorWhatsAppLink() {
+        const text = `Olá! Fiz uma simulação no site (Total: ${document.getElementById('result-total').textContent}) e gostaria de uma análise comparativa, pois já tenho um orçamento de outra empresa.`;
         window.open(`https://wa.me/5518981558125?text=${encodeURIComponent(text)}`, '_blank');
     }
 
