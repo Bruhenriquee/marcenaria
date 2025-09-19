@@ -553,7 +553,7 @@
                                     <h4 class="font-semibold text-lg mb-4 text-charcoal text-center">Qual o formato do seu projeto?</h4>
                                     <div class="grid md:grid-cols-2 gap-6">
                                         <label class="step-card">
-                                            <input type="radio" name="wardrobeFormat" value="reto" class="sr-only peer" checked>
+                                            <input type="radio" name="wardrobeFormat" value="reto" class="sr-only peer">
                                             <div class="card-content">
                                                 <div class="check-icon"><i class="fas fa-check-circle"></i></div>
                                                 <i class="fas fa-square text-3xl mb-3"></i><h4 class="font-semibold text-lg">Guarda-Roupa Reto</h4><p class="text-sm text-gray-500">Para uma única parede.</p>
@@ -574,7 +574,7 @@
                                     <h4 class="font-semibold text-lg mb-4 text-charcoal text-center">Seu closet terá portas?</h4>
                                     <div class="grid md:grid-cols-2 gap-6">
                                         <label class="step-card">
-                                            <input type="radio" name="closetDoors" value="sim" class="sr-only peer" checked>
+                                            <input type="radio" name="closetDoors" value="sim" class="sr-only peer">
                                             <div class="card-content">
                                                 <div class="check-icon"><i class="fas fa-check-circle"></i></div>
                                                 <i class="fas fa-door-closed text-3xl mb-3"></i><h4 class="font-semibold text-lg">Sim, com Portas</h4><p class="text-sm text-gray-500">Closet fechado.</p>
@@ -609,7 +609,7 @@
                                     <h4 class="font-semibold text-lg mb-4 text-charcoal text-center">Seu projeto incluirá um armário para a pia?</h4>
                                     <div class="grid md:grid-cols-2 gap-6">
                                         <label class="step-card">
-                                            <input type="radio" name="kitchenSink" value="sim" class="sr-only peer" checked>
+                                            <input type="radio" name="kitchenSink" value="sim" class="sr-only peer">
                                             <div class="card-content">
                                                 <div class="check-icon"><i class="fas fa-check-circle"></i></div>
                                                 <i class="fas fa-faucet text-3xl mb-3"></i><h4 class="font-semibold text-lg">Sim, incluir armário</h4>
@@ -636,7 +636,7 @@
                                             </div>
                                         </label>
                                         <label class="step-card">
-                                            <input type="radio" name="hasHotTower" value="nao" class="sr-only peer" checked>
+                                            <input type="radio" name="hasHotTower" value="nao" class="sr-only peer">
                                             <div class="card-content">
                                                 <div class="check-icon"><i class="fas fa-check-circle"></i></div>
                                                 <i class="fas fa-times-circle text-3xl mb-3"></i><h4 class="font-semibold text-lg">Não</h4>
@@ -654,7 +654,7 @@
                                     <h4 class="font-semibold text-lg mb-4 text-charcoal text-center">Qual o tipo de fogão?</h4>
                                     <div class="grid md:grid-cols-2 gap-6">
                                         <label class="step-card">
-                                            <input type="radio" name="stoveType" value="cooktop" class="sr-only peer" checked>
+                                            <input type="radio" name="stoveType" value="cooktop" class="sr-only peer">
                                             <div class="card-content">
                                                 <div class="check-icon"><i class="fas fa-check-circle"></i></div>
                                                 <i class="fas fa-grip-horizontal text-3xl mb-3"></i><h4 class="font-semibold text-lg">Cooktop</h4><p class="text-sm text-gray-500">Instalado na bancada</p>
@@ -673,7 +673,7 @@
                                         <h4 class="font-semibold text-lg mb-4 text-charcoal text-center">Onde o cooktop será instalado?</h4>
                                         <div class="grid md:grid-cols-2 gap-6 max-w-lg mx-auto">
                                             <label class="step-card">
-                                                <input type="radio" name="cooktopLocation" value="pia" class="sr-only peer" checked>
+                                                <input type="radio" name="cooktopLocation" value="pia" class="sr-only peer">
                                                 <div class="card-content">
                                                     <div class="check-icon"><i class="fas fa-check-circle"></i></div>
                                                     <h4 class="font-semibold text-lg">Na pedra da pia</h4>
@@ -725,7 +725,7 @@
                         <h3 class="step-title">3. Escolha o material principal</h3>
                         <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
                             <label class="step-card">
-                                <input type="radio" name="material" value="Branco" class="sr-only peer" checked>
+                                <input type="radio" name="material" value="Branco" class="sr-only peer">
                                 <div class="card-content">
                                     <div class="check-icon"><i class="fas fa-check-circle"></i></div>
                                     <h4 class="font-semibold text-lg">MDF Branco</h4>
@@ -777,7 +777,7 @@
                                     <h4 class="font-semibold text-lg mb-4 text-charcoal">Tipo de Porta</h4>
                                     <div class="grid md:grid-cols-2 gap-6">
                                         <label class="step-card">
-                                            <input type="radio" name="doorType" value="abrir" class="sr-only peer" checked>
+                                            <input type="radio" name="doorType" value="abrir" class="sr-only peer">
                                             <div class="card-content">
                                                 <div class="check-icon"><i class="fas fa-check-circle"></i></div>
                                                 <i class="fas fa-door-open text-3xl mb-3"></i><h4 class="font-semibold text-lg">Portas de Abrir</h4><p class="text-sm text-gray-500">Sistema tradicional</p>
@@ -801,42 +801,32 @@
                                 </div>
                             </div>
 
-                            <!-- Kitchen Specific Options -->
-                            <div id="kitchen-options" class="hidden space-y-4 smooth-toggle">
-                                <h4 class="font-semibold text-lg mb-4 text-charcoal">Adicionais para Cozinha</h4>
-                                <label class="extra-option-card"><input type="checkbox" name="extras" value="Porta-temperos"><div class="flex-grow"><h4>Porta-temperos Embutido</h4><p class="text-sm text-gray-500">Praticidade ao cozinhar.</p></div></label>
-                                <label class="extra-option-card"><input type="checkbox" name="extras" value="Lixeira Embutida"><div class="flex-grow"><h4>Lixeira Embutida na Bancada</h4><p class="text-sm text-gray-500">Design limpo e funcional.</p></div></label>
+                            <!-- Kitchen Specific Options (Reordered) -->
+                            <div id="kitchen-options" class="hidden space-y-8 smooth-toggle">
+                                <div>
+                                    <h4 class="font-semibold text-lg mb-4 text-charcoal">Tipo de Puxador (Perfil)</h4>
+                                    <div class="grid md:grid-cols-2 gap-6">
+                                        <label class="step-card"><input type="radio" name="handleType" value="aluminio" class="sr-only peer"><div class="card-content"><div class="check-icon"><i class="fas fa-check-circle"></i></div><h4 class="font-semibold text-lg">Alumínio</h4><p class="text-sm text-gray-500">Padrão moderno (Incluso)</p></div></label>
+                                        <label class="step-card"><input type="radio" name="handleType" value="inox" class="sr-only peer"><div class="card-content"><div class="check-icon"><i class="fas fa-check-circle"></i></div><h4 class="font-semibold text-lg">Inox</h4><p class="text-sm text-gray-500">Alta durabilidade</p></div></label>
+                                        <label class="step-card"><input type="radio" name="handleType" value="preto" class="sr-only peer"><div class="card-content"><div class="check-icon"><i class="fas fa-check-circle"></i></div><h4 class="font-semibold text-lg">Preto</h4><p class="text-sm text-gray-500">Acabamento sofisticado</p></div></label>
+                                        <label class="step-card"><input type="radio" name="handleType" value="dourado" class="sr-only peer"><div class="card-content"><div class="check-icon"><i class="fas fa-check-circle"></i></div><h4 class="font-semibold text-lg">Dourado</h4><p class="text-sm text-gray-500">Toque de luxo</p></div></label>
+                                    </div>
+                                </div>
+                                <div>
+                                    <h4 class="font-semibold text-lg mb-4 text-charcoal">Acabamento Interno (Ferragens)</h4>
+                                    <div class="grid md:grid-cols-2 gap-6">
+                                        <label class="step-card"><input type="radio" name="hardwareType" value="padrao" class="sr-only peer"><div class="card-content"><div class="check-icon"><i class="fas fa-check-circle"></i></div><i class="fas fa-cogs text-3xl mb-3"></i><h4 class="font-semibold text-lg">Padrão</h4><p class="text-sm text-gray-500">Ferragens convencionais (Incluso).</p></div></label>
+                                        <label class="step-card"><input type="radio" name="hardwareType" value="softclose" class="sr-only peer"><div class="card-content"><div class="check-icon"><i class="fas fa-check-circle"></i></div><i class="fas fa-feather-alt text-3xl mb-3"></i><h4 class="font-semibold text-lg">Com Amortecimento</h4><p class="text-sm text-gray-500">Fechamento suave (soft-close).</p></div></label>
+                                    </div>
+                                </div>
+                                <div class="space-y-4">
+                                    <h4 class="font-semibold text-lg mb-4 text-charcoal">Adicionais para Cozinha</h4>
+                                    <label class="extra-option-card"><input type="checkbox" name="extras" value="Porta-temperos"><div class="flex-grow"><h4>Porta-temperos Embutido</h4><p class="text-sm text-gray-500">Praticidade ao cozinhar.</p></div></label>
+                                    <label class="extra-option-card"><input type="checkbox" name="extras" value="Lixeira Embutida"><div class="flex-grow"><h4>Lixeira Embutida na Bancada</h4><p class="text-sm text-gray-500">Design limpo e funcional.</p></div></label>
+                                </div>
                             </div>
 
                             <!-- Common Extras -->
-                            <div class="mt-8">
-                                <h4 class="font-semibold text-lg mb-4 text-charcoal">Tipo de Puxador (Perfil)</h4>
-                                <div class="grid md:grid-cols-2 gap-6">
-                                    <label class="step-card"><input type="radio" name="handleType" value="aluminio" class="sr-only peer" checked><div class="card-content"><div class="check-icon"><i class="fas fa-check-circle"></i></div><h4 class="font-semibold text-lg">Alumínio</h4><p class="text-sm text-gray-500">Padrão moderno (Incluso)</p></div></label>
-                                    <label class="step-card"><input type="radio" name="handleType" value="inox" class="sr-only peer"><div class="card-content"><div class="check-icon"><i class="fas fa-check-circle"></i></div><h4 class="font-semibold text-lg">Inox</h4><p class="text-sm text-gray-500">Alta durabilidade</p></div></label>
-                                    <label class="step-card"><input type="radio" name="handleType" value="preto" class="sr-only peer"><div class="card-content"><div class="check-icon"><i class="fas fa-check-circle"></i></div><h4 class="font-semibold text-lg">Preto</h4><p class="text-sm text-gray-500">Acabamento sofisticado</p></div></label>
-                                    <label class="step-card"><input type="radio" name="handleType" value="dourado" class="sr-only peer"><div class="card-content"><div class="check-icon"><i class="fas fa-check-circle"></i></div><h4 class="font-semibold text-lg">Dourado</h4><p class="text-sm text-gray-500">Toque de luxo</p></div></label>
-                                </div>
-                            </div>
-                            <div class="mt-8">
-                                <h4 class="font-semibold text-lg mb-4 text-charcoal">Acabamento Interno (Ferragens)</h4>
-                                <div class="grid md:grid-cols-2 gap-6">
-                                    <label class="step-card">
-                                        <input type="radio" name="hardwareType" value="padrao" class="sr-only peer" checked>
-                                        <div class="card-content">
-                                            <div class="check-icon"><i class="fas fa-check-circle"></i></div>
-                                            <i class="fas fa-cogs text-3xl mb-3"></i><h4 class="font-semibold text-lg">Padrão</h4><p class="text-sm text-gray-500">Ferragens convencionais (Incluso).</p>
-                                        </div>
-                                    </label>
-                                    <label class="step-card">
-                                        <input type="radio" name="hardwareType" value="softclose" class="sr-only peer">
-                                        <div class="card-content">
-                                            <div class="check-icon"><i class="fas fa-check-circle"></i></div>
-                                            <i class="fas fa-feather-alt text-3xl mb-3"></i><h4 class="font-semibold text-lg">Com Amortecimento</h4><p class="text-sm text-gray-500">Fechamento suave (soft-close).</p>
-                                        </div>
-                                    </label>
-                                </div>
-                            </div>
                             <div class="mt-8">
                                 <h4 class="font-semibold text-lg mb-4 text-charcoal">Outros Acabamentos</h4>
                                 <div class="space-y-4"><label class="extra-option-card"><input type="checkbox" name="extras" value="Iluminação LED"><div class="flex-grow"><h4>Iluminação em LED</h4><p class="text-sm text-gray-500">Fitas de LED internas ou em nichos.</p></div></label></div>
@@ -853,7 +843,7 @@
                         <h3 class="step-title">5. E o projeto 3D?</h3>
                         <div class="grid md:grid-cols-3 gap-6">
                             <label class="step-card">
-                                <input type="radio" name="projectOption" value="create" class="sr-only peer" checked>
+                                <input type="radio" name="projectOption" value="create" class="sr-only peer">
                                 <div class="card-content">
                                     <div class="check-icon"><i class="fas fa-check-circle"></i></div>
                                     <i class="fas fa-drafting-compass text-3xl mb-3"></i><h4 class="font-semibold text-lg">Quero um projeto 3D</h4><p class="text-sm text-gray-500">Nossa equipe cria para você.</p>

@@ -732,20 +732,20 @@ function setupSimulator() {
     const totalSteps = 6;
     const state = {
         furnitureType: null,
-        dimensions: { height: 2.7, depth: 60, walls: [{width: 3, height: 2.7}] }, // walls is now [{width, height}]
-        material: 'Branco',
-        doorType: 'abrir', // 'abrir' or 'correr'
-        wardrobeFormat: 'reto', // 'reto' or 'closet'
-        closetHasDoors: true, // for closets
-        kitchenHasSinkCabinet: true,
+        dimensions: { height: 2.7, depth: 60, walls: [{width: 3.0, height: 2.7}] },
+        material: null,
+        doorType: null,
+        wardrobeFormat: null,
+        closetHasDoors: null,
+        kitchenHasSinkCabinet: null,
         sinkStoneWidth: 1.8,
-        hasHotTower: false,
+        hasHotTower: null,
         hotTowerHeight: 2.2,
-        stoveType: 'cooktop', // 'cooktop' or 'piso'
-        cooktopLocation: 'pia', // 'pia' or 'separado'
-        hardwareType: 'padrao', // 'padrao' or 'softclose'
-        handleType: 'aluminio',
-        projectOption: 'create', // 'create', 'upload', 'none'
+        stoveType: null,
+        cooktopLocation: null,
+        hardwareType: null,
+        handleType: null,
+        projectOption: null,
         projectFile: null,
         customColor: '',
         extras: [],
@@ -765,16 +765,10 @@ function setupSimulator() {
 
     // --- INITIALIZATION ---
     function init() {
-        loadStateFromStorage();
         setupEventListeners();
         // Recalculate height on window resize to handle responsive changes. Debounce is defined inline.
         window.addEventListener('resize', debounce(updateContainerHeight, 200));
         updateUI(false); // Pass false to prevent scrolling on initial load
-        // If loaded state is not on step 1, unlock the simulator
-        if (currentStep > 1 || state.furnitureType) {
-            disclaimerCheckbox.checked = true;
-            handleDisclaimer();
-        }
     }
 
     // Utility function for debouncing (used only for resize)
@@ -792,7 +786,6 @@ function setupSimulator() {
 
     function updateStateAndSave(newState) {
         Object.assign(state, newState);
-        localStorage.setItem('simulatorState', JSON.stringify(state));
     }
     function setupEventListeners() {
         disclaimerCheckbox.addEventListener('change', handleDisclaimer);
@@ -969,7 +962,6 @@ function setupSimulator() {
 
     function handleReset() {
         currentStep = 1;
-        localStorage.removeItem('simulatorState');
         resetState(); // Resets the internal state object
         resetFormUI(); // Resets the form inputs in the DOM
         updateUI(); // Updates which step is visible
@@ -980,7 +972,6 @@ function setupSimulator() {
         if (validateStep(currentStep)) {
             if (currentStep < totalSteps) {
                 currentStep++;
-                localStorage.setItem('simulatorStep', currentStep);
                 updateUI();
             }
         }
@@ -989,7 +980,6 @@ function setupSimulator() {
     function handlePrevStep() {
         if (currentStep > 1) {
             currentStep--;
-            localStorage.setItem('simulatorStep', currentStep);
             updateUI();
         }
     }
@@ -1161,7 +1151,6 @@ function setupSimulator() {
             state.hotTowerHeight = parseFloat(document.getElementById('hotTowerHeight').value) || 0;
         }
         // Save state after dimension update
-        localStorage.setItem('simulatorState', JSON.stringify(state));
     }
 
     function validateStep(step) {
@@ -1187,6 +1176,10 @@ function setupSimulator() {
                     heightInput?.scrollIntoView({ behavior: 'smooth', block: 'center' });
                     return false;
                 }
+                if (state.wardrobeFormat === null) {
+                    showNotification('Por favor, escolha o formato do projeto.', 'error');
+                    return false;
+                }
             } else { // Cozinha
                 const kitchenArea = state.dimensions.walls.reduce((acc, wall) => acc + (wall.width * wall.height), 0);
                 if (kitchenArea <= 0 && !state.kitchenHasSinkCabinet) {
@@ -1196,22 +1189,48 @@ function setupSimulator() {
                     firstWidthInput?.scrollIntoView({ behavior: 'smooth', block: 'center' });
                     return false;
                 }
+                if (state.kitchenHasSinkCabinet === null) {
+                    showNotification('Informe se o projeto incluirá um armário para a pia.', 'error');
+                    return false;
+                }
+                if (state.hasHotTower === null) {
+                    showNotification('Informe se o projeto terá Torre Quente.', 'error');
+                    return false;
+                }
+                if (state.stoveType === null) {
+                    showNotification('Por favor, escolha o tipo de fogão.', 'error');
+                    return false;
+                }
+                if (state.stoveType === 'cooktop' && state.cooktopLocation === null) {
+                    showNotification('Informe onde o cooktop será instalado.', 'error');
+                    return false;
+                }
             }
         }
+        if (step === 3 && !state.material) {
+            showNotification('Por favor, escolha o material principal.', 'error');
+            return false;
+        }
+        if (step === 4) {
+            const isClosetOpen = state.wardrobeFormat === 'closet' && !state.closetHasDoors;
+            if (state.furnitureType === 'Guarda-Roupa' && !isClosetOpen && !state.doorType) {
+                showNotification('Por favor, escolha o tipo de porta.', 'error');
+                return false;
+            }
+            if (!state.handleType) {
+                showNotification('Por favor, escolha o tipo de puxador.', 'error');
+                return false;
+            }
+            if (!state.hardwareType) {
+                showNotification('Por favor, escolha o acabamento interno.', 'error');
+                return false;
+            }
+        }
+        if (step === 5 && !state.projectOption) {
+            showNotification('Por favor, informe sobre o projeto 3D.', 'error');
+            return false;
+        }
         return true;
-    }
-
-    function loadStateFromStorage() {
-        const savedState = localStorage.getItem('simulatorState');
-        const savedStep = localStorage.getItem('simulatorStep');
-        if (savedState) {
-            const parsedState = JSON.parse(savedState);
-            // Merge saved state into the default state to ensure new properties are not missed
-            Object.assign(state, parsedState);
-        }
-        if (savedStep) {
-            currentStep = parseInt(savedStep, 10);
-        }
     }
 
     function updateWardrobeRecommendation() {
@@ -1407,20 +1426,20 @@ function setupSimulator() {
     function resetState() {
         Object.assign(state, {
             furnitureType: null,
-            dimensions: { height: 2.7, depth: 60, walls: [{width: 3, height: 2.7}] },
-            material: 'Branco',
-            doorType: 'abrir',
-            wardrobeFormat: 'reto',
-            closetHasDoors: true,
-            kitchenHasSinkCabinet: true,
+            dimensions: { height: 2.7, depth: 60, walls: [{width: 3.0, height: 2.7}] },
+            material: null,
+            doorType: null,
+            wardrobeFormat: null,
+            closetHasDoors: null,
+            kitchenHasSinkCabinet: null,
             sinkStoneWidth: 1.8,
-            hasHotTower: false,
+            hasHotTower: null,
             hotTowerHeight: 2.2,
-            stoveType: 'cooktop',
-            cooktopLocation: 'pia',
-            hardwareType: 'padrao',
-            handleType: 'aluminio',
-            projectOption: 'create',
+            stoveType: null,
+            cooktopLocation: null,
+            hardwareType: null,
+            handleType: null,
+            projectOption: null,
             projectFile: null,
             customColor: '',
             extras: [],
@@ -1430,39 +1449,34 @@ function setupSimulator() {
     }
 
     function resetFormUI() {
-        document.querySelectorAll('input[name="furnitureType"]').forEach(radio => radio.checked = false);
+        // Uncheck all radio buttons and checkboxes within the simulator
+        document.querySelectorAll('#simulador input[type="radio"], #simulador input[type="checkbox"]').forEach(input => {
+            if (!input.closest('#accept-disclaimer-checkbox')) { // Don't reset the disclaimer
+                input.checked = false;
+            }
+        });
+
+        // Reset specific input values to their defaults
         document.getElementById('wardrobe-width1').value = 3.0;
         document.getElementById('wardrobe-height').value = 2.7;
         const wardrobeWallsContainer = document.getElementById('wardrobe-walls-container');
         Array.from(wardrobeWallsContainer.children).slice(1).forEach(wall => wall.remove());
         document.getElementById('add-wardrobe-wall-btn').classList.remove('hidden');
-        document.querySelector('input[name="kitchenSink"][value="sim"]').checked = true; // Reset kitchen sink option
-        document.getElementById('sinkStoneWidth').value = 1.8; // Reset sink stone width
-        document.querySelector('input[name="hasHotTower"][value="nao"]').checked = true;
+        document.getElementById('sinkStoneWidth').value = 1.8;
         document.getElementById('hot-tower-height-container').classList.add('hidden');
         document.getElementById('hotTowerHeight').value = 2.2;
-        document.querySelector('input[name="stoveType"][value="cooktop"]').checked = true;
-        document.getElementById('cooktop-location-step').classList.remove('hidden');
-        document.querySelector('input[name="cooktopLocation"][value="pia"]').checked = true;
+        document.getElementById('cooktop-location-step').classList.add('hidden');
         document.getElementById('kitchen-wall-width1').value = 2.2;
         document.getElementById('kitchen-wall-height1').value = 2.7;
 
         const kitchenWallsContainer = document.getElementById('kitchen-walls-container');
         Array.from(kitchenWallsContainer.children).slice(1).forEach(wall => wall.remove());
         document.getElementById('add-wall-btn').classList.remove('hidden');
-        document.querySelector('input[name="material"][value="Branco"]').checked = true;
         document.getElementById('premium-options').classList.add('hidden');
         document.getElementById('customColor').value = '';
-        document.querySelector('input[name="doorType"][value="abrir"]').checked = true;
-        document.querySelector('input[name="wardrobeFormat"][value="reto"]').checked = true;
-        document.querySelector('input[name="closetDoors"][value="sim"]').checked = true;
-        document.querySelector('input[name="hardwareType"][value="padrao"]').checked = true;
-        document.querySelector('input[name="projectOption"][value="create"]').checked = true;
         document.getElementById('project-upload-container').classList.add('hidden');
         document.getElementById('project-file-input').value = '';
         document.getElementById('project-file-name').textContent = 'Escolher arquivo do projeto';
-        document.querySelector('input[name="handleType"][value="aluminio"]').checked = true;
-        document.querySelectorAll('input[name="extras"]').forEach(cb => cb.checked = false);
         document.getElementById('leadName').value = '';
         document.getElementById('leadEmail').value = '';
         document.getElementById('leadPhone').value = '';
@@ -1553,7 +1567,6 @@ function setupSimulator() {
         await new Promise(resolve => setTimeout(resolve, 100));
 
         try {
-            localStorage.setItem('customerData', JSON.stringify(state.customer));
             calculateQuote();
             renderResult();
             document.getElementById('lead-capture-form').classList.add('hidden');
