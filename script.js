@@ -622,38 +622,80 @@ window.maskPhone = maskPhone;
 // =================================================================
 // SIMULATOR LOGIC
 // =================================================================
-function setupSimulator() {
-    // --- CONFIGURATION ---
-    const PRICING = {
-        'Branco': 800,
-        'Premium': 1200,
-    };
-    const HANDLE_PRICES_PER_METER = {
-        'aluminio': 0, // Padrão, já incluso
-        'inox': 90,
-        'preto': 100,
-        'dourado': 150,
-    };
-    const EXTRAS_COST = {
-        'Iluminação LED': 350,   // per meter
-        'Portas de Correr': 250, // per m² of front area
-        'Porta com Espelho': 700, // fixed price per door/unit
-        'Gaveteiro com Chave': 200, // fixed price
-        'Porta-temperos': 350, // fixed price
-        'Lixeira Embutida': 400, // fixed price
-        'SINK_CABINET_PER_METER': 450, // Special cost for sink cabinet
-        'HOT_TOWER_PER_METER': 600, // Cost per linear meter of height
-        'HARDWARE_SOFT_CLOSE_PER_UNIT': 80, // Per door or drawer
-        'PROJECT_3D': 350, // Fixed cost for 3D project design
-    };
-    const MDF_SHEET_SIZE = 5.88; // 2.80m * 2.10m
 
+// --- CONFIGURATION OBJECT ---
+// All pricing and configuration variables are centralized here for easy updates.
+const SIMULATOR_CONFIG = {
+    // =========================================================================
+    // CUSTOS COMUNS (Aplicável a Guarda-Roupa e Cozinha)
+    // =========================================================================
+    COMMON_COSTS: {
+        'PROJECT_3D': 350,      // Custo fixo para criação do projeto 3D.
+        'Iluminação LED': 350,  // Custo por metro linear de fita de LED instalada.
+    },
+    // =========================================================================
+    // CONFIGURAÇÕES DE CÁLCULO PARA GUARDA-ROUPA
+    // =========================================================================
+    WARDROBE: { 
+        // Preço base por metro quadrado (m²) de área frontal.
+        PRICING_PER_M2: {
+            'Branco': 800,
+            'Mesclada': 900,
+            'Premium': 1200,
+        },
+        MDF_SHEET_SIZE: 5.09, // Área de uma chapa de MDF (padrão 2.75m * 1.85m).
+        // Custos de ferragens e puxadores para guarda-roupa.
+        HARDWARE: {
+            HANDLE_BAR_COST: {
+                'aluminio': 0,      // Custo da barra de alumínio (padrão, incluso).
+                'premium': 100.00   // Custo por barra de 3m para puxadores premium (inox, preto, dourado).
+            },
+            HANDLE_BAR_LENGTH: 3.0, // Comprimento da barra de puxador em metros.
+        },
+        // Custos de itens extras específicos para guarda-roupa.
+        EXTRAS_COST: {
+            'Portas de Correr': 250, // Custo extra por m² de área frontal.
+            'Porta com Espelho': 700, // Custo fixo por porta com espelho.
+            'Gaveteiro com Chave': 200, // Custo fixo por gaveteiro com chave.
+            'HARDWARE_SOFT_CLOSE_PER_UNIT': 80, // Custo extra por unidade (porta/gaveta) com amortecedor.
+        }
+    },
+    // =========================================================================
+    // CONFIGURAÇÕES DE CÁLCULO PARA COZINHA
+    // =========================================================================
+    KITCHEN: { 
+        // Preço por chapa de MDF.
+        MDF_SHEET_PRICING: {
+            'Branco': 240,
+            'Premium': 400,
+        },
+        MDF_SHEET_SIZE: 5.09, // Área de uma chapa de MDF para cozinha (2.75m * 1.85m).
+        // Custos detalhados de ferragens e puxadores.
+        HARDWARE: {
+            HINGE_COST: { 'padrao': 5.00, 'softclose': 10.00 }, // Custo por porta (considerando 2 dobradiças).
+            SLIDE_COST_PER_DRAWER: 20.00, // Custo do par de corrediças por gaveta.
+            HANDLE_BAR_COST: { 'aluminio': 75.00, 'premium': 100.00 }, // Custo por barra de 3 metros de puxador.
+            HANDLE_PREMIUM_EXTRA_PER_UNIT: 6.00, // Custo extra por porta/gaveta ao usar puxador premium.
+            HANDLE_BAR_LENGTH: 3.0, // Comprimento da barra de puxador em metros.
+            UNIT_WIDTH: 0.4, // Largura média de uma porta/gaveta em metros (usada para estimar quantidades).
+        },
+        // Custos de itens extras específicos para cozinha.
+        EXTRAS_COST: {
+            'Porta-temperos': 350, // Custo fixo.
+            'Lixeira Embutida': 400, // Custo fixo.
+            'SINK_CABINET_PER_METER': 450, // Custo por metro linear de armário de pia.
+            'HOT_TOWER_PER_METER': 600, // Custo por metro linear de altura da torre quente.
+        }
+    },
+};
+
+function setupSimulator() {
     // --- STATE ---
     let currentStep = 1;
     const totalSteps = 6;
     const state = {
         furnitureType: null,
-        dimensions: { width: 3, height: 2.7, depth: 60, walls: [4] },
+        dimensions: { height: 2.7, depth: 60, walls: [{width: 3, height: 2.7}] }, // walls is now [{width, height}]
         material: 'Branco',
         doorType: 'abrir', // 'abrir' or 'correr'
         wardrobeFormat: 'reto', // 'reto' or 'closet'
@@ -661,6 +703,7 @@ function setupSimulator() {
         kitchenHasSinkCabinet: true,
         sinkStoneWidth: 1.8,
         hasHotTower: false,
+        hotTowerHeight: 2.2,
         stoveType: 'cooktop', // 'cooktop' or 'piso'
         cooktopLocation: 'pia', // 'pia' or 'separado'
         hardwareType: 'padrao', // 'padrao' or 'softclose'
@@ -686,18 +729,21 @@ function setupSimulator() {
     // --- INITIALIZATION ---
     function init() {
         setupEventListeners();
+        // Recalculate height on window resize to handle responsive changes
+        window.addEventListener('resize', debounce(updateContainerHeight, 200));
         updateUI();
     }
-
     function setupEventListeners() {
         disclaimerCheckbox.addEventListener('change', handleDisclaimer);
-
+        
         // Event delegation for navigation buttons
         stepsContainer.addEventListener('click', (e) => {
             if (e.target.closest('.next-btn')) {
                 handleNextStep();
             } else if (e.target.closest('.prev-btn')) {
                 handlePrevStep();
+            } else if (e.target.closest('.remove-wall-btn')) {
+                handleRemoveWall(e.target.closest('.remove-wall-btn'));
             } else if (e.target.closest('#reset-btn')) {
                 handleReset();
             }
@@ -707,6 +753,7 @@ function setupSimulator() {
         document.querySelectorAll('input[name="furnitureType"]').forEach(radio => {
             radio.addEventListener('change', (e) => {
                 state.furnitureType = e.target.value;
+                // This function will now also trigger a height update
                 updateUIForFurnitureType();
             });
         });
@@ -718,6 +765,7 @@ function setupSimulator() {
         document.querySelectorAll('#kitchen-dims input').forEach(input => {
             input.addEventListener('input', updateDimensionsState);
         });
+        document.getElementById('hotTowerHeight').addEventListener('input', updateDimensionsState);
         document.getElementById('add-wall-btn').addEventListener('click', addKitchenWall);
         document.getElementById('add-wardrobe-wall-btn').addEventListener('click', addWardrobeWall);
 
@@ -726,6 +774,7 @@ function setupSimulator() {
             radio.addEventListener('change', (e) => {
                 state.wardrobeFormat = e.target.value;
                 updateWardrobeSubSteps();
+                updateContainerHeight();
             });
         });
 
@@ -734,6 +783,7 @@ function setupSimulator() {
             radio.addEventListener('change', (e) => {
                 state.closetHasDoors = e.target.value === 'sim';
                 updateWardrobeRecommendation();
+                updateWardrobeSubSteps(); // Re-check door type visibility
             });
         });
 
@@ -742,6 +792,7 @@ function setupSimulator() {
             radio.addEventListener('change', (e) => {
                 state.kitchenHasSinkCabinet = e.target.value === 'sim';
                 updateKitchenSubSteps();
+                updateContainerHeight();
             });
         });
 
@@ -749,6 +800,8 @@ function setupSimulator() {
         document.querySelectorAll('input[name="hasHotTower"]').forEach(radio => {
             radio.addEventListener('change', (e) => {
                 state.hasHotTower = e.target.value === 'sim';
+                document.getElementById('hot-tower-height-container').classList.toggle('hidden', !state.hasHotTower);
+                updateContainerHeight();
             });
         });
 
@@ -757,6 +810,7 @@ function setupSimulator() {
             radio.addEventListener('change', (e) => {
                 state.stoveType = e.target.value;
                 document.getElementById('cooktop-location-step').classList.toggle('hidden', e.target.value !== 'cooktop');
+                updateContainerHeight();
             });
         });
 
@@ -772,6 +826,7 @@ function setupSimulator() {
             radio.addEventListener('change', (e) => {
                 state.projectOption = e.target.value;
                 document.getElementById('project-upload-container').classList.toggle('hidden', e.target.value !== 'upload');
+                updateContainerHeight();
             });
         });
         document.getElementById('project-file-input').addEventListener('change', (e) => {
@@ -792,7 +847,9 @@ function setupSimulator() {
         document.querySelectorAll('input[name="material"]').forEach(radio => {
             radio.addEventListener('change', (e) => {
                 state.material = e.target.value;
-                document.getElementById('premium-options').classList.toggle('hidden', e.target.value !== 'Premium');
+                const showPremiumOptions = e.target.value === 'Premium' || e.target.value === 'Mesclada';
+                document.getElementById('premium-options').classList.toggle('hidden', !showPremiumOptions);
+                updateContainerHeight();
             });
         });
         document.getElementById('customColor').addEventListener('input', (e) => state.customColor = e.target.value);
@@ -888,6 +945,9 @@ function setupSimulator() {
         progressBarLines.forEach((line, index) => {
             line.classList.toggle('active', index < currentStep - 1);
         });
+
+        // Adjust container height after the correct step is made active
+        updateContainerHeight();
     }
     
     function updateUIForFurnitureType() {
@@ -903,6 +963,7 @@ function setupSimulator() {
             const recommendationDiv = document.getElementById('wardrobe-recommendation');
             if (recommendationDiv) recommendationDiv.classList.add('hidden');
         }
+        updateContainerHeight();
     }
 
     function updateWardrobeSubSteps() {
@@ -914,11 +975,13 @@ function setupSimulator() {
         const doorTypeSection = document.getElementById('door-type-section');
         const isClosetOpen = isCloset && !state.closetHasDoors;
         doorTypeSection.classList.toggle('hidden', isClosetOpen);
+        // No need to call updateContainerHeight here, the event listener that calls this function will do it.
     }
 
     function updateKitchenSubSteps() {
         const hasSinkCabinet = state.kitchenHasSinkCabinet;
         document.getElementById('sink-stone-width-container').classList.toggle('hidden', !hasSinkCabinet);
+        // No need to call updateContainerHeight here, the event listener that calls this function will do it.
     }
 
     function addWardrobeWall() {
@@ -926,12 +989,22 @@ function setupSimulator() {
         const wallCount = container.children.length + 1;
         if (wallCount > 3) return; // Max 3 walls for a closet (U-shape)
         const newWall = document.createElement('div');
-        newWall.innerHTML = `<label for="wardrobe-width${wallCount}" class="block mb-2 font-semibold">Largura Parede ${wallCount} (m)</label><input type="number" id="wardrobe-width${wallCount}" name="wardrobe-width" step="0.1" min="0" value="0" class="form-input">`;
+        newWall.className = 'wall-entry flex items-center gap-4 pt-4 mt-4 border-t';
+        newWall.innerHTML = `
+            <div class="flex-grow">
+                <label for="wardrobe-width${wallCount}" class="block mb-2 font-semibold">Largura Parede ${wallCount} (m)</label>
+                <input type="number" id="wardrobe-width${wallCount}" name="wardrobe-width" step="0.1" min="0" value="0" class="form-input">
+            </div>
+            <button type="button" class="remove-wall-btn text-red-500 hover:text-red-700 transition-colors mt-6" aria-label="Remover parede">
+                <i class="fas fa-times-circle text-2xl"></i>
+            </button>
+        `;
         container.appendChild(newWall);
         newWall.querySelector('input').addEventListener('input', updateDimensionsState);
         if (wallCount === 3) {
             document.getElementById('add-wardrobe-wall-btn').classList.add('hidden');
         }
+        updateContainerHeight();
     }
 
     function addKitchenWall() {
@@ -939,23 +1012,72 @@ function setupSimulator() {
         const wallCount = container.children.length + 1;
         if (wallCount > 3) return;
         const newWall = document.createElement('div');
-        newWall.innerHTML = `<label for="kitchen-wall${wallCount}" class="block mb-2 font-semibold">Largura Parede ${wallCount} (m)</label><input type="number" id="kitchen-wall${wallCount}" name="kitchen-wall" step="0.1" min="0" value="0" class="form-input">`;
+        newWall.className = 'wall-entry relative border-t border-gray-200 pt-4 mt-4';
+        newWall.innerHTML = `
+            <button type="button" class="remove-wall-btn absolute top-4 right-0 text-red-500 hover:text-red-700 transition-colors" aria-label="Remover parede">
+                <i class="fas fa-times-circle text-xl"></i>
+            </button>
+            <label class="block mb-2 font-semibold">Parede ${wallCount} com armários</label>
+            <div class="grid grid-cols-2 gap-4">
+                <div>
+                    <label for="kitchen-wall-width${wallCount}" class="text-sm text-gray-600">Largura (m)</label>
+                    <input type="number" id="kitchen-wall-width${wallCount}" name="kitchen-wall-width" step="0.1" min="0" value="0" class="form-input">
+                </div>
+                <div>
+                    <label for="kitchen-wall-height${wallCount}" class="text-sm text-gray-600">Altura da parede (m)</label>
+                    <input type="number" id="kitchen-wall-height${wallCount}" name="kitchen-wall-height" step="0.1" min="0" value="2.7" class="form-input">
+                </div>
+            </div>`;
         container.appendChild(newWall);
-        newWall.querySelector('input').addEventListener('input', updateDimensionsState);
+        newWall.querySelectorAll('input').forEach(input => input.addEventListener('input', updateDimensionsState));
         if (wallCount === 3) {
             document.getElementById('add-wall-btn').classList.add('hidden');
+        }
+        updateContainerHeight();
+    }
+
+    function handleRemoveWall(button) {
+        const wallEntry = button.closest('.wall-entry');
+        if (wallEntry) {
+            const container = wallEntry.parentElement;
+            wallEntry.remove();
+            updateDimensionsState(); // Recalculate state
+            
+            if (container.id === 'wardrobe-walls-container') {
+                document.getElementById('add-wardrobe-wall-btn').classList.remove('hidden');
+            } else if (container.id === 'kitchen-walls-container') {
+                document.getElementById('add-wall-btn').classList.remove('hidden');
+            }
+            updateContainerHeight(); // Adjust container height
+        }
+    }
+
+    function updateContainerHeight() {
+        const activeStep = document.querySelector('.form-step.active');
+        if (activeStep) {
+            // Use a small timeout to allow the DOM to update (e.g., for smooth-toggle animations to start)
+            // before measuring the new height.
+            setTimeout(() => {
+                if (stepsContainer) { // Check if container exists
+                    stepsContainer.style.height = `${activeStep.offsetHeight}px`;
+                }
+            }, 50); // A small delay is enough for the DOM to reflow.
         }
     }
 
     function updateDimensionsState() {
         if (state.furnitureType === 'Guarda-Roupa') {
-            state.dimensions.walls = Array.from(document.querySelectorAll('#wardrobe-walls-container input')).map(input => parseFloat(input.value) || 0);
-            state.dimensions.height = parseFloat(document.getElementById('wardrobe-height').value) || 0;
+            const widths = Array.from(document.querySelectorAll('#wardrobe-walls-container input[name="wardrobe-width"]')).map(input => parseFloat(input.value) || 0);
+            const height = parseFloat(document.getElementById('wardrobe-height').value) || 0;
+            state.dimensions.walls = widths.map(w => ({ width: w, height: height }));
+            state.dimensions.height = height;
             updateWardrobeRecommendation();
         } else {
-            state.dimensions.walls = Array.from(document.querySelectorAll('#kitchen-walls-container input')).map(input => parseFloat(input.value) || 0);
+            const widths = Array.from(document.querySelectorAll('input[name="kitchen-wall-width"]')).map(input => parseFloat(input.value) || 0);
+            const heights = Array.from(document.querySelectorAll('input[name="kitchen-wall-height"]')).map(input => parseFloat(input.value) || 0);
+            state.dimensions.walls = widths.map((w, i) => ({ width: w, height: heights[i] || 0 }));
             state.sinkStoneWidth = parseFloat(document.getElementById('sinkStoneWidth').value) || 0;
-            state.dimensions.height = parseFloat(document.getElementById('kitchenHeight').value) || 0;
+            state.hotTowerHeight = parseFloat(document.getElementById('hotTowerHeight').value) || 0;
         }
     }
 
@@ -965,12 +1087,13 @@ function setupSimulator() {
             return false;
         }
         if (step === 2) {
-            if (state.furnitureType === 'Guarda-Roupa' && (state.dimensions.walls.reduce((a, b) => a + b, 0) <= 0 || state.dimensions.height <= 0)) {
+            if (state.furnitureType === 'Guarda-Roupa' && (state.dimensions.walls.reduce((acc, wall) => acc + wall.width, 0) <= 0 || state.dimensions.height <= 0)) {
                 alert('Por favor, preencha a largura e altura.');
                 return false;
             }
-            if (state.furnitureType === 'Cozinha' && ((state.dimensions.walls.reduce((a, b) => a + b, 0) <= 0 && !state.kitchenHasSinkCabinet) || state.dimensions.height <= 0)) {
-                alert('Por favor, preencha a largura de pelo menos uma parede e a altura.');
+            const kitchenArea = state.dimensions.walls.reduce((acc, wall) => acc + (wall.width * wall.height), 0);
+            if (state.furnitureType === 'Cozinha' && kitchenArea <= 0 && !state.kitchenHasSinkCabinet) {
+                alert('Por favor, preencha a largura e altura de pelo menos uma parede de armários.');
                 return false;
             }
         }
@@ -980,7 +1103,7 @@ function setupSimulator() {
     function updateWardrobeRecommendation() {
         const recommendationDiv = document.getElementById('wardrobe-recommendation');
         const recommendationText = document.getElementById('recommendation-text');
-        const width = state.dimensions.walls.reduce((a, b) => a + b, 0);
+        const width = state.dimensions.walls.reduce((acc, wall) => acc + wall.width, 0);
 
         if (!recommendationDiv || !recommendationText || width <= 0) {
             if (recommendationDiv) recommendationDiv.classList.add('hidden');
@@ -994,140 +1117,173 @@ function setupSimulator() {
         }
 
         // Simple logic: hinged doors ~50cm, sliding doors ~100cm. Minimum of 2 doors.
-        const hingedDoors = Math.max(2, Math.round(width / 0.5));
+        const hingedDoors = Math.max(2, Math.round(width / 0.45));
         const slidingDoors = Math.max(2, Math.round(width / 1.0));
 
         recommendationText.textContent = `Para esta largura, recomendamos aproximadamente ${hingedDoors} portas de abrir ou ${slidingDoors} portas de correr.`;
         recommendationDiv.classList.remove('hidden');
+        updateContainerHeight();
     }
 
-    function calculateQuote() {
-        let totalMaterialArea = 0;
-        let frontArea = 0;
-        let basePrice = 0;
+    function calculateWardrobeQuote() {
+        const config = SIMULATOR_CONFIG.WARDROBE;
+
+        const { height, depth } = state.dimensions;
+        const width = state.dimensions.walls.reduce((acc, wall) => acc + wall.width, 0);
+        const depthM = depth / 100;
+        const frontArea = width * height;
+        const hasDoors = !(state.wardrobeFormat === 'closet' && !state.closetHasDoors);
+        
+        // --- Base Price Calculation (based on m²) ---
+        const pricePerM2 = config.PRICING_PER_M2[state.material];
+        const basePrice = frontArea * pricePerM2;
+
+        // --- Extras Calculation ---
         let extrasPrice = 0;
-        const materialPrice = PRICING[state.material];
-
-        if (state.furnitureType === 'Guarda-Roupa') {
-            const { height, depth } = state.dimensions;
-            const width = state.dimensions.walls.reduce((a, b) => a + b, 0);
-            const depthM = depth / 100;
-            frontArea = width * height;
-
-            const hasDoors = !(state.wardrobeFormat === 'closet' && !state.closetHasDoors);
-
-            // Calculation based on components
-            const doorsArea = hasDoors ? frontArea : 0;
-            const carcassArea = (2 * height * depthM) + (width * depthM) + (width * height); // 2 sides, 1 bottom, 1 back
-            const internalArea = frontArea * 1.5; // Estimate for shelves and dividers
-
-            totalMaterialArea = doorsArea + carcassArea + internalArea;
-            basePrice = frontArea * materialPrice; // Base price remains on front area as per industry standard
-        } else { // Cozinha
-            let otherWallsWidth = state.dimensions.walls.reduce((a, b) => a + b, 0);
-            const lowerCabinetHeight = 0.9;
-            const upperCabinetHeight = 0.7;
-            const cabinetDepth = 0.6; // Average depth
-            let totalFrontArea = 0;
-
-            // Calculate sink cabinet if it exists
-            if (state.kitchenHasSinkCabinet && state.sinkStoneWidth > 0) {
-                const sinkCabinetWidth = Math.max(0, state.sinkStoneWidth - 0.05); // 2.5cm gutter on each side
-                const sinkFrontArea = sinkCabinetWidth * lowerCabinetHeight;
-                const sinkCarcassArea = (sinkCabinetWidth * cabinetDepth) + (sinkFrontArea); // 1 bottom, 1 back
-                totalMaterialArea += sinkFrontArea + sinkCarcassArea;
-                totalFrontArea += sinkFrontArea;
-                extrasPrice += sinkCabinetWidth * EXTRAS_COST.SINK_CABINET_PER_METER;
-            }
-
-            // Calculate hot tower if it exists
-            if (state.hasHotTower) {
-                const towerWidth = 0.6;
-                const towerFrontArea = towerWidth * state.dimensions.height;
-                const towerCarcassArea = (2 * state.dimensions.height * cabinetDepth) + towerFrontArea;
-                totalMaterialArea += towerFrontArea + towerCarcassArea;
-                totalFrontArea += towerFrontArea;
-                extrasPrice += state.dimensions.height * EXTRAS_COST.HOT_TOWER_PER_METER;
-            }
-
-            // Calculate remaining cabinets
-            let otherLowerWidth = otherWallsWidth;
-            if (state.stoveType === 'piso') {
-                otherLowerWidth -= 0.75; // Subtract standard freestanding stove width
-            }
-            otherLowerWidth = Math.max(0, otherLowerWidth);
-            const otherUpperWidth = otherWallsWidth;
-
-            const otherLowerFrontArea = otherLowerWidth * lowerCabinetHeight;
-            const otherUpperFrontArea = otherUpperWidth * upperCabinetHeight;
-            const otherFrontArea = otherLowerFrontArea + otherUpperFrontArea;
-            const otherCarcassArea = (otherWallsWidth * cabinetDepth * 2) + otherFrontArea;
-            const otherInternalArea = otherFrontArea * 1.2;
-            totalMaterialArea += otherFrontArea + otherCarcassArea + otherInternalArea;
-            totalFrontArea += otherFrontArea;
-
-            basePrice = totalFrontArea * materialPrice;
-        }
-
-        // Calculate hardware cost
         if (state.hardwareType === 'softclose') {
             let hardwareUnits = 0;
-            if (state.furnitureType === 'Guarda-Roupa') {
-                const width = state.dimensions.walls.reduce((a, b) => a + b, 0);
-                const hasDoors = !(state.wardrobeFormat === 'closet' && !state.closetHasDoors);
-                if (hasDoors) {
-                    if (state.doorType === 'correr') {
-                        hardwareUnits += Math.max(2, Math.round(width / 1.0)); // Sliding doors
-                    } else {
-                        hardwareUnits += Math.max(2, Math.round(width / 0.5)); // Hinged doors
-                    }
-                }
-                hardwareUnits += Math.floor(width * 2); // Estimate 2 drawers per meter of width
-            } else { // Cozinha
-                // Estimate doors/drawers based on front area. Assume average unit size is 0.5m²
-                if (frontArea > 0) {
-                    hardwareUnits += Math.ceil(frontArea / 0.5);
+            if (hasDoors) {
+                if (state.doorType === 'correr') {
+                    hardwareUnits += Math.max(2, Math.round(width / 1.0));
+                } else {
+                    hardwareUnits += Math.max(2, Math.round(width / 0.45));
                 }
             }
-            extrasPrice += hardwareUnits * EXTRAS_COST.HARDWARE_SOFT_CLOSE_PER_UNIT;
+            hardwareUnits += Math.floor(width * 2);
+            extrasPrice += hardwareUnits * config.EXTRAS_COST.HARDWARE_SOFT_CLOSE_PER_UNIT;
         }
 
-        // Add cost for 3D project
+        // --- Handle Cost Calculation ---
+        if (hasDoors && state.handleType !== 'aluminio') {
+            const hardwareConfig = config.HARDWARE;
+            let numDoors = 0;
+            let totalHandleLength = 0;
+
+            if (state.doorType === 'correr') {
+                numDoors = Math.max(2, Math.round(width / 1.0));
+                // Portas do meio precisam de puxador dos dois lados.
+                // Total de puxadores = 2 (pontas) + (numDoors - 2) * 2 (meio) = 2*numDoors - 2
+                if (numDoors >= 2) {
+                    totalHandleLength = (2 * numDoors - 2) * height;
+                }
+            } else { // 'abrir'
+                numDoors = Math.max(2, Math.round(width / 0.45));
+                totalHandleLength = numDoors * height;
+            }
+
+            if (totalHandleLength > 0) {
+                const numBarsNeeded = Math.ceil(totalHandleLength / hardwareConfig.HANDLE_BAR_LENGTH);
+                extrasPrice += numBarsNeeded * hardwareConfig.HANDLE_BAR_COST.premium;
+            }
+        }
+
+        if (state.doorType === 'correr' && hasDoors) {
+            extrasPrice += config.EXTRAS_COST['Portas de Correr'] * frontArea;
+        }
+
         if (state.projectOption === 'create') {
-            extrasPrice += EXTRAS_COST.PROJECT_3D;
-        }
-
-        // Add cost for sliding doors
-        if (state.furnitureType === 'Guarda-Roupa' && state.doorType === 'correr' && state.closetHasDoors) {
-            extrasPrice += EXTRAS_COST['Portas de Correr'] * frontArea;
-        }
-
-        // Calculate handle cost
-        const handlePricePerMeter = HANDLE_PRICES_PER_METER[state.handleType] || 0;
-        const hasHandles = !(state.wardrobeFormat === 'closet' && !state.closetHasDoors);
-
-        if (handlePricePerMeter > 0 && hasHandles) {
-            let handleLength = 0;
-            if (state.furnitureType === 'Guarda-Roupa') {
-                handleLength = state.dimensions.walls.reduce((a, b) => a + b, 0) * 2; // Simplified: assumes two horizontal profiles
-            } else { // Cozinha
-                handleLength = state.dimensions.walls.reduce((a, b) => a + b, 0) * 2; // Lower and upper cabinets
-            }
-            extrasPrice += handleLength * handlePricePerMeter;
+            extrasPrice += SIMULATOR_CONFIG.COMMON_COSTS.PROJECT_3D;
         }
 
         state.extras.forEach(extra => {
-            const cost = EXTRAS_COST[extra] || 0;
-            if (extra === 'Iluminação LED') {
-                const length = state.furnitureType === 'Guarda-Roupa' ? state.dimensions.walls.reduce((a, b) => a + b, 0) : state.dimensions.walls.reduce((a, b) => a + b, 0);
-                extrasPrice += cost * length;
-            } else {
-                extrasPrice += cost;
-            }
+            const cost = config.EXTRAS_COST[extra] || SIMULATOR_CONFIG.COMMON_COSTS[extra] || 0;
+            extrasPrice += (extra === 'Iluminação LED') ? cost * width : cost;
         });
+
+        // Estimate material area for display purposes
+        const doorsArea = hasDoors ? frontArea : 0;
+        const carcassArea = (2 * height * depthM) + (width * depthM) + (width * height);
+        const internalArea = frontArea * 1.5;
+        const totalMaterialArea = doorsArea + carcassArea + internalArea;
+
+        return { basePrice, extrasPrice, totalMaterialArea };
+    }
+
+    function calculateKitchenQuote() {
+        const config = SIMULATOR_CONFIG.KITCHEN;
+        let extrasPrice = 0;
+        let basePrice = 0;
+
+        // Material area calculation
+        const totalFrontArea = state.dimensions.walls.reduce((acc, wall) => acc + (wall.width * wall.height), 0);
+        const cabinetDepth = 0.6;
+        const totalCarcassArea = totalFrontArea * 1.2;
+        const totalInternalArea = totalFrontArea * 1.0;
+        const totalMaterialArea = totalFrontArea + totalCarcassArea + totalInternalArea;
+
+        // --- Base Price Calculation (based on MDF sheets) ---
+        if (state.material === 'Mesclada') {
+            const numWhiteSheets = Math.ceil((totalCarcassArea + totalInternalArea) / config.MDF_SHEET_SIZE);
+            const numColoredSheets = Math.ceil(totalFrontArea / config.MDF_SHEET_SIZE);
+            basePrice = (numWhiteSheets * config.MDF_SHEET_PRICING['Branco']) + (numColoredSheets * config.MDF_SHEET_PRICING['Premium']);
+        } else {
+            const numSheets = Math.ceil(totalMaterialArea / config.MDF_SHEET_SIZE);
+            basePrice = numSheets * config.MDF_SHEET_PRICING[state.material];
+        }
+
+        // --- Extras Calculation ---
+        if (state.kitchenHasSinkCabinet && state.sinkStoneWidth > 0) {
+            const sinkCabinetWidth = Math.max(0, state.sinkStoneWidth - 0.05);
+            extrasPrice += sinkCabinetWidth * config.EXTRAS_COST.SINK_CABINET_PER_METER;
+        }
+
+        if (state.hasHotTower) {
+            extrasPrice += state.hotTowerHeight * config.EXTRAS_COST.HOT_TOWER_PER_METER;
+        }
+
+        const totalWidth = state.dimensions.walls.reduce((acc, wall) => acc + wall.width, 0);
+        let lowerCabinetWidth = totalWidth;
+        if (state.stoveType === 'piso') { lowerCabinetWidth -= 0.75; }
+        const upperCabinetWidth = totalWidth;
+        const UNIT_WIDTH = config.HARDWARE.UNIT_WIDTH;
+        const lowerUnits = Math.max(0, lowerCabinetWidth) / UNIT_WIDTH;
+        const upperUnits = upperCabinetWidth / UNIT_WIDTH;
+        const totalUnits = Math.ceil(lowerUnits + upperUnits) + (state.hasHotTower ? 2 : 0);
+        const numDoors = Math.round(totalUnits * 0.75);
+        const numDrawers = totalUnits - numDoors;
+
+        const hingeCostPerDoor = config.HARDWARE.HINGE_COST[state.hardwareType];
+        extrasPrice += numDoors * hingeCostPerDoor;
+
+        const slideCostPerDrawer = config.HARDWARE.SLIDE_COST_PER_DRAWER;
+        extrasPrice += numDrawers * slideCostPerDrawer;
+
+        const totalHandleUnits = numDoors + numDrawers;
+        const totalHandleLength = totalHandleUnits * UNIT_WIDTH;
+        const numBarsNeeded = Math.ceil(totalHandleLength / config.HARDWARE.HANDLE_BAR_LENGTH);
+
+        if (state.handleType === 'aluminio') {
+            extrasPrice += numBarsNeeded * config.HARDWARE.HANDLE_BAR_COST.aluminio;
+        } else {
+            extrasPrice += (numBarsNeeded * config.HARDWARE.HANDLE_BAR_COST.premium) + (totalHandleUnits * config.HARDWARE.HANDLE_PREMIUM_EXTRA_PER_UNIT);
+        }
+
+        if (state.projectOption === 'create') {
+            extrasPrice += SIMULATOR_CONFIG.COMMON_COSTS.PROJECT_3D;
+        }
+
+        state.extras.forEach(extra => {
+            const cost = config.EXTRAS_COST[extra] || SIMULATOR_CONFIG.COMMON_COSTS[extra] || 0;
+            extrasPrice += (extra === 'Iluminação LED') ? cost * totalWidth : cost;
+        });
+
+        return { basePrice, extrasPrice, totalMaterialArea };
+    }
+
+    function calculateQuote() {
+        let quoteDetails;
+        if (state.furnitureType === 'Guarda-Roupa') {
+            quoteDetails = calculateWardrobeQuote();
+        } else { // Cozinha
+            quoteDetails = calculateKitchenQuote();
+        }
+
+        const { basePrice, extrasPrice, totalMaterialArea } = quoteDetails;
+        const sheetSize = state.furnitureType === 'Cozinha' ? SIMULATOR_CONFIG.KITCHEN.MDF_SHEET_SIZE : SIMULATOR_CONFIG.WARDROBE.MDF_SHEET_SIZE;
+        
         state.quote = { 
             area: totalMaterialArea, 
-            sheets: Math.ceil(totalMaterialArea / MDF_SHEET_SIZE), 
+            sheets: Math.ceil(totalMaterialArea / sheetSize), 
             total: basePrice + extrasPrice,
             basePrice: basePrice,
             extrasPrice: extrasPrice
@@ -1137,7 +1293,7 @@ function setupSimulator() {
     function resetState() {
         Object.assign(state, {
             furnitureType: null,
-            dimensions: { width: 3, height: 2.7, depth: 60, walls: [4] },
+            dimensions: { height: 2.7, depth: 60, walls: [{width: 3, height: 2.7}] },
             material: 'Branco',
             doorType: 'abrir',
             wardrobeFormat: 'reto',
@@ -1145,6 +1301,7 @@ function setupSimulator() {
             kitchenHasSinkCabinet: true,
             sinkStoneWidth: 1.8,
             hasHotTower: false,
+            hotTowerHeight: 2.2,
             stoveType: 'cooktop',
             cooktopLocation: 'pia',
             hardwareType: 'padrao',
@@ -1168,11 +1325,14 @@ function setupSimulator() {
         document.querySelector('input[name="kitchenSink"][value="sim"]').checked = true; // Reset kitchen sink option
         document.getElementById('sinkStoneWidth').value = 1.8; // Reset sink stone width
         document.querySelector('input[name="hasHotTower"][value="nao"]').checked = true;
+        document.getElementById('hot-tower-height-container').classList.add('hidden');
+        document.getElementById('hotTowerHeight').value = 2.2;
         document.querySelector('input[name="stoveType"][value="cooktop"]').checked = true;
         document.getElementById('cooktop-location-step').classList.remove('hidden');
         document.querySelector('input[name="cooktopLocation"][value="pia"]').checked = true;
-        document.getElementById('kitchen-wall1').value = 2.2;
-        document.getElementById('kitchenHeight').value = 2.7;
+        document.getElementById('kitchen-wall-width1').value = 2.2;
+        document.getElementById('kitchen-wall-height1').value = 2.7;
+
         const kitchenWallsContainer = document.getElementById('kitchen-walls-container');
         Array.from(kitchenWallsContainer.children).slice(1).forEach(wall => wall.remove());
         document.getElementById('add-wall-btn').classList.remove('hidden');
@@ -1195,22 +1355,87 @@ function setupSimulator() {
         disclaimerCheckbox.checked = false;
     }
 
-    function handleViewQuote() {
+    async function handleViewQuote() {
+        const viewQuoteBtn = document.getElementById('view-quote-btn');
+        const originalBtnText = viewQuoteBtn.innerHTML;
+
+        // 1. Validate inputs
         Object.assign(state.customer, { name: document.getElementById('leadName').value, email: document.getElementById('leadEmail').value, phone: document.getElementById('leadPhone').value });
+
         if (!state.customer.name || !state.customer.phone) {
-            alert('Por favor, preencha todos os campos para continuar.');
+            showNotification('Por favor, preencha seu nome e WhatsApp para continuar.', 'error');
             return;
         }
-        localStorage.setItem('customerData', JSON.stringify(state.customer));
-        calculateQuote();
-        renderResult();
-        document.getElementById('lead-capture-form').classList.add('hidden');
-        document.getElementById('result-container').classList.remove('hidden');
+
+        // --- Validação Avançada de Celular (Brasil) ---
+        const phoneDigits = state.customer.phone.replace(/\D/g, '');
+
+        if (phoneDigits.length !== 11) {
+            showNotification('Por favor, insira um WhatsApp válido com DDD (11 dígitos).', 'error');
+            return;
+        }
+
+        const ddd = phoneDigits.substring(0, 2);
+        const validDDDs = [
+            '11', '12', '13', '14', '15', '16', '17', '18', '19', '21', '22', '24',
+            '27', '28', '31', '32', '33', '34', '35', '37', '38', '41', '42', '43',
+            '44', '45', '46', '47', '48', '49', '51', '53', '54', '55', '61', '62',
+            '63', '64', '65', '66', '67', '68', '69', '71', '73', '74', '75', '77',
+            '79', '81', '82', '83', '84', '85', '86', '87', '88', '89', '91', '92',
+            '93', '94', '95', '96', '97', '98', '99'
+        ];
+        if (!validDDDs.includes(ddd)) {
+            showNotification('O DDD informado é inválido.', 'error');
+            return;
+        }
+
+        const numberPart = phoneDigits.substring(2);
+        if (numberPart[0] !== '9') {
+            showNotification('O número de WhatsApp deve começar com 9 após o DDD.', 'error');
+            return;
+        }
+        if (/^(\d)\1+$/.test(numberPart.substring(1))) {
+            showNotification('Este número de celular parece inválido (sequência repetida).', 'error');
+            return;
+        }
+
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (state.customer.email && !emailRegex.test(state.customer.email)) {
+            showNotification('Por favor, insira um endereço de e-mail válido.', 'error');
+            return;
+        }
+
+        // --- If validation passes, show loading and proceed ---
+        viewQuoteBtn.disabled = true;
+        viewQuoteBtn.innerHTML = '<div class="spinner mr-2"></div>Calculando...';
+
+        // Use a small timeout to allow the UI to update before heavy calculation
+        await new Promise(resolve => setTimeout(resolve, 100));
+
+        try {
+            localStorage.setItem('customerData', JSON.stringify(state.customer));
+            calculateQuote();
+            renderResult();
+            document.getElementById('lead-capture-form').classList.add('hidden');
+            document.getElementById('result-container').classList.remove('hidden');
+            updateContainerHeight(); // Ajusta a altura do container para mostrar o resultado
+        } catch (error) {
+            console.error("Error calculating quote:", error);
+            showNotification('Ocorreu um erro ao calcular o orçamento. Tente novamente.', 'error');
+            // Restore button on error
+            viewQuoteBtn.disabled = false;
+            viewQuoteBtn.innerHTML = originalBtnText;
+        }
     }
 
     function renderResult() {
         document.getElementById('result-furniture').textContent = state.furnitureType;
-        const dimsText = state.furnitureType === 'Guarda-Roupa' ? `Paredes: ${state.dimensions.walls.join('m + ')}m | Altura: ${state.dimensions.height}m` : `Paredes: ${state.dimensions.walls.join('m + ')}m | Altura: ${state.dimensions.height}m`;
+        let dimsText = '';
+        if (state.furnitureType === 'Guarda-Roupa') {
+            dimsText = `Paredes: ${state.dimensions.walls.map(w => w.width).join('m + ')}m | Altura: ${state.dimensions.height}m`;
+        } else { // Cozinha
+            dimsText = state.dimensions.walls.map(w => `${w.width}m (L) x ${w.height}m (A)`).join(' | ');
+        }
         document.getElementById('result-dims').textContent = dimsText;
         document.getElementById('result-sheets').textContent = `${state.quote.sheets} chapas`;
         document.getElementById('result-extras').textContent = state.extras.length > 0 ? state.extras.join(', ') : 'Nenhum';
@@ -1258,26 +1483,35 @@ function setupSimulator() {
         return `*Orçamento de Móveis Planejados*\n---------------------------------\n*Cliente:* ${state.customer.name}\n*Móvel:* ${state.furnitureType}${formatDetails}${kitchenDetails}\n${details}${projectDetails}\n*Material:* ${state.material} ${state.customColor ? `(Cor: ${state.customColor})` : ''}\n*Puxador:* Perfil ${handleName}${hardwareDetails}\n*Extras:* ${state.extras.join(', ') || 'Nenhum'}\n---------------------------------\n*Total Estimado: ${document.getElementById('result-total').textContent}*\n\n_Este é um orçamento informativo. O valor final será definido após visita técnica._`;
     }
 
+    function getPdfData() {
+        return {
+            date: new Date().toLocaleDateString('pt-BR'),
+            'quote-id': Date.now(),
+            name: state.customer.name,
+            email: state.customer.email,
+            phone: state.customer.phone,
+            furniture: state.furnitureType,
+            dims: document.getElementById('result-dims').textContent,
+            material: state.material,
+            color: state.customColor || 'N/A',
+            project: state.projectOption === 'create' ? 'Sim' : (state.projectOption === 'upload' ? 'Fornecido pelo cliente' : 'Não'),
+            extras: state.extras.join(', ') || 'Nenhum',
+            total: document.getElementById('result-total').textContent
+        };
+    }
+
     async function generatePDF() {
         const { jsPDF } = window.jspdf;
         const pdfTemplate = document.getElementById('pdf-template');
+        const pdfData = getPdfData();
+
         ['date', 'quote-id', 'name', 'email', 'phone', 'furniture', 'dims', 'material', 'color', 'project', 'extras', 'total'].forEach(id => {
             const el = document.getElementById(`pdf-${id}`);
-            if(el) el.textContent = {
-                date: new Date().toLocaleDateString('pt-BR'),
-                'quote-id': Date.now(),
-                name: state.customer.name,
-                email: state.customer.email,
-                phone: state.customer.phone,
-                furniture: state.furnitureType,
-                dims: document.getElementById('result-dims').textContent,
-                material: state.material,
-                color: state.customColor || 'N/A',
-                project: state.projectOption === 'create' ? 'Sim' : (state.projectOption === 'upload' ? 'Fornecido pelo cliente' : 'Não'),
-                extras: state.extras.join(', ') || 'Nenhum',
-                total: document.getElementById('result-total').textContent
-            }[id];
+            if (el) {
+                el.textContent = pdfData[id];
+            }
         });
+
         pdfTemplate.classList.remove('hidden');
         const canvas = await html2canvas(pdfTemplate.firstElementChild, { scale: 2 });
         const imgData = canvas.toDataURL('image/png');
