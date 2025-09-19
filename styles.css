@@ -509,6 +509,12 @@ input[type="radio"]:not(.sr-only):checked::after {
     visibility: hidden;
 }
 
+.form-step.active {
+    position: relative;
+    opacity: 1;
+    visibility: visible;
+}
+
 /* Banner for "Best Value" card */
 .best-value-banner {
     width: 100%;
@@ -526,11 +532,6 @@ input[type="radio"]:not(.sr-only):checked::after {
     border-bottom: 1px solid rgba(0,0,0,0.1);
 }
 
-.form-step.active {
-    position: relative;
-    opacity: 1;
-    visibility: visible;
-}
 .step-card {
     position: relative; /* Necessário para posicionar o ícone de check */
     display: flex; /* Alterado para flex */
@@ -620,6 +621,14 @@ input[type="radio"]:not(.sr-only):checked::after {
 }
 .action-btn:hover {
     box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+}
+.action-btn-secondary {
+    width: 100%;
+    font-weight: 600;
+    padding-top: 0.75rem;
+    padding-bottom: 0.75rem;
+    border-radius: 0.5rem;
+    transition: all 0.3s;
 }
 .progress-step {
     width: 3rem;

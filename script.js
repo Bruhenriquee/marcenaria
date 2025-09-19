@@ -803,16 +803,27 @@ function setupSimulator() {
 
     // --- INITIALIZATION ---
     function init() {
+        loadStateFromStorage();
         setupEventListeners();
         // Recalculate height on window resize to handle responsive changes
         window.addEventListener('resize', debounce(updateContainerHeight, 200));
-        updateUI();
+        updateUI(false); // Pass false to prevent scrolling on initial load
+        // If loaded state is not on step 1, unlock the simulator
+        if (currentStep > 1 || state.furnitureType) {
+            disclaimerCheckbox.checked = true;
+            handleDisclaimer();
+        }
+    }
+
+    function updateStateAndSave(newState) {
+        Object.assign(state, newState);
+        localStorage.setItem('simulatorState', JSON.stringify(state));
     }
     function setupEventListeners() {
         disclaimerCheckbox.addEventListener('change', handleDisclaimer);
         
         // Event delegation for navigation buttons
-        stepsContainer.addEventListener('click', (e) => {
+        document.getElementById('simulator-content').addEventListener('click', (e) => {
             if (e.target.closest('.next-btn')) {
                 handleNextStep();
             } else if (e.target.closest('.prev-btn')) {
@@ -827,7 +838,7 @@ function setupSimulator() {
         // Step 1: Furniture Type
         document.querySelectorAll('input[name="furnitureType"]').forEach(radio => {
             radio.addEventListener('change', (e) => {
-                state.furnitureType = e.target.value;
+                updateStateAndSave({ furnitureType: e.target.value });
                 // This function will now also trigger a height update
                 updateUIForFurnitureType();
             });
@@ -847,7 +858,7 @@ function setupSimulator() {
         // Step 2.1: Wardrobe Format
         document.querySelectorAll('input[name="wardrobeFormat"]').forEach(radio => {
             radio.addEventListener('change', (e) => {
-                state.wardrobeFormat = e.target.value;
+                updateStateAndSave({ wardrobeFormat: e.target.value });
                 updateWardrobeSubSteps();
                 updateContainerHeight();
             });
@@ -856,7 +867,7 @@ function setupSimulator() {
         // Step 2.2: Closet Doors
         document.querySelectorAll('input[name="closetDoors"]').forEach(radio => {
             radio.addEventListener('change', (e) => {
-                state.closetHasDoors = e.target.value === 'sim';
+                updateStateAndSave({ closetHasDoors: e.target.value === 'sim' });
                 updateWardrobeRecommendation();
                 updateWardrobeSubSteps(); // Re-check door type visibility
             });
@@ -865,7 +876,7 @@ function setupSimulator() {
         // Step 2: Kitchen Sink
         document.querySelectorAll('input[name="kitchenSink"]').forEach(radio => {
             radio.addEventListener('change', (e) => {
-                state.kitchenHasSinkCabinet = e.target.value === 'sim';
+                updateStateAndSave({ kitchenHasSinkCabinet: e.target.value === 'sim' });
                 updateKitchenSubSteps();
                 updateContainerHeight();
             });
@@ -874,7 +885,7 @@ function setupSimulator() {
         // Step 2: Kitchen Hot Tower
         document.querySelectorAll('input[name="hasHotTower"]').forEach(radio => {
             radio.addEventListener('change', (e) => {
-                state.hasHotTower = e.target.value === 'sim';
+                updateStateAndSave({ hasHotTower: e.target.value === 'sim' });
                 document.getElementById('hot-tower-height-container').classList.toggle('hidden', !state.hasHotTower);
                 updateContainerHeight();
             });
@@ -883,7 +894,7 @@ function setupSimulator() {
         // Step 2: Kitchen Stove Type
         document.querySelectorAll('input[name="stoveType"]').forEach(radio => {
             radio.addEventListener('change', (e) => {
-                state.stoveType = e.target.value;
+                updateStateAndSave({ stoveType: e.target.value });
                 document.getElementById('cooktop-location-step').classList.toggle('hidden', e.target.value !== 'cooktop');
                 updateContainerHeight();
             });
@@ -892,14 +903,14 @@ function setupSimulator() {
         // Step 2: Cooktop Location
         document.querySelectorAll('input[name="cooktopLocation"]').forEach(radio => {
             radio.addEventListener('change', (e) => {
-                state.cooktopLocation = e.target.value;
+                updateStateAndSave({ cooktopLocation: e.target.value });
             });
         });
 
         // Step 5: 3D Project
         document.querySelectorAll('input[name="projectOption"]').forEach(radio => {
             radio.addEventListener('change', (e) => {
-                state.projectOption = e.target.value;
+                updateStateAndSave({ projectOption: e.target.value });
                 document.getElementById('project-upload-container').classList.toggle('hidden', e.target.value !== 'upload');
                 updateContainerHeight();
             });
@@ -913,7 +924,7 @@ function setupSimulator() {
                     e.target.value = ''; // Clear the input
                     return;
                 }
-                state.projectFile = file;
+                updateStateAndSave({ projectFile: file });
                 document.getElementById('project-file-name').textContent = file.name;
             }
         });
@@ -921,39 +932,39 @@ function setupSimulator() {
         // Step 3: Material
         document.querySelectorAll('input[name="material"]').forEach(radio => {
             radio.addEventListener('change', (e) => {
-                state.material = e.target.value;
+                updateStateAndSave({ material: e.target.value });
                 const showPremiumOptions = e.target.value === 'Premium' || e.target.value === 'Mesclada';
                 document.getElementById('premium-options').classList.toggle('hidden', !showPremiumOptions);
                 updateContainerHeight();
             });
         });
-        document.getElementById('customColor').addEventListener('input', (e) => state.customColor = e.target.value);
+        document.getElementById('customColor').addEventListener('input', (e) => updateStateAndSave({ customColor: e.target.value }));
 
         // Step 4: Door Type (Wardrobe)
         document.querySelectorAll('input[name="doorType"]').forEach(radio => {
             radio.addEventListener('change', (e) => {
-                state.doorType = e.target.value;
+                updateStateAndSave({ doorType: e.target.value });
             });
         });
 
         // Step 4: Hardware Type
         document.querySelectorAll('input[name="hardwareType"]').forEach(radio => {
             radio.addEventListener('change', (e) => {
-                state.hardwareType = e.target.value;
+                updateStateAndSave({ hardwareType: e.target.value });
             });
         });
 
         // Step 4: Handle Type
         document.querySelectorAll('input[name="handleType"]').forEach(radio => {
             radio.addEventListener('change', (e) => {
-                state.handleType = e.target.value;
+                updateStateAndSave({ handleType: e.target.value });
             });
         });
 
         // Step 4: Extras
         document.querySelectorAll('input[name="extras"]').forEach(checkbox => {
             checkbox.addEventListener('change', () => {
-                state.extras = Array.from(document.querySelectorAll('input[name="extras"]:checked')).map(cb => cb.value);
+                updateStateAndSave({ extras: Array.from(document.querySelectorAll('input[name="extras"]:checked')).map(cb => cb.value) });
             });
         });
         
@@ -974,16 +985,18 @@ function setupSimulator() {
 
     function handleReset() {
         currentStep = 1;
-        resetState();
-        resetFormUI();
-        updateUI();
-        handleDisclaimer(); // Re-apply overlay
+        localStorage.removeItem('simulatorState');
+        resetState(); // Resets the internal state object
+        resetFormUI(); // Resets the form inputs in the DOM
+        updateUI(); // Updates which step is visible
+        handleDisclaimer(); // Re-applies the overlay
     }
 
     function handleNextStep() {
         if (validateStep(currentStep)) {
             if (currentStep < totalSteps) {
                 currentStep++;
+                localStorage.setItem('simulatorStep', currentStep);
                 updateUI();
             }
         }
@@ -992,11 +1005,12 @@ function setupSimulator() {
     function handlePrevStep() {
         if (currentStep > 1) {
             currentStep--;
+            localStorage.setItem('simulatorStep', currentStep);
             updateUI();
         }
     }
 
-    function updateUI() {
+    function updateUI(shouldScroll = true) { // Add parameter with default value
         steps.forEach(step => {
             const stepNumber = parseInt(step.dataset.step);
             const isActive = stepNumber === currentStep;
@@ -1023,6 +1037,14 @@ function setupSimulator() {
 
         // Adjust container height after the correct step is made active
         updateContainerHeight();
+
+        // Scroll to the top of the simulator section for better UX
+        if (shouldScroll) { // Check the parameter before scrolling
+            const simulatorSection = document.getElementById('simulador');
+            if (simulatorSection) {
+                simulatorSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }
+        }
     }
     
     function updateUIForFurnitureType() {
@@ -1154,25 +1176,58 @@ function setupSimulator() {
             state.sinkStoneWidth = parseFloat(document.getElementById('sinkStoneWidth').value) || 0;
             state.hotTowerHeight = parseFloat(document.getElementById('hotTowerHeight').value) || 0;
         }
+        // Save state after dimension update
+        localStorage.setItem('simulatorState', JSON.stringify(state));
     }
 
     function validateStep(step) {
         if (step === 1 && !state.furnitureType) {
-            alert('Por favor, escolha um tipo de móvel.');
+            showNotification('Por favor, escolha um tipo de móvel para continuar.', 'error');
             return false;
         }
         if (step === 2) {
-            if (state.furnitureType === 'Guarda-Roupa' && (state.dimensions.walls.reduce((acc, wall) => acc + wall.width, 0) <= 0 || state.dimensions.height <= 0)) {
-                alert('Por favor, preencha a largura e altura.');
-                return false;
-            }
-            const kitchenArea = state.dimensions.walls.reduce((acc, wall) => acc + (wall.width * wall.height), 0);
-            if (state.furnitureType === 'Cozinha' && kitchenArea <= 0 && !state.kitchenHasSinkCabinet) {
-                alert('Por favor, preencha a largura e altura de pelo menos uma parede de armários.');
-                return false;
+            if (state.furnitureType === 'Guarda-Roupa') {
+                const totalWidth = state.dimensions.walls.reduce((acc, wall) => acc + wall.width, 0);
+                const height = state.dimensions.height;
+                if (totalWidth <= 0) {
+                    const firstWidthInput = document.querySelector('#wardrobe-walls-container input[name="wardrobe-width"]');
+                    showNotification('Por favor, preencha a largura do guarda-roupa.', 'error');
+                    firstWidthInput?.focus();
+                    firstWidthInput?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    return false;
+                }
+                if (height <= 0) {
+                    const heightInput = document.getElementById('wardrobe-height');
+                    showNotification('Por favor, preencha a altura do guarda-roupa.', 'error');
+                    heightInput?.focus();
+                    heightInput?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    return false;
+                }
+            } else { // Cozinha
+                const kitchenArea = state.dimensions.walls.reduce((acc, wall) => acc + (wall.width * wall.height), 0);
+                if (kitchenArea <= 0 && !state.kitchenHasSinkCabinet) {
+                    const firstWidthInput = document.getElementById('kitchen-wall-width1');
+                    showNotification('Por favor, adicione as medidas de pelo menos uma parede de armários.', 'error');
+                    firstWidthInput?.focus();
+                    firstWidthInput?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    return false;
+                }
             }
         }
         return true;
+    }
+
+    function loadStateFromStorage() {
+        const savedState = localStorage.getItem('simulatorState');
+        const savedStep = localStorage.getItem('simulatorStep');
+        if (savedState) {
+            const parsedState = JSON.parse(savedState);
+            // Merge saved state into the default state to ensure new properties are not missed
+            Object.assign(state, parsedState);
+        }
+        if (savedStep) {
+            currentStep = parseInt(savedStep, 10);
+        }
     }
 
     function updateWardrobeRecommendation() {

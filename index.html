@@ -913,15 +913,24 @@
                             <div class="bg-gradient-to-r from-charcoal to-gray-800 text-white p-8 rounded-2xl text-center shadow-xl mb-8">
                                 <h4 class="text-lg text-gray-300">Valor Total Estimado</h4>
                                 <p id="result-total" class="font-montserrat font-bold text-5xl text-gold my-4">R$ 0,00</p>
+                                <p class="text-sm text-gray-300 mt-4 max-w-md mx-auto">
+                                    <i class="fas fa-info-circle mr-1"></i>
+                                    Este valor é uma estimativa. Para condições especiais e descontos, fale com nossa equipe.
+                                </p>
                             </div>
                             <div class="bg-gold/10 border-l-4 border-gold text-yellow-800 p-6 rounded-lg">
                                 <h4 class="font-bold text-xl mb-4 text-charcoal"><i class="fas fa-tags mr-2 text-gold"></i>Condições Especiais</h4>
                                 <p class="leading-relaxed">Oferecemos parcelamento em até <strong>12x no cartão</strong> ou um <strong>desconto de 10%</strong> para pagamentos à vista. Fale conosco para outras opções!</p>
                             </div>
-                            <div class="grid md:grid-cols-3 gap-4 mt-8">
-                                <button id="pdf-btn" class="action-btn bg-red-500 hover:bg-red-600"><i class="fas fa-file-pdf mr-2"></i>Gerar PDF</button>
-                                <button id="whatsapp-btn" class="action-btn bg-green-500 hover:bg-green-600"><i class="fab fa-whatsapp mr-2"></i>Enviar WhatsApp</button>
-                                <button id="email-btn" class="action-btn bg-blue-500 hover:bg-blue-600"><i class="fas fa-envelope mr-2"></i>Enviar por E-mail</button>
+                            <div class="space-y-4 mt-8">
+                                <button id="whatsapp-btn" class="w-full bg-green-500 text-white font-bold py-4 px-8 rounded-lg shadow-lg hover:bg-green-600 hover:shadow-xl transform hover:-translate-y-1 transition-all duration-300 text-lg">
+                                    <i class="fab fa-whatsapp mr-2"></i>
+                                    Negociar Desconto via WhatsApp
+                                </button>
+                                <div class="grid grid-cols-2 gap-4">
+                                    <button id="pdf-btn" class="action-btn-secondary bg-gray-200 text-gray-700 hover:bg-gray-300"><i class="fas fa-file-pdf mr-2 text-red-500"></i>Gerar PDF</button>
+                                    <button id="email-btn" class="action-btn-secondary bg-gray-200 text-gray-700 hover:bg-gray-300"><i class="fas fa-envelope mr-2 text-blue-500"></i>Enviar por E-mail</button>
+                                </div>
                             </div>
                             <div class="flex flex-col sm:flex-row items-center justify-center gap-4 mt-8">
                                 <button class="prev-btn bg-transparent text-gray-500 font-semibold py-2 px-4 hover:text-charcoal transition-colors">
