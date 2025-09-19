@@ -70,21 +70,24 @@ function toggleMobileMenu() {
     isMenuOpen = !isMenuOpen;
     
     if (isMenuOpen) {
-        mobileMenu.classList.remove('hidden');
+        mobileMenu.classList.remove('translate-x-full');
         mobileMenuToggle.innerHTML = '<i class="fas fa-times text-2xl"></i>';
         mobileMenuToggle.setAttribute('aria-expanded', 'true');
         document.body.style.overflow = 'hidden';
+        header.classList.remove('bg-white/95', 'backdrop-blur-md'); // Remove blur to see menu clearly
     } else {
         closeMobileMenu();
     }
 }
 
 function closeMobileMenu() {
+    if (!isMenuOpen) return;
     isMenuOpen = false;
-    mobileMenu.classList.add('hidden');
+    mobileMenu.classList.add('translate-x-full');
     mobileMenuToggle.innerHTML = '<i class="fas fa-bars text-2xl"></i>';
     mobileMenuToggle.setAttribute('aria-expanded', 'false');
     document.body.style.overflow = 'auto';
+    header.classList.add('bg-white/95', 'backdrop-blur-md');
 }
 
 // Scroll effects
@@ -183,6 +186,14 @@ function setupContactForm() {
                 fileNameSpan.textContent = 'Escolher arquivo (planta, foto, etc.)';
             }
         });
+
+        const newMessageBtn = document.getElementById('new-message-btn');
+        if (newMessageBtn) {
+            newMessageBtn.addEventListener('click', () => {
+                document.getElementById('contact-form-container').classList.remove('hidden');
+                document.getElementById('contact-success-message').classList.add('hidden');
+            });
+        }
     }
 }
 
@@ -240,10 +251,10 @@ async function handleContactFormSubmit(e) {
         });
 
         if (response.ok) {
-            showNotification('Mensagem enviada com sucesso! Entraremos em contato em breve.', 'success');
             contactForm.reset();
-            // Reseta o nome do arquivo no label
-            if (document.getElementById('file-name')) {
+            document.getElementById('contact-form-container').classList.add('hidden');
+            document.getElementById('contact-success-message').classList.remove('hidden');
+            if (document.getElementById('file-name')) { // Reset file name on success
                 document.getElementById('file-name').textContent = 'Escolher arquivo (planta, foto, etc.)';
             }
         } else {
@@ -938,6 +949,14 @@ function setupSimulator() {
         document.getElementById('whatsapp-btn').addEventListener('click', generateWhatsAppLink);
         document.getElementById('email-btn').addEventListener('click', generateEmailLink);
         document.getElementById('competitor-whatsapp-btn').addEventListener('click', generateCompetitorWhatsAppLink);
+
+        // Step 6: Breakdown toggle
+        const toggleBtn = document.getElementById('toggle-breakdown-btn');
+        const breakdownDiv = document.getElementById('result-breakdown');
+        toggleBtn.addEventListener('click', () => {
+            const isHidden = breakdownDiv.classList.toggle('hidden');
+            toggleBtn.querySelector('i').classList.toggle('rotate-180', !isHidden);
+        });
     }
 
     // --- UI & NAVIGATION ---

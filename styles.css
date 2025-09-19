@@ -418,6 +418,10 @@ input[type="radio"]:not(.sr-only):checked::after {
     cursor: pointer;
     transition: all 0.3s;
 }
+.extra-option-card:hover {
+    box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+    border-color: #d1d5db;
+}
 .extra-option-card:has(input:checked) {
     border-color: #D4AF37;
     background-color: rgba(212, 175, 55, 0.05);

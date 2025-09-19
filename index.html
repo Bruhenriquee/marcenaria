@@ -90,7 +90,7 @@
             </div>
             
             <!-- Mobile Menu -->
-            <div class="md:hidden mt-4 hidden" id="mobile-menu">
+            <div class="md:hidden fixed inset-0 bg-white/95 backdrop-blur-md z-40 pt-24 px-6 transform translate-x-full transition-transform duration-300 ease-in-out" id="mobile-menu">
                 <div class="flex flex-col space-y-4 py-4">
                     <a href="#inicio" class="text-gray-700 hover:text-gold transition-colors">Início</a>
                     <a href="#sobre" class="text-gray-700 hover:text-gold transition-colors">Sobre</a>
@@ -119,24 +119,20 @@
         
         <div class="relative z-10 container mx-auto px-6">
             <div class="max-w-3xl mx-auto text-center">
-                <h2 class="font-montserrat font-semibold text-lg text-gold tracking-widest uppercase mb-2">
-                    Arte em forma de móvel
-                </h2>
-                <div class="w-24 h-px bg-gold/50 mx-auto mb-6"></div>
-                <h1 class="font-montserrat text-white mb-6 leading-tight shadow-text">
+                <h1 class="font-montserrat text-white mb-5 leading-tight shadow-text">
                     <span class="font-bold tracking-wider uppercase block text-6xl md:text-7xl">Móveis Planejados</span>
                     <span class="font-light text-gold text-3xl md:text-4xl tracking-[0.2em] uppercase [text-shadow:0_0_10px_rgba(0,0,0,0.7)]">de Alta Qualidade</span>
                 </h1>
-                <p class="text-xl md:text-2xl text-gray-200 mb-8 font-light leading-relaxed">
-                    Transformamos seus sonhos em realidade com móveis sob medida, 
-                    design exclusivo e materiais de alta qualidade.
+                <div class="w-48 h-px bg-gold mx-auto mb-5"></div>
+                <p class="text-xl text-gray-200 mb-8 font-light leading-relaxed max-w-xl mx-auto">
+                    Design e qualidade para transformar seus ambientes. Simule seu projeto online.
                 </p>
                 <div class="flex flex-col sm:flex-row gap-4 justify-center">
                     <button onclick="scrollToSection('simulador')" class="bg-gradient-to-r from-gold to-yellow-600 text-white px-8 py-4 rounded-lg font-montserrat font-semibold text-lg hover:shadow-xl transform hover:-translate-y-2 transition-all duration-300">
                         <i class="fas fa-calculator mr-2"></i>
                         Simular Preço
                     </button>
-                    <button onclick="scrollToSection('galeria')" class="border-2 border-white text-white px-8 py-4 rounded-lg font-montserrat font-semibold text-lg hover:bg-white hover:text-charcoal transition-all duration-300">
+                    <button onclick="scrollToSection('galeria')" class="border border-white/80 text-white/90 px-8 py-4 rounded-lg font-montserrat font-semibold text-lg hover:bg-white/10 hover:text-white hover:border-white transition-all duration-300">
                         <i class="fas fa-images mr-2"></i>
                         Ver Projetos
                     </button>
@@ -917,11 +913,15 @@
                                         <div class="flex justify-between items-center py-2"><span class="flex items-center"><i class="fas fa-plus-circle w-6 text-gold"></i>Extras</span><span id="result-extras" class="font-bold text-charcoal text-right">Nenhum</span></div>
                                     </div>
                                 </div>
-                                <div class="bg-gray-50 p-8">
-                                    <h4 class="font-montserrat font-bold text-lg text-charcoal mb-4">Detalhamento de Custos</h4>
-                                    <div class="space-y-2 text-gray-600">
-                                        <div class="flex justify-between items-center"><span class="flex items-center"><i class="fas fa-box-open w-5 mr-2 text-gray-400"></i>Custo Base (Materiais)</span><span id="result-base-price" class="font-semibold text-charcoal">R$ 0,00</span></div>
-                                        <div class="flex justify-between items-center"><span class="flex items-center"><i class="fas fa-star w-5 mr-2 text-gray-400"></i>Adicionais e Acabamentos</span><span id="result-extras-price" class="font-semibold text-charcoal">R$ 0,00</span></div>
+                                <div id="result-breakdown-container" class="bg-gray-50 p-8">
+                                    <button id="toggle-breakdown-btn" class="w-full text-center text-gold font-semibold mb-4">
+                                        Ver Detalhamento <i class="fas fa-chevron-down ml-1 transition-transform"></i>
+                                    </button>
+                                    <div id="result-breakdown" class="hidden">
+                                        <div class="space-y-2 text-gray-600">
+                                            <div class="flex justify-between items-center"><span class="flex items-center"><i class="fas fa-box-open w-5 mr-2 text-gray-400"></i>Custo Base (Materiais)</span><span id="result-base-price" class="font-semibold text-charcoal">R$ 0,00</span></div>
+                                            <div class="flex justify-between items-center"><span class="flex items-center"><i class="fas fa-star w-5 mr-2 text-gray-400"></i>Adicionais e Acabamentos</span><span id="result-extras-price" class="font-semibold text-charcoal">R$ 0,00</span></div>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -936,51 +936,26 @@
 
                             <!-- Competitor Quote Hook -->
                             <div id="competitor-quote-hook" class="my-8 p-8 bg-gold/5 rounded-2xl text-center shadow-lg border border-gold/20">
-                                <h4 class="font-montserrat font-bold text-2xl text-charcoal mb-3">Achou o valor diferente do que esperava?</h4>
-                                <p class="text-gray-600 mb-8 max-w-2xl mx-auto">Se você já tem um orçamento, envie para nossa análise. Nós não apenas cobrimos a oferta, nós <strong>superamos na qualidade</strong>. Veja como:</p>
-                                
-                                <div class="max-w-4xl mx-auto grid md:grid-cols-3 gap-8 text-left mb-8">
-                                    <div class="flex items-start gap-4">
-                                        <i class="fas fa-gem text-2xl text-gold mt-1"></i>
-                                        <div>
-                                            <h5 class="font-semibold text-charcoal">Materiais Premium</h5>
-                                            <p class="text-sm text-gray-600">Garantimos MDF de primeira linha e ferragens robustas.</p>
-                                        </div>
-                                    </div>
-                                    <div class="flex items-start gap-4">
-                                        <i class="fas fa-hand-sparkles text-2xl text-gold mt-1"></i>
-                                        <div>
-                                            <h5 class="font-semibold text-charcoal">Acabamento Impecável</h5>
-                                            <p class="text-sm text-gray-600">Montagem artesanal para um resultado final perfeito.</p>
-                                        </div>
-                                    </div>
-                                    <div class="flex items-start gap-4">
-                                        <i class="fas fa-shield-alt text-2xl text-gold mt-1"></i>
-                                        <div>
-                                            <h5 class="font-semibold text-charcoal">Garantia e Suporte</h5>
-                                            <p class="text-sm text-gray-600">Suporte completo e garantia em todos os projetos.</p>
-                                        </div>
-                                    </div>
-                                </div>
+                                <h4 class="font-montserrat font-bold text-2xl text-charcoal mb-3">Já tem um orçamento?</h4>
+                                <p class="text-gray-600 mb-6 max-w-2xl mx-auto">Envie para nossa análise. Nós não apenas cobrimos a oferta, nós <strong>superamos na qualidade</strong>, com materiais premium e acabamento impecável.</p>
 
                                 <button id="competitor-whatsapp-btn" class="bg-charcoal text-white font-bold py-3 px-8 rounded-lg shadow-md hover:bg-gray-800 transform hover:-translate-y-1 transition-all duration-300">
                                     <i class="fas fa-search-dollar mr-2"></i>
                                     Analisar meu Orçamento
                                 </button>
 
-                                <div class="mt-8 pt-6 border-t border-gold/20">
+                                <div class="mt-6 pt-4 border-t border-gold/20">
                                     <h5 class="font-semibold text-charcoal mb-3">Além disso, oferecemos condições facilitadas:</h5>
                                     <div class="flex flex-col sm:flex-row justify-center items-center gap-x-6 gap-y-2 text-gray-600">
                                         <span class="flex items-center">
                                             <i class="fas fa-credit-card text-gold mr-2"></i>
-                                            Parcelamento em até 12x*
+                                            Parcelamento em até 12x
                                         </span>
                                         <span class="flex items-center">
                                             <i class="fas fa-dollar-sign text-gold mr-2"></i>
                                             Desconto para pagamento à vista
                                         </span>
                                     </div>
-                                    <p class="text-xs text-gray-500 mt-3">*Consulte taxas e condições.</p>
                                 </div>
                             </div>
 
@@ -989,9 +964,9 @@
                                     <i class="fab fa-whatsapp mr-2"></i>
                                     Negociar Desconto via WhatsApp
                                 </button>
-                                <div class="grid grid-cols-2 gap-4">
-                                    <button id="pdf-btn" class="action-btn-secondary bg-gray-200 text-gray-700 hover:bg-gray-300"><i class="fas fa-file-pdf mr-2 text-red-500"></i>Gerar PDF</button>
-                                    <button id="email-btn" class="action-btn-secondary bg-gray-200 text-gray-700 hover:bg-gray-300"><i class="fas fa-envelope mr-2 text-blue-500"></i>Enviar por E-mail</button>
+                                <div class="flex justify-center items-center gap-6 mt-4">
+                                    <button id="pdf-btn" class="text-gray-600 hover:text-gold font-semibold transition-colors flex items-center gap-2"><i class="fas fa-file-pdf text-red-500"></i>Gerar PDF</button>
+                                    <button id="email-btn" class="text-gray-600 hover:text-gold font-semibold transition-colors flex items-center gap-2"><i class="fas fa-envelope text-blue-500"></i>Enviar por E-mail</button>
                                 </div>
                             </div>
                             <div class="flex flex-col sm:flex-row items-center justify-center gap-4 mt-8">
@@ -1106,54 +1081,68 @@
 
             <!-- Layout Integrado -->
             <div class="max-w-7xl mx-auto grid lg:grid-cols-5 gap-10">
-                <!-- Formulário -->
-                <div class="lg:col-span-3 bg-white rounded-2xl shadow-xl p-8">
-                    <h3 class="font-montserrat font-bold text-2xl text-charcoal mb-6">Envie sua mensagem</h3>
-                    <form action="https://formspree.io/f/SEU_ID_AQUI" method="POST" id="contact-form" class="space-y-6">
-                        <div class="relative">
-                            <input type="text" id="name" name="name" required class="form-input peer" placeholder=" ">
-                            <label for="name" class="form-label">Nome Completo *</label>
-                        </div>
-                        <div class="grid md:grid-cols-2 gap-6">
+                <!-- Wrapper do Formulário -->
+                <div id="contact-form-wrapper" class="lg:col-span-3 bg-white rounded-2xl shadow-xl p-8">
+                    <!-- Formulário -->
+                    <div id="contact-form-container">
+                        <h3 class="font-montserrat font-bold text-2xl text-charcoal mb-6">Envie sua mensagem</h3>
+                        <form action="https://formspree.io/f/SEU_ID_AQUI" method="POST" id="contact-form" class="space-y-6">
                             <div class="relative">
-                                <input type="email" id="email" name="email" required class="form-input peer" placeholder=" ">
-                                <label for="email" class="form-label">E-mail *</label>
+                                <input type="text" id="name" name="name" required class="form-input peer" placeholder=" ">
+                                <label for="name" class="form-label">Nome Completo *</label>
+                            </div>
+                            <div class="grid md:grid-cols-2 gap-6">
+                                <div class="relative">
+                                    <input type="email" id="email" name="email" required class="form-input peer" placeholder=" ">
+                                    <label for="email" class="form-label">E-mail *</label>
+                                </div>
+                                <div class="relative">
+                                    <input type="tel" id="phone" name="phone" class="form-input peer" placeholder=" " oninput="maskPhone(event)">
+                                    <label for="phone" class="form-label">Telefone</label>
+                                </div>
                             </div>
                             <div class="relative">
-                                <input type="tel" id="phone" name="phone" class="form-input peer" placeholder=" " oninput="maskPhone(event)">
-                                <label for="phone" class="form-label">Telefone</label>
+                                <select id="subject" name="subject" required class="form-input peer">
+                                    <option value="">Selecione o tipo de móvel *</option>
+                                    <option value="cozinha">Cozinha Planejada</option>
+                                    <option value="guarda-roupa">Guarda-Roupa Planejado</option>
+                                    <option value="home-theater">Home Theater</option>
+                                    <option value="estante">Estante/Biblioteca</option>
+                                    <option value="home-office">Home Office</option>
+                                    <option value="dormitorio">Dormitório Completo</option>
+                                    <option value="outro">Outro</option>
+                                </select>
                             </div>
+                            <div class="relative">
+                                <textarea id="message" name="message" rows="5" required class="form-input peer" placeholder=" "></textarea>
+                                <label for="message" class="form-label">Sua Mensagem *</label>
+                            </div>
+                            <div class="relative">
+                                <label for="attachment" class="block text-sm font-medium text-gray-700 mb-2">Anexar arquivo (opcional)</label>
+                                <label for="attachment" class="file-input-label">
+                                    <i class="fas fa-paperclip mr-2"></i>
+                                    <span id="file-name">Escolher arquivo (planta, foto, etc.)</span>
+                                </label>
+                                <input type="file" id="attachment" name="attachment" class="sr-only">
+                                <p class="text-xs text-gray-500 mt-1">Tamanho máximo: 5MB. Tipos: JPG, PNG, PDF.</p>
+                            </div>
+                            <button type="submit" class="w-full bg-gradient-to-r from-gold to-yellow-600 text-white py-3 rounded-lg font-montserrat font-bold text-lg hover:shadow-xl transform hover:-translate-y-1 transition-all duration-300">
+                                <i class="fas fa-paper-plane mr-2"></i>
+                                Enviar Mensagem
+                            </button>
+                        </form>
+                    </div>
+                    <!-- Mensagem de Sucesso -->
+                    <div id="contact-success-message" class="hidden text-center py-10">
+                        <div class="w-20 h-20 bg-green-100 text-green-500 rounded-full flex items-center justify-center mx-auto mb-6">
+                            <i class="fas fa-check-circle text-4xl"></i>
                         </div>
-                        <div class="relative">
-                            <select id="subject" name="subject" required class="form-input peer">
-                                <option value="">Selecione o tipo de móvel *</option>
-                                <option value="cozinha">Cozinha Planejada</option>
-                                <option value="guarda-roupa">Guarda-Roupa Planejado</option>
-                                <option value="home-theater">Home Theater</option>
-                                <option value="estante">Estante/Biblioteca</option>
-                                <option value="home-office">Home Office</option>
-                                <option value="dormitorio">Dormitório Completo</option>
-                                <option value="outro">Outro</option>
-                            </select>
-                        </div>
-                        <div class="relative">
-                            <textarea id="message" name="message" rows="5" required class="form-input peer" placeholder=" "></textarea>
-                            <label for="message" class="form-label">Sua Mensagem *</label>
-                        </div>
-                        <div class="relative">
-                            <label for="attachment" class="block text-sm font-medium text-gray-700 mb-2">Anexar arquivo (opcional)</label>
-                            <label for="attachment" class="file-input-label">
-                                <i class="fas fa-paperclip mr-2"></i>
-                                <span id="file-name">Escolher arquivo (planta, foto, etc.)</span>
-                            </label>
-                            <input type="file" id="attachment" name="attachment" class="sr-only">
-                            <p class="text-xs text-gray-500 mt-1">Tamanho máximo: 5MB. Tipos: JPG, PNG, PDF.</p>
-                        </div>
-                        <button type="submit" class="w-full bg-gradient-to-r from-gold to-yellow-600 text-white py-3 rounded-lg font-montserrat font-bold text-lg hover:shadow-xl transform hover:-translate-y-1 transition-all duration-300">
-                            <i class="fas fa-paper-plane mr-2"></i>
-                            Enviar Mensagem
+                        <h3 class="font-montserrat font-bold text-2xl text-charcoal mb-3">Mensagem Enviada!</h3>
+                        <p class="text-gray-600 mb-8">Agradecemos o seu contato. Retornaremos em breve.</p>
+                        <button id="new-message-btn" class="bg-charcoal text-white font-semibold py-2 px-6 rounded-lg hover:bg-gray-700 transition-colors">
+                            <i class="fas fa-plus mr-2"></i>Enviar Nova Mensagem
                         </button>
-                    </form>
+                    </div>
                 </div>
 
                 <!-- Coluna da Direita: Informações e Mapa -->
