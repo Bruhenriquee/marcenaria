@@ -838,6 +838,7 @@ function setupSimulator() {
                 updateStateAndSave({ closetHasDoors: e.target.value === 'sim' });
                 updateWardrobeRecommendation();
                 updateWardrobeSubSteps(); // Re-check door type visibility
+                updateContainerHeight();
             });
         });
 
@@ -1028,6 +1029,15 @@ function setupSimulator() {
         document.getElementById('wardrobe-options').classList.toggle('hidden', !isWardrobe);
         document.getElementById('kitchen-options').classList.toggle('hidden', isWardrobe);
 
+        // Explicitly manage handle section visibility when furniture type changes
+        const handleTypeSection = document.getElementById('handle-type-section');
+        if (isWardrobe) {
+            // For wardrobe, its visibility depends on whether it's an open closet, which is handled in updateWardrobeSubSteps
+            updateWardrobeSubSteps();
+        } else { // For Kitchen, it should always be visible in step 4
+            handleTypeSection.classList.remove('hidden');
+        }
+
         if (isWardrobe) {
             updateWardrobeRecommendation();
         } else {
@@ -1041,12 +1051,29 @@ function setupSimulator() {
         const isCloset = state.wardrobeFormat === 'closet';
         document.getElementById('closet-door-step').classList.toggle('hidden', !isCloset);
         document.getElementById('add-wardrobe-wall-btn').classList.toggle('hidden', !isCloset);
+
+        // Hide handle selection if it's an open closet
+        const handleTypeSection = document.getElementById('handle-type-section');
+        handleTypeSection.classList.toggle('hidden', isCloset && !state.closetHasDoors);
         
         // Hide door type selection if it's an open closet
         const doorTypeSection = document.getElementById('door-type-section');
         const isClosetOpen = isCloset && !state.closetHasDoors;
         doorTypeSection.classList.toggle('hidden', isClosetOpen);
-        // No need to call updateContainerHeight here, the event listener that calls this function will do it.
+
+        // Hide mirror door option if it's an open closet
+        const mirrorDoorOption = document.getElementById('extra-mirror-door');
+        if (mirrorDoorOption) {
+            mirrorDoorOption.classList.toggle('hidden', isClosetOpen);
+            // If it's hidden, also uncheck it and remove from state
+            if (isClosetOpen) {
+                const mirrorCheckbox = mirrorDoorOption.querySelector('input[type="checkbox"]');
+                if (mirrorCheckbox.checked) {
+                    mirrorCheckbox.checked = false;
+                    mirrorCheckbox.dispatchEvent(new Event('change')); 
+                }
+            }
+        }
     }
 
     function updateKitchenSubSteps() {
@@ -1213,17 +1240,20 @@ function setupSimulator() {
         }
         if (step === 4) {
             const isClosetOpen = state.wardrobeFormat === 'closet' && !state.closetHasDoors;
-            if (state.furnitureType === 'Guarda-Roupa' && !isClosetOpen && !state.doorType) {
-                showNotification('Por favor, escolha o tipo de porta.', 'error');
-                return false;
-            }
-            if (!state.handleType) {
-                showNotification('Por favor, escolha o tipo de puxador.', 'error');
-                return false;
-            }
-            if (!state.hardwareType) {
-                showNotification('Por favor, escolha o acabamento interno.', 'error');
-                return false;
+            if (state.furnitureType === 'Guarda-Roupa') {
+                if (!isClosetOpen && !state.doorType) {
+                    showNotification('Por favor, escolha o tipo de porta.', 'error');
+                    return false;
+                }
+                if (!isClosetOpen && !state.handleType) {
+                    showNotification('Por favor, escolha o tipo de puxador.', 'error');
+                    return false;
+                }
+            } else { // Cozinha
+                if (!state.handleType) {
+                    showNotification('Por favor, escolha o tipo de puxador.', 'error');
+                    return false;
+                }
             }
         }
         if (step === 5 && !state.projectOption) {
@@ -1567,6 +1597,11 @@ function setupSimulator() {
         await new Promise(resolve => setTimeout(resolve, 100));
 
         try {
+            // FIX: Default hardwareType if not selected to prevent calculation errors.
+            if (!state.hardwareType) {
+                updateStateAndSave({ hardwareType: 'padrao' });
+            }
+
             calculateQuote();
             renderResult();
             document.getElementById('lead-capture-form').classList.add('hidden');
