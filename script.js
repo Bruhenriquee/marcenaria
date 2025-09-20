@@ -31,6 +31,7 @@ function initializeApp() {
     observeElements();
     setupGalleryLightbox();
     setupPdfViewer();
+    setupTermsModal(); // Add this
     setupSimulator(); // This was the missing call
     setupLazyLoading();
     setupActiveNavLinks(); // Highlight active nav link on scroll
@@ -497,6 +498,46 @@ function setupPdfViewer() {
     pdfModal.addEventListener('click', (e) => {
         if (e.target === pdfModal) {
             closePdfViewer();
+        }
+    });
+}
+
+// Terms Modal Logic
+function setupTermsModal() {
+    const termsModal = document.getElementById('terms-modal');
+    if (!termsModal) return;
+
+    const closeBtn = document.getElementById('terms-modal-close');
+    const openTriggers = document.querySelectorAll('#open-terms-modal-footer, #open-terms-modal-simulator');
+
+    const openModal = () => {
+        termsModal.classList.remove('hidden');
+        document.body.style.overflow = 'hidden';
+    };
+
+    const closeModal = () => {
+        termsModal.classList.add('hidden');
+        document.body.style.overflow = 'auto';
+    };
+
+    openTriggers.forEach(trigger => {
+        trigger.addEventListener('click', (e) => {
+            e.preventDefault(); // Prevent default link behavior if it's an <a>
+            openModal();
+        });
+    });
+
+    closeBtn.addEventListener('click', closeModal);
+
+    termsModal.addEventListener('click', (e) => {
+        if (e.target === termsModal) {
+            closeModal();
+        }
+    });
+
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && !termsModal.classList.contains('hidden')) {
+            closeModal();
         }
     });
 }
