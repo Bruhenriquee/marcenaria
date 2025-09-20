@@ -316,7 +316,7 @@ function showNotification(message, type = 'info') {
 function animateCounter(element, start, end, duration, suffix = '') {
     let startTime = null;
 
-    function animation(currentTime) {
+    const animation = (currentTime) => {
         if (!startTime) startTime = currentTime;
         const progress = Math.min((currentTime - startTime) / duration, 1);
         const currentValue = Math.floor(progress * (end - start) + start);
@@ -338,10 +338,10 @@ function observeElements() {
                 // Check for counters inside the revealed element
                 const counters = entry.target.querySelectorAll('.counter');
                 counters.forEach(counter => {
-                    if (counter.dataset.animated) return; // Prevent re-animating
+                    if (counter.dataset.animated === 'true') return; // Prevent re-animating
                     const target = +counter.dataset.countTo;
                     const suffix = counter.dataset.suffix || '';
-                    animateCounter(counter, 0, target, 2000, suffix);
+                    animateCounter(counter, 0, target, 2500, suffix);
                     counter.dataset.animated = 'true';
                 });
 
@@ -349,7 +349,7 @@ function observeElements() {
             }
         });
     }, {
-        threshold: 0.1,
+        threshold: 0.15,
         rootMargin: '50px'
     });
     
@@ -645,12 +645,12 @@ window.maskPhone = maskPhone;
 const SIMULATOR_CONFIG = {
     // =========================================================================
     // CUSTOS COMUNS (Aplicável a Guarda-Roupa e Cozinha)
-    // =========================================================================
     COMMON_COSTS: {
         // Custo fixo cobrado se o cliente optar pela criação de um projeto 3D.
         'PROJECT_3D': 350,
         // Custo por METRO LINEAR de fita de LED instalada.
         // O cálculo multiplica este valor pela largura total do móvel.
+            // =========================================================================
         'Iluminação LED': 350,
     },
     // =========================================================================
@@ -660,8 +660,8 @@ const SIMULATOR_CONFIG = {
         // O preço do guarda-roupa é calculado com base na ÁREA FRONTAL (largura x altura).
         // Defina aqui o preço por METRO QUADRADO (m²) para cada tipo de material.
         PRICING_PER_M2: {
-            'Branco': 800,    // Preço/m² para MDF totalmente branco.
-            'Mesclada': 900,  // Preço/m² para estrutura branca e portas coloridas.
+                'Branco': 800, // Preço/m² para MDF totalmente branco.
+                'Mesclada': 900, // Preço/m² para estrutura branca e portas coloridas.
             'Premium': 1200,  // Preço/m² para MDF totalmente colorido/texturizado.
         },
         // Área total de uma chapa de MDF (padrão 2.75m * 1.85m = 5.0875 m²). Usado para estimar a quantidade de chapas.
@@ -669,7 +669,7 @@ const SIMULATOR_CONFIG = {
         // Custos de ferragens e puxadores para guarda-roupa.
         HARDWARE: {
             HANDLE_BAR_COST: {
-                'aluminio': 0,      // Custo da barra de alumínio (padrão, já incluso no preço/m²).
+                    'aluminio': 0, // Custo da barra de alumínio (padrão, já incluso no preço/m²).
                 'premium': 100.00   // Custo ADICIONAL por BARRA de 3m para puxadores premium (inox, preto, dourado).
             },
             // Comprimento padrão de uma barra de puxador em metros. Usado para calcular quantas barras são necessárias.
@@ -694,7 +694,7 @@ const SIMULATOR_CONFIG = {
         // O preço da cozinha é calculado com base no CUSTO DAS CHAPAS de MDF.
         // Defina aqui o preço por CHAPA para cada tipo de material.
         MDF_SHEET_PRICING: {
-            'Branco': 240,   // Preço de uma chapa de MDF branco.
+            'Branco': 240, // Preço de uma chapa de MDF branco.
             'Premium': 400,  // Preço de uma chapa de MDF colorido/texturizado.
         },
         // Área total de uma chapa de MDF (padrão 2.75m * 1.85m = 5.0875 m²). Usado para calcular a quantidade de chapas.
@@ -716,8 +716,8 @@ const SIMULATOR_CONFIG = {
         },
         // Custos de itens extras específicos para cozinha.
         EXTRAS_COST: {
-            'Porta-temperos': 350,        // Custo FIXO para um porta-temperos embutido.
-            'Lixeira Embutida': 400,        // Custo FIXO para uma lixeira embutida.
+            'Porta-temperos': 350, // Custo FIXO para um porta-temperos embutido.
+            'Lixeira Embutida': 400, // Custo FIXO para uma lixeira embutida.
             // Custo por METRO LINEAR de armário de pia (balcão inferior).
             'SINK_CABINET_PER_METER': 450,
             // Custo por METRO LINEAR de altura da torre quente (para forno/micro-ondas).
@@ -876,7 +876,7 @@ function setupSimulator() {
             });
         });
 
-        // Step 5: 3D Project
+        // Step 6 (old Step 5): 3D Project
         document.querySelectorAll('input[name="projectOption"]').forEach(radio => {
             radio.addEventListener('change', (e) => {
                 updateStateAndSave({ projectOption: e.target.value });
@@ -922,14 +922,12 @@ function setupSimulator() {
                 updateStateAndSave({ hardwareType: e.target.value });
             });
         });
-
         // Step 4: Handle Type
         document.querySelectorAll('input[name="handleType"]').forEach(radio => {
             radio.addEventListener('change', (e) => {
                 updateStateAndSave({ handleType: e.target.value });
             });
         });
-
         // Step 4: Extras
         document.querySelectorAll('input[name="extras"]').forEach(checkbox => {
             checkbox.addEventListener('change', () => {
@@ -942,7 +940,6 @@ function setupSimulator() {
         document.getElementById('pdf-btn').addEventListener('click', generatePDF);
         document.getElementById('whatsapp-btn').addEventListener('click', generateWhatsAppLink);
         document.getElementById('email-btn').addEventListener('click', generateEmailLink);
-        document.getElementById('competitor-whatsapp-btn').addEventListener('click', generateCompetitorWhatsAppLink);
 
         // Step 6: Breakdown toggle
         const toggleBtn = document.getElementById('toggle-breakdown-btn');
@@ -1037,7 +1034,7 @@ function setupSimulator() {
         } else { // For Kitchen, it should always be visible in step 4
             handleTypeSection.classList.remove('hidden');
         }
-
+        
         if (isWardrobe) {
             updateWardrobeRecommendation();
         } else {
@@ -1294,7 +1291,7 @@ function setupSimulator() {
         const { height, depth } = state.dimensions;
         const width = state.dimensions.walls.reduce((acc, wall) => acc + wall.width, 0);
         const depthM = depth / 100;
-        const frontArea = width * height;
+        const frontArea = width * height;        
         const hasDoors = !(state.wardrobeFormat === 'closet' && !state.closetHasDoors);
         
         // --- Base Price Calculation (based on m²) ---
@@ -1725,11 +1722,6 @@ function setupSimulator() {
         if (state.projectOption === 'upload' && state.projectFile) {
             text += '\n\n*(Anexei o arquivo do meu projeto no simulador. Por favor, me informe como posso enviá-lo.)*';
         }
-        window.open(`https://wa.me/5518981558125?text=${encodeURIComponent(text)}`, '_blank');
-    }
-
-    function generateCompetitorWhatsAppLink() {
-        const text = `Olá! Fiz uma simulação no site (Total: ${document.getElementById('result-total').textContent}) e gostaria de uma análise comparativa, pois já tenho um orçamento de outra empresa.`;
         window.open(`https://wa.me/5518981558125?text=${encodeURIComponent(text)}`, '_blank');
     }
 

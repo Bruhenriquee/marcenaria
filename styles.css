@@ -476,6 +476,14 @@ input[type="radio"]:not(.sr-only):checked::after {
     background-color: #D4AF37;
 }
 
+/* Ajuste para a barra de progresso em telas muito pequenas */
+@media (max-width: 360px) {
+    .progress-step {
+        width: 2.5rem;
+        height: 2.5rem;
+        font-size: 1rem;
+    }
+}
 #simulator-overlay {
     transition: opacity 0.3s ease-in-out, visibility 0.3s ease-in-out;
 }
