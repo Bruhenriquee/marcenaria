@@ -38,6 +38,7 @@
                         'wood': '#8B4513',
                         'gold': '#D4AF37',
                         'charcoal': '#2F2F2F',
+
                     }
                 }
             }
@@ -46,67 +47,104 @@
 </head>
 <body class="font-roboto">
     <!-- Header -->
-    <header class="fixed w-full top-0 z-50 bg-white/95 backdrop-blur-md shadow-sm transition-all duration-300" id="header">
+    <header class="fixed w-full top-0 z-40 bg-white/95 backdrop-blur-md shadow-sm transition-all duration-300" id="header">
         <nav class="container mx-auto px-4 sm:px-6 py-4">
             <div class="flex items-center justify-between">
                 <!-- Logo SVG -->
-                <div class="flex items-center space-x-2 sm:space-x-3">
-                    <svg class="w-10 h-10" viewBox="0 0 50 50" xmlns="http://www.w3.org/2000/svg">
-                        <rect x="10" y="15" width="30" height="20" rx="2" fill="#8B4513" stroke="#D4AF37" stroke-width="1"/>
-                        <rect x="15" y="20" width="5" height="10" fill="#D4AF37"/>
-                        <rect x="22.5" y="20" width="5" height="10" fill="#D4AF37"/>
-                        <rect x="30" y="20" width="5" height="10" fill="#D4AF37"/>
-                        <text x="25" y="45" text-anchor="middle" font-family="Montserrat" font-size="8" font-weight="600" fill="#2F2F2F">RM</text>
-                    </svg>
-                    <div>
-                        <h1 class="font-montserrat font-bold text-lg sm:text-xl text-charcoal">Roni Marceneiro</h1>
-                        <p class="text-xs text-gray-600">Móveis Planejados</p>
+                <a href="#inicio" class="flex items-center space-x-2 sm:space-x-3 group focus:outline-none focus:ring-2 focus:ring-gold focus:ring-offset-2 rounded-lg">
+                    <div class="flex items-center space-x-2 sm:space-x-3">
+                        <svg class="w-10 h-10 group-hover:scale-105 transition-transform duration-300" viewBox="0 0 50 50" xmlns="http://www.w3.org/2000/svg">
+                            <rect x="10" y="15" width="30" height="20" rx="2" fill="#8B4513" stroke="#D4AF37" stroke-width="1"/>
+                            <rect x="15" y="20" width="5" height="10" fill="#D4AF37"/>
+                            <rect x="22.5" y="20" width="5" height="10" fill="#D4AF37"/>
+                            <rect x="30" y="20" width="5" height="10" fill="#D4AF37"/>
+                            <text x="25" y="45" text-anchor="middle" font-family="Montserrat" font-size="8" font-weight="600" fill="#2F2F2F">RM</text>
+                        </svg>
+                        <div>
+                            <h1 class="font-montserrat font-bold text-lg sm:text-xl text-charcoal">Roni Marceneiro</h1>
+                            <p class="text-xs text-gray-600">Móveis Planejados</p>
+                        </div>
                     </div>
-                </div>
+                </a>
                 
                 <!-- Desktop Navigation -->
                 <nav class="hidden md:flex items-center space-x-8">
-                    <a href="#inicio" class="text-gray-700 hover:text-gold transition-colors duration-300">Início</a>
-                    <a href="#sobre" class="text-gray-700 hover:text-gold transition-colors duration-300">Sobre</a>
-                    <a href="#servicos" class="text-gray-700 hover:text-gold transition-colors duration-300">Serviços</a>
-                    <a href="#processo" class="text-gray-700 hover:text-gold transition-colors duration-300">Processo</a>
-                    <a href="#galeria" class="text-gray-700 hover:text-gold transition-colors duration-300">Galeria</a>
-                    <a href="#simulador" class="text-gray-700 hover:text-gold transition-colors duration-300">Simulador</a>
-                    <a href="#contato" class="text-gray-700 hover:text-gold transition-colors duration-300">Contato</a>
+                    <a href="#inicio" class="nav-link">Início</a>
+                    <a href="#sobre" class="nav-link">Sobre</a>
+                    <a href="#servicos" class="nav-link">Serviços</a>
+                    <a href="#processo" class="nav-link">Processo</a>
+                    <a href="#galeria" class="nav-link">Galeria</a>
+                    <a href="#simulador" class="nav-link">Simulador</a>
+                    <a href="#contato" class="nav-link">Contato</a>
                 </nav>
                 
                 <!-- CTA Button -->
-                <button onclick="scrollToSection('contato')" class="hidden md:block bg-gradient-to-r from-gold to-yellow-600 text-white px-6 py-3 rounded-lg font-montserrat font-semibold hover:shadow-lg transform hover:-translate-y-1 transition-all duration-300">
+                <button onclick="scrollToSection('contato')" class="hidden md:block bg-gradient-to-r from-gold to-yellow-600 text-white px-6 py-3 rounded-lg font-montserrat font-semibold hover:shadow-lg transform hover:-translate-y-1 transition-all duration-300 btn-gradient">
                     Orçamento Grátis
                 </button>
                 
                 <!-- Mobile Menu Toggle -->
-                <button class="md:hidden text-charcoal" 
+                <button class="md:hidden text-charcoal z-[60] relative w-8 h-8 flex items-center justify-center"
                         id="mobile-menu-toggle"
                         aria-controls="mobile-menu" 
                         aria-expanded="false"
-                        aria-label="Abrir menu de navegação">
-                    <i class="fas fa-bars text-2xl"></i>
+                        aria-label="Abrir/Fechar menu de navegação">
+                    <i class="fas fa-bars text-2xl transition-all duration-300 transform absolute"></i>
+                    <i class="fas fa-times text-2xl transition-all duration-300 transform absolute opacity-0 scale-50"></i>
                 </button>
-            </div>
-            
-            <!-- Mobile Menu -->
-            <div class="md:hidden fixed inset-0 bg-white/95 backdrop-blur-md z-40 pt-24 px-6 transform translate-x-full transition-transform duration-300 ease-in-out" id="mobile-menu">
-                <div class="flex flex-col space-y-4 py-4">
-                    <a href="#inicio" class="text-gray-700 hover:text-gold transition-colors">Início</a>
-                    <a href="#sobre" class="text-gray-700 hover:text-gold transition-colors">Sobre</a>
-                    <a href="#servicos" class="text-gray-700 hover:text-gold transition-colors">Serviços</a>
-                    <a href="#processo" class="text-gray-700 hover:text-gold transition-colors">Processo</a>
-                    <a href="#galeria" class="text-gray-700 hover:text-gold transition-colors">Galeria</a>
-                    <a href="#simulador" class="text-gray-700 hover:text-gold transition-colors">Simulador</a>
-                    <a href="#contato" class="text-gray-700 hover:text-gold transition-colors">Contato</a>
-                    <button onclick="scrollToSection('contato')" class="bg-gradient-to-r from-gold to-yellow-600 text-white px-6 py-3 rounded-lg font-semibold mt-4">
-                        Orçamento Grátis
-                    </button>
-                </div>
             </div>
         </nav>
     </header>
+    
+    <!-- Mobile Menu Components -->
+    <div id="mobile-menu-components">
+        <!-- Overlay for when menu is open -->
+        <div id="page-overlay" class="md:hidden fixed inset-0 bg-black/60 z-40 opacity-0 invisible transition-opacity duration-300 ease-in-out"></div>
+        
+        <!-- The actual menu panel -->
+        <div id="mobile-menu" class="md:hidden fixed top-0 right-0 h-full w-4/5 max-w-sm bg-charcoal shadow-2xl z-50 transform translate-x-full transition-transform duration-500 ease-in-out flex flex-col">
+            <!-- Menu Header -->
+            <div class="p-6 border-b border-gold/20 flex items-center space-x-3 flex-shrink-0">
+                <svg class="w-8 h-8" viewBox="0 0 50 50" xmlns="http://www.w3.org/2000/svg">
+                    <rect x="10" y="15" width="30" height="20" rx="2" fill="#D4AF37"/>
+                    <rect x="15" y="20" width="5" height="10" fill="#2F2F2F"/>
+                    <rect x="22.5" y="20" width="5" height="10" fill="#2F2F2F"/>
+                    <rect x="30" y="20" width="5" height="10" fill="#2F2F2F"/>
+                    <text x="25" y="45" text-anchor="middle" font-family="Montserrat" font-size="8" font-weight="600" fill="#D4AF37">RM</text>
+                </svg>
+                <div>
+                    <h2 class="font-montserrat font-bold text-lg text-white">Roni Marceneiro</h2>
+                    <p class="text-xs text-gray-400">Menu de Navegação</p>
+                </div>
+            </div>
+
+            <!-- Links and CTA -->
+            <div class="flex-grow p-4 overflow-y-auto space-y-2">
+                <a href="#inicio" class="mobile-menu-link block w-full p-3 rounded-lg text-lg font-montserrat text-gray-200">Início</a>
+                <a href="#sobre" class="mobile-menu-link block w-full p-3 rounded-lg text-lg font-montserrat text-gray-200">Sobre</a>
+                <a href="#servicos" class="mobile-menu-link block w-full p-3 rounded-lg text-lg font-montserrat text-gray-200">Serviços</a>
+                <a href="#processo" class="mobile-menu-link block w-full p-3 rounded-lg text-lg font-montserrat text-gray-200">Processo</a>
+                <a href="#galeria" class="mobile-menu-link block w-full p-3 rounded-lg text-lg font-montserrat text-gray-200">Galeria</a>
+                <a href="#simulador" class="mobile-menu-link block w-full p-3 rounded-lg text-lg font-montserrat text-gray-200">Simulador</a>
+                <a href="#contato" class="mobile-menu-link block w-full p-3 rounded-lg text-lg font-montserrat text-gray-200">Contato</a>
+                
+                <hr class="!my-4 border-gold/20 mobile-menu-link">
+
+                <button onclick="scrollToSection('contato')" class="mobile-menu-link w-full bg-gradient-to-r from-gold to-yellow-600 text-white px-6 py-3 rounded-lg font-semibold text-center transform hover:-translate-y-0.5 transition-transform duration-200">
+                    Orçamento Grátis
+                </button>
+            </div>
+
+            <!-- Menu Footer -->
+            <div class="p-6 border-t border-gold/20 flex-shrink-0">
+                <div class="flex justify-center space-x-6">
+                    <a href="#" class="text-gray-400 hover:text-gold transition-transform hover:scale-110" aria-label="Instagram"><i class="fab fa-instagram text-2xl"></i></a>
+                    <a href="#" class="text-gray-400 hover:text-gold transition-transform hover:scale-110" aria-label="Facebook"><i class="fab fa-facebook text-2xl"></i></a>
+                    <a href="https://wa.me/5511999999999" target="_blank" class="text-gray-400 hover:text-gold transition-transform hover:scale-110" aria-label="WhatsApp"><i class="fab fa-whatsapp text-2xl"></i></a>
+                </div>
+            </div>
+        </div>
+    </div>
 
     <!-- Hero Section -->
     <section id="inicio" class="relative min-h-screen flex items-center justify-center overflow-hidden">
@@ -119,7 +157,7 @@
             <div class="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(0,0,0,0.3)_0%,rgba(0,0,0,0.9)_100%)]"></div>
         </div>
         
-        <div class="relative z-10 container mx-auto px-4 sm:px-6">
+        <div class="relative z-10 container mx-auto px-4 sm:px-6 reveal reveal-up">
             <div class="max-w-3xl mx-auto text-center">
                 <h1 class="font-montserrat text-white mb-5 leading-tight shadow-text">
                     <span class="font-bold tracking-wider uppercase block text-6xl md:text-7xl">Móveis Planejados</span>
@@ -149,10 +187,10 @@
     </section>
 
     <!-- Sobre Nós -->
-    <section id="sobre" class="py-20 bg-gray-50">
+    <section id="sobre" class="py-20 bg-gray-50 overflow-x-hidden">
         <div class="container mx-auto px-4 sm:px-6">
             <div class="grid md:grid-cols-2 gap-12 items-center">
-                <div class="space-y-6">
+                <div class="space-y-6 reveal reveal-left">
                     <h2 class="font-montserrat font-bold text-4xl md:text-5xl text-charcoal mb-6">
                         Sobre o 
                         <span class="text-gold">Roni Marceneiro</span>
@@ -186,7 +224,7 @@
                     </div>
                 </div>
                 
-                <div class="relative">
+                <div class="relative reveal reveal-right">
                     <img src="https://images.unsplash.com/photo-1754611362309-71297e9f42fd?crop=entropy&cs=srgb&fm=jpg&ixid=M3w3NDQ2NDF8MHwxfHNlYXJjaHwxfHxwcmVtaXVtJTIwZnVybml0dXJlfGVufDB8fHx8MTc1ODEzMDEzMXww&ixlib=rb-4.1.0&q=85" 
                          alt="Ambiente com móveis de alta qualidade" 
                          width="800" height="600"
@@ -205,7 +243,7 @@
     <!-- Serviços -->
     <section id="servicos" class="py-20">
         <div class="container mx-auto px-4 sm:px-6">
-            <div class="text-center mb-16">
+            <div class="text-center mb-16 reveal reveal-up">
                 <h2 class="font-montserrat font-bold text-4xl md:text-5xl text-charcoal mb-6">
                     Nossos <span class="text-gold">Serviços</span>
                 </h2>
@@ -217,7 +255,7 @@
             <!-- Serviços Principais -->
             <div class="grid md:grid-cols-2 gap-8 mb-16">
                 <!-- Card Cozinha -->
-                <div class="group bg-white rounded-2xl shadow-lg overflow-hidden hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2 flex flex-col">
+                <div class="group bg-white rounded-2xl shadow-lg overflow-hidden hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2 flex flex-col reveal reveal-up">
                     <div class="relative h-64 overflow-hidden">
                         <img src="https://images.unsplash.com/photo-1657524497227-66242be7ee6e?crop=entropy&cs=srgb&fm=jpg&ixid=M3w3NDQ2MzR8MHwxfHNlYXJjaHw0fHxjdXN0b20lMjBraXRjaGVuJTIwY2FiaW5ldHN8ZW58MHx8fHwxNzU4MTMwMTI1fDA&ixlib=rb-4.1.0&q=85" alt="Cozinha planejada de alta qualidade" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300" loading="lazy">
                     </div>
@@ -232,7 +270,7 @@
                 </div>
 
                 <!-- Card Guarda-Roupa -->
-                <div class="group bg-white rounded-2xl shadow-lg overflow-hidden hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2 flex flex-col">
+                <div class="group bg-white rounded-2xl shadow-lg overflow-hidden hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2 flex flex-col reveal reveal-up" style="transition-delay: 0.1s;">
                     <div class="relative h-64 overflow-hidden">
                         <img src="https://images.unsplash.com/photo-1708758487256-8a3a73565dc2?crop=entropy&cs=srgb&fm=jpg&ixid=M3w3NDQ2NDF8MHwxfHNlYXJjaHwyfHxwcmVtaXVtJTIwZnVybml0dXJlfGVufDB8fHx8MTc1ODEzMDEzMXww&ixlib=rb-4.1.0&q=85" alt="Guarda-roupa planejado" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300" loading="lazy">
                     </div>
@@ -248,7 +286,7 @@
             </div>
 
             <!-- Seção de Outros Serviços (reformulada) -->
-            <div class="mt-16">
+            <div class="mt-16 reveal reveal-up">
                 <div class="text-center mb-12">
                     <h3 class="font-montserrat font-bold text-3xl text-charcoal mb-4">Soluções Completas para Sua Casa</h3>
                     <p class="text-lg text-gray-600 max-w-3xl mx-auto">
@@ -320,7 +358,7 @@
     </section>
 
     <!-- Diferenciais -->
-    <section class="py-20 bg-charcoal text-white">
+    <section class="py-20 bg-charcoal text-white reveal reveal-up">
         <div class="container mx-auto px-4 sm:px-6">
             <div class="text-center mb-16">
                 <h2 class="font-montserrat font-bold text-4xl md:text-5xl mb-6">
@@ -376,7 +414,7 @@
     </section>
 
     <!-- Nosso Processo -->
-    <section id="processo" class="py-20 bg-white">
+    <section id="processo" class="py-20 bg-white reveal">
         <div class="container mx-auto px-4 sm:px-6">
             <div class="text-center mb-16">
                 <h2 class="font-montserrat font-bold text-4xl md:text-5xl text-charcoal mb-6">
@@ -395,7 +433,7 @@
                 
                 <div class="grid md:grid-cols-4 gap-8 relative">
                     <!-- Step 1 -->
-                    <div class="text-center flex flex-col items-center reveal-on-scroll">
+                    <div class="text-center flex flex-col items-center reveal reveal-zoom" style="transition-delay: 0.2s;">
                         <div class="relative mb-4">
                             <div class="w-24 h-24 rounded-full bg-gold text-white flex items-center justify-center text-3xl shadow-lg">
                                 <i class="fas fa-comments-dollar"></i>
@@ -406,7 +444,7 @@
                         <p class="text-sm text-gray-600">Use nosso simulador ou entre em contato para um orçamento inicial.</p>
                     </div>
                     <!-- Step 2 -->
-                    <div class="text-center flex flex-col items-center reveal-on-scroll">
+                    <div class="text-center flex flex-col items-center reveal reveal-zoom" style="transition-delay: 0.3s;">
                          <div class="relative mb-4">
                             <div class="w-24 h-24 rounded-full bg-gold text-white flex items-center justify-center text-3xl shadow-lg">
                                 <i class="fas fa-ruler-combined"></i>
@@ -423,7 +461,7 @@
                         </div>
                     </div>
                     <!-- Step 3 -->
-                    <div class="text-center flex flex-col items-center reveal-on-scroll">
+                    <div class="text-center flex flex-col items-center reveal reveal-zoom" style="transition-delay: 0.4s;">
                          <div class="relative mb-4">
                             <div class="w-24 h-24 rounded-full bg-gold text-white flex items-center justify-center text-3xl shadow-lg">
                                 <i class="fas fa-cogs"></i>
@@ -434,7 +472,7 @@
                         <p class="text-sm text-gray-600">Seu projeto ganha vida em nossa marcenaria com materiais de alta qualidade.</p>
                     </div>
                     <!-- Step 4 -->
-                    <div class="text-center flex flex-col items-center reveal-on-scroll">
+                    <div class="text-center flex flex-col items-center reveal reveal-zoom" style="transition-delay: 0.5s;">
                          <div class="relative mb-4">
                             <div class="w-24 h-24 rounded-full bg-gold text-white flex items-center justify-center text-3xl shadow-lg">
                                 <i class="fas fa-truck-loading"></i>
@@ -452,7 +490,7 @@
     <!-- Galeria -->
     <section id="galeria" class="py-20 bg-gray-50">
         <div class="container mx-auto px-4 sm:px-6">
-            <div class="text-center mb-16">
+            <div class="text-center mb-16 reveal reveal-up">
                 <h2 class="font-montserrat font-bold text-4xl md:text-5xl text-charcoal mb-6">
                     Nossa <span class="text-gold">Galeria</span>
                 </h2>
@@ -465,7 +503,7 @@
             <div id="instagram-feed-container">
                 <!-- Galeria Mosaico -->
                 <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-                    <button class="group relative overflow-hidden rounded-xl aspect-square focus:outline-none focus:ring-2 focus:ring-gold focus:ring-offset-2"
+                    <button class="group relative overflow-hidden rounded-xl aspect-square focus:outline-none focus:ring-2 focus:ring-gold focus:ring-offset-2 reveal reveal-zoom"
                          data-gallery-project
                          data-title="Cozinha em MDF Cinza Sagrado" 
                          data-description="Projeto com puxadores em perfil de alumínio preto e bancada em quartzo branco."
@@ -480,7 +518,7 @@
                         </div>
                     </button>
     
-                    <button class="group relative overflow-hidden rounded-xl aspect-square focus:outline-none focus:ring-2 focus:ring-gold focus:ring-offset-2"
+                    <button class="group relative overflow-hidden rounded-xl aspect-square focus:outline-none focus:ring-2 focus:ring-gold focus:ring-offset-2 reveal reveal-zoom" style="transition-delay: 0.1s;"
                          data-gallery-project
                          data-title="Guarda-Roupa com Portas de Correr"
                          data-description="Estrutura em MDF branco e portas com espelho bronze, otimizando o espaço e a iluminação do ambiente."
@@ -495,7 +533,7 @@
                         </div>
                     </button>
     
-                    <button class="group relative overflow-hidden rounded-xl aspect-square focus:outline-none focus:ring-2 focus:ring-gold focus:ring-offset-2"
+                    <button class="group relative overflow-hidden rounded-xl aspect-square focus:outline-none focus:ring-2 focus:ring-gold focus:ring-offset-2 reveal reveal-zoom" style="transition-delay: 0.2s;"
                          data-gallery-project
                          data-title="Home Theater Minimalista"
                          data-description="Painel ripado em MDF amadeirado com iluminação em fita de LED embutida."
@@ -510,7 +548,7 @@
                         </div>
                     </button>
     
-                    <button class="group relative overflow-hidden rounded-xl aspect-square focus:outline-none focus:ring-2 focus:ring-gold focus:ring-offset-2"
+                    <button class="group relative overflow-hidden rounded-xl aspect-square focus:outline-none focus:ring-2 focus:ring-gold focus:ring-offset-2 reveal reveal-zoom" style="transition-delay: 0.3s;"
                          data-gallery-project
                          data-title="Closet Aberto Funcional"
                          data-description="Solução em MDF branco com prateleiras, gaveteiros e cabideiros para máxima organização."
@@ -538,7 +576,7 @@
 
     <!-- Simulador -->
     <section id="simulador" class="py-20">
-        <div class="container mx-auto p-4 md:p-8">
+        <div class="container mx-auto p-4 md:p-8 reveal reveal-up">
             <header class="text-center mb-8">
                 <h2 class="font-montserrat font-bold text-4xl md:text-5xl text-charcoal">Simulador de <span class="text-gold">Orçamento</span></h2>
                 <p class="text-lg text-gray-500 mt-2">Configure seu móvel planejado em poucos passos.</p>
@@ -1039,7 +1077,7 @@
     <!-- Depoimentos -->
     <section class="py-20 bg-gray-50">
         <div class="container mx-auto px-4 sm:px-6">
-            <div class="text-center mb-16">
+            <div class="text-center mb-16 reveal reveal-up">
                 <h2 class="font-montserrat font-bold text-4xl md:text-5xl text-charcoal mb-6">
                     O que nossos <span class="text-gold">clientes dizem</span>
                 </h2>
@@ -1049,7 +1087,7 @@
             </div>
 
             <div class="grid md:grid-cols-3 gap-8">
-                <div class="bg-white rounded-2xl p-8 shadow-lg hover:shadow-xl transition-shadow duration-300">
+                <div class="bg-white rounded-2xl p-8 shadow-lg hover:shadow-xl transition-shadow duration-300 reveal reveal-up">
                     <div class="flex items-center mb-6">
                         <div class="w-12 h-12 bg-gold rounded-full flex items-center justify-center text-white font-bold mr-4">
                             MC
@@ -1072,7 +1110,7 @@
                     </p>
                 </div>
 
-                <div class="bg-white rounded-2xl p-8 shadow-lg hover:shadow-xl transition-shadow duration-300">
+                <div class="bg-white rounded-2xl p-8 shadow-lg hover:shadow-xl transition-shadow duration-300 reveal reveal-up" style="transition-delay: 0.1s;">
                     <div class="flex items-center mb-6">
                         <div class="w-12 h-12 bg-gold rounded-full flex items-center justify-center text-white font-bold mr-4">
                             JS
@@ -1094,7 +1132,7 @@
                     </p>
                 </div>
 
-                <div class="bg-white rounded-2xl p-8 shadow-lg hover:shadow-xl transition-shadow duration-300">
+                <div class="bg-white rounded-2xl p-8 shadow-lg hover:shadow-xl transition-shadow duration-300 reveal reveal-up" style="transition-delay: 0.2s;">
                     <div class="flex items-center mb-6">
                         <div class="w-12 h-12 bg-gold rounded-full flex items-center justify-center text-white font-bold mr-4">
                             AS
@@ -1120,9 +1158,9 @@
     </section>
 
     <!-- Contato -->
-    <section id="contato" class="py-20">
+    <section id="contato" class="py-20 overflow-x-hidden">
         <div class="container mx-auto px-4 sm:px-6">
-            <div class="text-center mb-16">
+            <div class="text-center mb-16 reveal reveal-up">
                 <h2 class="font-montserrat font-bold text-4xl md:text-5xl text-charcoal mb-6">
                     Entre em <span class="text-gold">Contato</span>
                 </h2>
@@ -1198,7 +1236,7 @@
                 </div>
 
                 <!-- Coluna da Direita: Informações e Mapa -->
-                <div class="lg:col-span-2 bg-charcoal text-white rounded-2xl shadow-xl p-8 flex flex-col space-y-6">
+                <div class="lg:col-span-2 bg-charcoal text-white rounded-2xl shadow-xl p-8 flex flex-col space-y-6 reveal reveal-right">
                     <div>
                         <h3 class="font-montserrat font-bold text-2xl text-white mb-6">Informações de Contato</h3>
                         <div class="space-y-4 text-gray-300">
