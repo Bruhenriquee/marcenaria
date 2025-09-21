@@ -151,7 +151,6 @@ textarea:focus,
 a:focus {
     outline: 2px solid #D4AF37;
     outline-offset: 2px;
-    position: relative; /* Garante que o outline não seja cortado */
 }
 
 /* High contrast mode support */
@@ -266,11 +265,6 @@ a:focus {
 
 /* Animação da seção de processo */
 #process-line-animated {
-    width: 0;
-    transition: width 1.5s cubic-bezier(0.25, 1, 0.5, 1);
-    transition-delay: 0.3s; /* Atraso para começar após o título aparecer */
-}
-.reveal.revealed #process-line-animated {
     width: 100%;
 }
 

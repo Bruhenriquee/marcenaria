@@ -414,7 +414,7 @@
     </section>
 
     <!-- Nosso Processo -->
-    <section id="processo" class="py-20 bg-white reveal">
+    <section id="processo" class="py-20 bg-white">
         <div class="container mx-auto px-4 sm:px-6">
             <div class="text-center mb-16">
                 <h2 class="font-montserrat font-bold text-4xl md:text-5xl text-charcoal mb-6">
@@ -427,7 +427,7 @@
 
             <div class="relative max-w-5xl mx-auto">
                 <!-- Linha Conectora (apenas para telas médias e maiores) -->
-                <div class="hidden md:block absolute top-12 left-0 w-full h-0.5 bg-gold/30 -z-10">
+                <div class="hidden md:block absolute top-12 left-0 w-full h-0.5 bg-gold/30">
                     <div id="process-line-animated" class="h-full bg-gold"></div>
                 </div>
                 
@@ -624,7 +624,7 @@
                     <!-- Step 1: Furniture Type -->
                     <div class="form-step active" data-step="1">
                         <h3 class="step-title">1. Qual tipo de móvel você deseja simular?</h3>
-                        <div class="grid md:grid-cols-2 gap-6">
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
                             <label class="step-card">
                                 <input type="radio" name="furnitureType" value="Guarda-Roupa" class="sr-only peer">
                                 <div class="card-content">
@@ -639,6 +639,12 @@
                                     <i class="fas fa-utensils text-3xl mb-3"></i><h4 class="font-semibold text-lg">Cozinha</h4>
                                 </div>
                             </label>
+                            <button type="button" id="other-furniture-btn" class="step-card">
+                                <div class="card-content">
+                                    <i class="fas fa-drafting-compass text-3xl mb-3"></i>
+                                    <h4 class="font-semibold text-lg">Outros Ambientes</h4>
+                                </div>
+                            </button>
                         </div>
                         <div class="flex justify-between mt-12">
                             <button class="prev-btn hidden bg-transparent border-2 border-gray-300 text-gray-500 font-bold py-3 px-6 rounded-lg hover:bg-gray-100 hover:border-gray-400 transition-all duration-300"><i class="fas fa-arrow-left mr-2"></i>Anterior</button>
@@ -746,11 +752,6 @@
                                             </div>
                                         </label>
                                     </div>
-                                    <!-- Conditional height input for hot tower -->
-                                    <div id="hot-tower-height-container" class="mt-6 hidden smooth-toggle">
-                                        <label for="hotTowerHeight" class="block mb-2 font-semibold text-center">Altura da Torre Quente (m)</label>
-                                        <input type="number" id="hotTowerHeight" step="0.1" min="1.5" max="3.0" value="2.2" class="form-input max-w-xs mx-auto">
-                                    </div>
                                 </div>
                                 <!-- Sub-step 2.3: Stove Type -->
                                 <div id="kitchen-stove-type-step">
@@ -772,7 +773,7 @@
                                         </label>
                                     </div>
                                     <!-- Conditional question for cooktop -->
-                                    <div id="cooktop-location-step" class="mt-8 smooth-toggle">
+                                    <div id="cooktop-location-step" class="mt-8 smooth-toggle hidden">
                                         <h4 class="font-semibold text-lg mb-4 text-charcoal text-center">Onde o cooktop será instalado?</h4>
                                         <div class="grid md:grid-cols-2 gap-6 max-w-lg mx-auto">
                                             <label class="step-card">
@@ -1378,6 +1379,26 @@
                 <p class="text-sm">O uso continuado de nosso site será considerado como aceitação de nossas práticas em torno de privacidade e informações pessoais. Se você tiver alguma dúvida sobre como lidamos com dados do usuário, entre em contato conosco.</p>
                 <p class="text-sm"><em>Esta política é efetiva a partir de Outubro de 2024.</em></p>
             </div>
+        </div>
+    </div>
+
+    <!-- Other Furniture Modal -->
+    <div id="other-furniture-modal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-[100] flex items-center justify-center p-4 hidden" role="dialog" aria-modal="true" aria-hidden="true" aria-labelledby="other-furniture-modal-title">
+        <div class="bg-white rounded-lg w-full max-w-lg text-center p-8 shadow-2xl relative">
+            <button id="other-furniture-modal-close" class="absolute top-4 right-4 text-charcoal text-2xl hover:text-gold transition-colors">
+                <i class="fas fa-times"></i>
+            </button>
+            <i class="fas fa-drafting-compass text-gold text-5xl mb-4"></i>
+            <h3 id="other-furniture-modal-title" class="font-montserrat font-bold text-2xl text-charcoal mb-3">Projetos Especiais</h3>
+            <p class="text-gray-600 mb-6">
+                Que legal que você tem um projeto único em mente! Para ambientes como <strong>Home Office, Painéis de TV, Banheiros</strong> ou qualquer outra ideia, nosso especialista está pronto para te atender pessoalmente e criar um orçamento sob medida.
+            </p>
+            <a href="https://wa.me/5511999999999?text=Olá! Gostaria de um orçamento para um projeto especial que não está no simulador." 
+               target="_blank" 
+               class="inline-flex items-center justify-center w-full max-w-xs mx-auto bg-green-500 text-white font-bold py-3 px-6 rounded-lg shadow-lg hover:bg-green-600 hover:shadow-xl transform hover:-translate-y-1 transition-all duration-300 text-lg">
+                <i class="fab fa-whatsapp mr-3"></i>
+                Falar com um Especialista
+            </a>
         </div>
     </div>
 

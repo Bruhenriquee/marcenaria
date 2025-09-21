@@ -32,7 +32,8 @@ function initializeApp() {
     observeElements();
     setupGalleryLightbox();
     setupPdfViewer();
-    setupTermsModal(); // Add this
+    setupTermsModal();
+    setupOtherFurnitureModal();
     setupSimulator(); // This was the missing call
     setupLazyLoading();
     setupActiveNavLinks(); // Highlight active nav link on scroll
@@ -342,19 +343,20 @@ function observeElements() {
     const observer = new IntersectionObserver((entries, observer) => {
         entries.forEach(entry => {
             if (entry.isIntersecting) {
-                entry.target.classList.add('revealed');
-
-                // Check for counters inside the revealed element
-                const counters = entry.target.querySelectorAll('.counter');
-                counters.forEach(counter => {
-                    if (counter.dataset.animated === 'true') return;
-                    const target = +counter.dataset.countTo;
-                    const suffix = counter.dataset.suffix || '';
-                    animateCounter(counter, 0, target, 2000, suffix);
-                    counter.dataset.animated = 'true';
-                });
-
-                observer.unobserve(entry.target);
+                // Only act if the element has not been revealed yet
+                if (!entry.target.classList.contains('revealed')) {
+                    entry.target.classList.add('revealed');
+    
+                    // Check for counters inside the revealed element
+                    const counters = entry.target.querySelectorAll('.counter');
+                    counters.forEach(counter => {
+                        if (counter.dataset.animated === 'true') return;
+                        const target = +counter.dataset.countTo;
+                        const suffix = counter.dataset.suffix || '';
+                        animateCounter(counter, 0, target, 2000, suffix);
+                        counter.dataset.animated = 'true';
+                    });
+                }
             }
         });
     }, {
@@ -575,6 +577,45 @@ function setupTermsModal() {
 
     document.addEventListener('keydown', (e) => {
         if (e.key === 'Escape' && !termsModal.classList.contains('hidden')) {
+            closeModal();
+        }
+    });
+}
+
+// Other Furniture Modal Logic
+function setupOtherFurnitureModal() {
+    const modal = document.getElementById('other-furniture-modal');
+    if (!modal) return;
+
+    const openBtn = document.getElementById('other-furniture-btn');
+    const closeBtn = document.getElementById('other-furniture-modal-close');
+
+    const openModal = () => {
+        modal.classList.remove('hidden');
+        document.body.style.overflow = 'hidden';
+    };
+
+    const closeModal = () => {
+        modal.classList.add('hidden');
+        document.body.style.overflow = 'auto';
+    };
+
+    if (openBtn) {
+        openBtn.addEventListener('click', openModal);
+    }
+
+    if (closeBtn) {
+        closeBtn.addEventListener('click', closeModal);
+    }
+
+    modal.addEventListener('click', (e) => {
+        if (e.target === modal) {
+            closeModal();
+        }
+    });
+
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && !modal.classList.contains('hidden')) {
             closeModal();
         }
     });
@@ -811,10 +852,8 @@ function setupSimulator() {
     const state = {
         furnitureType: null,
         dimensions: { height: 2.7, depth: 60, walls: [{width: 3.0, height: 2.7}] },
-        material: null,
-        doorType: null,
         wardrobeFormat: null,
-        closetHasDoors: null,
+        material: null,
         kitchenHasSinkCabinet: null,
         sinkStoneWidth: 1.8,
         hasHotTower: null,
@@ -822,6 +861,8 @@ function setupSimulator() {
         stoveType: null,
         cooktopLocation: null,
         hardwareType: null,
+        doorType: null,
+        closetHasDoors: null,
         handleType: null,
         projectOption: null,
         projectFile: null,
@@ -897,7 +938,6 @@ function setupSimulator() {
         document.querySelectorAll('#kitchen-dims input').forEach(input => {
             input.addEventListener('input', updateDimensionsState);
         });
-        document.getElementById('hotTowerHeight').addEventListener('input', updateDimensionsState);
         document.getElementById('add-wall-btn').addEventListener('click', addKitchenWall);
         document.getElementById('add-wardrobe-wall-btn').addEventListener('click', addWardrobeWall);
 
@@ -933,7 +973,6 @@ function setupSimulator() {
         document.querySelectorAll('input[name="hasHotTower"]').forEach(radio => {
             radio.addEventListener('change', (e) => {
                 updateStateAndSave({ hasHotTower: e.target.value === 'sim' });
-                document.getElementById('hot-tower-height-container').classList.toggle('hidden', !state.hasHotTower);
                 updateContainerHeight();
             });
         });
@@ -1162,13 +1201,13 @@ function setupSimulator() {
         const wallCount = container.children.length + 1;
         if (wallCount > 3) return; // Max 3 walls for a closet (U-shape)
         const newWall = document.createElement('div');
-        newWall.className = 'wall-entry flex items-center gap-4 pt-4 mt-4 border-t';
+    newWall.className = 'wall-entry flex items-end gap-4 pt-4 mt-4 border-t';
         newWall.innerHTML = `
             <div class="flex-grow">
                 <label for="wardrobe-width${wallCount}" class="block mb-2 font-semibold">Largura Parede ${wallCount} (m)</label>
                 <input type="number" id="wardrobe-width${wallCount}" name="wardrobe-width" step="0.1" min="0" value="0" class="form-input">
             </div>
-            <button type="button" class="remove-wall-btn text-red-500 hover:text-red-700 transition-colors mt-6" aria-label="Remover parede">
+        <button type="button" class="remove-wall-btn text-red-500 hover:text-red-700 transition-colors pb-2" aria-label="Remover parede">
                 <i class="fas fa-times-circle text-2xl"></i>
             </button>
         `;
@@ -1185,22 +1224,25 @@ function setupSimulator() {
         const wallCount = container.children.length + 1;
         if (wallCount > 3) return;
         const newWall = document.createElement('div');
-        newWall.className = 'wall-entry relative border-t border-gray-200 pt-4 mt-4';
+        newWall.className = 'wall-entry flex items-end gap-4 border-t border-gray-200 pt-4 mt-4';
         newWall.innerHTML = `
-            <button type="button" class="remove-wall-btn absolute top-4 right-0 text-red-500 hover:text-red-700 transition-colors" aria-label="Remover parede">
-                <i class="fas fa-times-circle text-xl"></i>
+            <div class="flex-grow">
+                <label class="block mb-2 font-semibold">Parede ${wallCount} com armários</label>
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label for="kitchen-wall-width${wallCount}" class="text-sm text-gray-600">Largura (m)</label>
+                        <input type="number" id="kitchen-wall-width${wallCount}" name="kitchen-wall-width" step="0.1" min="0" value="0" class="form-input">
+                    </div>
+                    <div>
+                        <label for="kitchen-wall-height${wallCount}" class="text-sm text-gray-600">Altura da parede (m)</label>
+                        <input type="number" id="kitchen-wall-height${wallCount}" name="kitchen-wall-height" step="0.1" min="0" value="2.7" class="form-input">
+                    </div>
+                </div>
+            </div>
+            <button type="button" class="remove-wall-btn text-red-500 hover:text-red-700 transition-colors pb-2" aria-label="Remover parede">
+                <i class="fas fa-times-circle text-2xl"></i>
             </button>
-            <label class="block mb-2 font-semibold">Parede ${wallCount} com armários</label>
-            <div class="grid grid-cols-2 gap-4">
-                <div>
-                    <label for="kitchen-wall-width${wallCount}" class="text-sm text-gray-600">Largura (m)</label>
-                    <input type="number" id="kitchen-wall-width${wallCount}" name="kitchen-wall-width" step="0.1" min="0" value="0" class="form-input">
-                </div>
-                <div>
-                    <label for="kitchen-wall-height${wallCount}" class="text-sm text-gray-600">Altura da parede (m)</label>
-                    <input type="number" id="kitchen-wall-height${wallCount}" name="kitchen-wall-height" step="0.1" min="0" value="2.7" class="form-input">
-                </div>
-            </div>`;
+        `;
         container.appendChild(newWall);
         newWall.querySelectorAll('input').forEach(input => input.addEventListener('input', updateDimensionsState));
         if (wallCount === 3) {
@@ -1250,7 +1292,6 @@ function setupSimulator() {
             const heights = Array.from(document.querySelectorAll('input[name="kitchen-wall-height"]')).map(input => parseFloat(input.value) || 0);
             state.dimensions.walls = widths.map((w, i) => ({ width: w, height: heights[i] || 0 }));
             state.sinkStoneWidth = parseFloat(document.getElementById('sinkStoneWidth').value) || 0;
-            state.hotTowerHeight = parseFloat(document.getElementById('hotTowerHeight').value) || 0;
         }
         // Save state after dimension update
     }
@@ -1466,7 +1507,8 @@ function setupSimulator() {
         }
 
         if (state.hasHotTower) {
-            extrasPrice += state.hotTowerHeight * config.EXTRAS_COST.HOT_TOWER_PER_METER;
+            const hotTowerHeight = 2.2; // Use a fixed default height
+            extrasPrice += hotTowerHeight * config.EXTRAS_COST.HOT_TOWER_PER_METER;
         }
 
         const totalWidth = state.dimensions.walls.reduce((acc, wall) => acc + wall.width, 0);
@@ -1539,7 +1581,6 @@ function setupSimulator() {
             kitchenHasSinkCabinet: null,
             sinkStoneWidth: 1.8,
             hasHotTower: null,
-            hotTowerHeight: 2.2,
             stoveType: null,
             cooktopLocation: null,
             hardwareType: null,
@@ -1568,8 +1609,6 @@ function setupSimulator() {
         Array.from(wardrobeWallsContainer.children).slice(1).forEach(wall => wall.remove());
         document.getElementById('add-wardrobe-wall-btn').classList.remove('hidden');
         document.getElementById('sinkStoneWidth').value = 1.8;
-        document.getElementById('hot-tower-height-container').classList.add('hidden');
-        document.getElementById('hotTowerHeight').value = 2.2;
         document.getElementById('cooktop-location-step').classList.add('hidden');
         document.getElementById('kitchen-wall-width1').value = 2.2;
         document.getElementById('kitchen-wall-height1').value = 2.7;
@@ -1800,7 +1839,7 @@ function setupSimulator() {
         if (state.projectOption === 'upload' && state.projectFile) {
             text += '\n\n*(Anexei o arquivo do meu projeto no simulador. Por favor, me informe como posso enviá-lo.)*';
         }
-        window.open(`https://wa.me/5518981558125?text=${encodeURIComponent(text)}`, '_blank');
+        window.open(`https://wa.me/5511999999999?text=${encodeURIComponent(text)}`, '_blank');
     }
 
     function generateEmailLink() {
