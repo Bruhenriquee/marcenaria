@@ -116,11 +116,6 @@ function setupScrollEffects() {
                     }
                 }
 
-                // 3. Parallax effect for hero image
-                if (heroImage && currentScrollY < window.innerHeight) {
-                    heroImage.style.transform = `translateY(${currentScrollY * 0.3}px)`;
-                }
-
                 lastScrollY = currentScrollY <= 0 ? 0 : currentScrollY;
                 isTicking = false;
             });
@@ -359,6 +354,37 @@ function observeElements() {
     elementsToAnimate.forEach(element => {
         element.classList.add('reveal');
         observer.observe(element);
+    });
+}
+
+// Service/Portfolio Filter
+function setupServiceFilters() {
+    const filtersContainer = document.getElementById('service-filters');
+    const servicesGrid = document.getElementById('services-grid');
+
+    if (!filtersContainer || !servicesGrid) return;
+
+    const filterButtons = filtersContainer.querySelectorAll('.service-filter-btn');
+    const serviceCards = servicesGrid.querySelectorAll('.service-card');
+
+    filtersContainer.addEventListener('click', (e) => {
+        const targetButton = e.target.closest('.service-filter-btn');
+        if (!targetButton) return;
+
+        const filter = targetButton.dataset.filter;
+
+        // Update active button
+        filterButtons.forEach(btn => btn.classList.remove('active'));
+        targetButton.classList.add('active');
+
+        // Filter cards
+        serviceCards.forEach(card => {
+            const category = card.dataset.category;
+            const shouldShow = filter === 'all' || category === filter;
+            
+            // The 'hidden' class from Tailwind handles display:none
+            card.classList.toggle('hidden', !shouldShow);
+        });
     });
 }
 

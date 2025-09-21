@@ -119,7 +119,7 @@
             <div class="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(0,0,0,0.3)_0%,rgba(0,0,0,0.9)_100%)]"></div>
         </div>
         
-        <div class="relative z-10 container mx-auto px-6">
+        <div class="relative z-10 container mx-auto px-4 sm:px-6">
             <div class="max-w-3xl mx-auto text-center">
                 <h1 class="font-montserrat text-white mb-5 leading-tight shadow-text">
                     <span class="font-bold tracking-wider uppercase block text-6xl md:text-7xl">Móveis Planejados</span>
@@ -150,7 +150,7 @@
 
     <!-- Sobre Nós -->
     <section id="sobre" class="py-20 bg-gray-50">
-        <div class="container mx-auto px-6">
+        <div class="container mx-auto px-4 sm:px-6">
             <div class="grid md:grid-cols-2 gap-12 items-center">
                 <div class="space-y-6">
                     <h2 class="font-montserrat font-bold text-4xl md:text-5xl text-charcoal mb-6">
@@ -204,130 +204,124 @@
 
     <!-- Serviços -->
     <section id="servicos" class="py-20">
-        <div class="container mx-auto px-6">
+        <div class="container mx-auto px-4 sm:px-6">
             <div class="text-center mb-16">
                 <h2 class="font-montserrat font-bold text-4xl md:text-5xl text-charcoal mb-6">
                     Nossos <span class="text-gold">Serviços</span>
                 </h2>
                 <p class="text-xl text-gray-600 max-w-3xl mx-auto">
-                    Especializados em móveis planejados de alta qualidade com foco em funcionalidade e design exclusivo
+                    Criamos soluções completas em móveis planejados, desde cozinhas e guarda-roupas a ambientes inteiros, com design exclusivo e funcionalidade.
                 </p>
             </div>
 
-            <!-- Serviços Principais (com simulador) -->
+            <!-- Serviços Principais -->
             <div class="grid md:grid-cols-2 gap-8 mb-16">
-                <!-- Cozinhas Planejadas -->
-                <div class="group bg-white rounded-2xl shadow-lg overflow-hidden hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2">
+                <!-- Card Cozinha -->
+                <div class="group bg-white rounded-2xl shadow-lg overflow-hidden hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2 flex flex-col">
                     <div class="relative h-64 overflow-hidden">
-                        <img src="https://images.unsplash.com/photo-1657524497227-66242be7ee6e?crop=entropy&cs=srgb&fm=jpg&ixid=M3w3NDQ2MzR8MHwxfHNlYXJjaHw0fHxjdXN0b20lMjBraXRjaGVuJTIwY2FiaW5ldHN8ZW58MHx8fHwxNzU4MTMwMTI1fDA&ixlib=rb-4.1.0&q=85" 
-                             alt="Cozinha planejada de alta qualidade" 
-                             width="600" height="400"
-                             class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
-                             loading="lazy">                        
+                        <img src="https://images.unsplash.com/photo-1657524497227-66242be7ee6e?crop=entropy&cs=srgb&fm=jpg&ixid=M3w3NDQ2MzR8MHwxfHNlYXJjaHw0fHxjdXN0b20lMjBraXRjaGVuJTIwY2FiaW5ldHN8ZW58MHx8fHwxNzU4MTMwMTI1fDA&ixlib=rb-4.1.0&q=85" alt="Cozinha planejada de alta qualidade" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300" loading="lazy">
                     </div>
-                    <div class="p-8">
+                    <div class="p-8 flex flex-col flex-grow">
                         <h3 class="font-montserrat font-bold text-2xl text-charcoal mb-4">Cozinhas Planejadas</h3>
-                        <p class="text-gray-600 mb-6 leading-relaxed">
-                            Cozinhas sob medida com design funcional e elegante. Materiais de alto padrão, 
-                            ferragens de qualidade e acabamentos impecáveis para o coração da sua casa.
-                        </p>
-                        <ul class="space-y-2 mb-6">
-                            <li class="flex items-center text-gray-700">
-                                <i class="fas fa-check text-gold mr-3"></i>
-                                Design 3D personalizado
-                            </li>
-                            <li class="flex items-center text-gray-700">
-                                <i class="fas fa-check text-gold mr-3"></i>
-                                Materiais de alta qualidade
-                            </li>
-                            <li class="flex items-center text-gray-700">
-                                <i class="fas fa-check text-gold mr-3"></i>
-                                Montagem profissional
-                            </li>
-                        </ul>
-                        <button onclick="scrollToSection('contato')" class="w-full bg-gradient-to-r from-gold to-yellow-600 text-white py-3 rounded-lg font-semibold hover:shadow-lg transition-all duration-300">
-                            <i class="fas fa-phone mr-2"></i>
-                            Solicitar Orçamento
+                        <p class="text-gray-600 mb-6 leading-relaxed flex-grow">Cozinhas sob medida com design funcional, materiais de alto padrão e acabamentos impecáveis para o coração da sua casa.</p>
+                        <button onclick="scrollToSection('simulador')" class="w-full bg-gradient-to-r from-gold to-yellow-600 text-white py-3 rounded-lg font-semibold hover:shadow-lg transition-all duration-300 mt-auto">
+                            <i class="fas fa-calculator mr-2"></i>
+                            Simular Projeto
                         </button>
                     </div>
                 </div>
 
-                <!-- Guarda-Roupas -->
-                <div class="group bg-white rounded-2xl shadow-lg overflow-hidden hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2">
+                <!-- Card Guarda-Roupa -->
+                <div class="group bg-white rounded-2xl shadow-lg overflow-hidden hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2 flex flex-col">
                     <div class="relative h-64 overflow-hidden">
-                        <img src="https://images.unsplash.com/photo-1708758487256-8a3a73565dc2?crop=entropy&cs=srgb&fm=jpg&ixid=M3w3NDQ2NDF8MHwxfHNlYXJjaHwyfHxwcmVtaXVtJTIwZnVybml0dXJlfGVufDB8fHx8MTc1ODEzMDEzMXww&ixlib=rb-4.1.0&q=85" 
-                             alt="Guarda-roupa planejado" 
-                             width="600" height="400"
-                             class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
-                             loading="lazy">                        
+                        <img src="https://images.unsplash.com/photo-1708758487256-8a3a73565dc2?crop=entropy&cs=srgb&fm=jpg&ixid=M3w3NDQ2NDF8MHwxfHNlYXJjaHwyfHxwcmVtaXVtJTIwZnVybml0dXJlfGVufDB8fHx8MTc1ODEzMDEzMXww&ixlib=rb-4.1.0&q=85" alt="Guarda-roupa planejado" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300" loading="lazy">
                     </div>
-                    <div class="p-8">
+                    <div class="p-8 flex flex-col flex-grow">
                         <h3 class="font-montserrat font-bold text-2xl text-charcoal mb-4">Guarda-Roupas Planejados</h3>
-                        <p class="text-gray-600 mb-6 leading-relaxed">
-                            Guarda-roupas sob medida que maximizam o espaço e organização. 
-                            Soluções inteligentes para todos os tipos de ambientes.
-                        </p>
-                        <ul class="space-y-2 mb-6">
-                            <li class="flex items-center text-gray-700">
-                                <i class="fas fa-check text-gold mr-3"></i>
-                                Otimização de espaço
-                            </li>
-                            <li class="flex items-center text-gray-700">
-                                <i class="fas fa-check text-gold mr-3"></i>
-                                Acabamentos de luxo
-                            </li>
-                            <li class="flex items-center text-gray-700">
-                                <i class="fas fa-check text-gold mr-3"></i>
-                                Divisórias personalizadas
-                            </li>
-                        </ul>
-                        <button onclick="scrollToSection('contato')" class="w-full bg-gradient-to-r from-gold to-yellow-600 text-white py-3 rounded-lg font-semibold hover:shadow-lg transition-all duration-300">
-                            <i class="fas fa-phone mr-2"></i>
-                            Solicitar Orçamento
+                        <p class="text-gray-600 mb-6 leading-relaxed flex-grow">Guarda-roupas sob medida que maximizam o espaço e organização. Soluções inteligentes para todos os tipos de ambientes.</p>
+                        <button onclick="scrollToSection('simulador')" class="w-full bg-gradient-to-r from-gold to-yellow-600 text-white py-3 rounded-lg font-semibold hover:shadow-lg transition-all duration-300 mt-auto">
+                            <i class="fas fa-calculator mr-2"></i>
+                            Simular Projeto
                         </button>
                     </div>
                 </div>
             </div>
 
-            <!-- Outros Serviços -->
-            <div class="bg-gray-50 rounded-2xl p-8">
-                <h3 class="font-montserrat font-bold text-2xl text-charcoal mb-8 text-center">Outros Móveis Planejados</h3>
-                <div class="grid md:grid-cols-4 gap-6">
-                    <div class="text-center p-6 bg-white rounded-xl hover:shadow-lg transition-shadow duration-300">
-                        <i class="fas fa-tv text-3xl text-gold mb-4"></i>
-                        <h4 class="font-semibold text-charcoal mb-2">Home Theater</h4>
-                        <p class="text-sm text-gray-600">Móveis para entretenimento</p>
+            <!-- Seção de Outros Serviços (reformulada) -->
+            <div class="mt-16">
+                <div class="text-center mb-12">
+                    <h3 class="font-montserrat font-bold text-3xl text-charcoal mb-4">Soluções Completas para Sua Casa</h3>
+                    <p class="text-lg text-gray-600 max-w-3xl mx-auto">
+                        Além de nossas especialidades, criamos móveis sob medida para todos os ambientes, integrando design e funcionalidade.
+                    </p>
+                </div>
+
+                <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+                    <!-- Home Office -->
+                    <div class="flex items-start space-x-6 p-6 bg-gray-50 rounded-2xl hover:bg-white hover:shadow-lg transition-all duration-300">
+                        <div class="flex-shrink-0 w-16 h-16 bg-gold/10 rounded-full flex items-center justify-center"><i class="fas fa-desktop text-3xl text-gold"></i></div>
+                        <div>
+                            <h4 class="font-semibold text-charcoal text-lg mb-2">Home Office</h4>
+                            <p class="text-sm text-gray-600">Crie um espaço de trabalho produtivo e elegante, com bancadas, armários e estantes funcionais.</p>
+                        </div>
                     </div>
-                    <div class="text-center p-6 bg-white rounded-xl hover:shadow-lg transition-shadow duration-300">
-                        <i class="fas fa-book text-3xl text-gold mb-4"></i>
-                        <h4 class="font-semibold text-charcoal mb-2">Estantes</h4>
-                        <p class="text-sm text-gray-600">Bibliotecas personalizadas</p>
+                    <!-- Home Theaters e Painéis -->
+                    <div class="flex items-start space-x-6 p-6 bg-gray-50 rounded-2xl hover:bg-white hover:shadow-lg transition-all duration-300">
+                        <div class="flex-shrink-0 w-16 h-16 bg-gold/10 rounded-full flex items-center justify-center"><i class="fas fa-tv text-3xl text-gold"></i></div>
+                        <div>
+                            <h4 class="font-semibold text-charcoal text-lg mb-2">Home Theaters e Painéis</h4>
+                            <p class="text-sm text-gray-600">Painéis ripados, racks e estantes que transformam sua sala em um cinema particular.</p>
+                        </div>
                     </div>
-                    <div class="text-center p-6 bg-white rounded-xl hover:shadow-lg transition-shadow duration-300">
-                        <i class="fas fa-desktop text-3xl text-gold mb-4"></i>
-                        <h4 class="font-semibold text-charcoal mb-2">Home Office</h4>
-                        <p class="text-sm text-gray-600">Escritórios funcionais</p>
+                    <!-- Dormitórios Completos -->
+                    <div class="flex items-start space-x-6 p-6 bg-gray-50 rounded-2xl hover:bg-white hover:shadow-lg transition-all duration-300">
+                        <div class="flex-shrink-0 w-16 h-16 bg-gold/10 rounded-full flex items-center justify-center"><i class="fas fa-bed text-3xl text-gold"></i></div>
+                        <div>
+                            <h4 class="font-semibold text-charcoal text-lg mb-2">Dormitórios Completos</h4>
+                            <p class="text-sm text-gray-600">Além de guarda-roupas, projetamos camas, criados-mudos e penteadeiras.</p>
+                        </div>
                     </div>
-                    <div class="text-center p-6 bg-white rounded-xl hover:shadow-lg transition-shadow duration-300">
-                        <i class="fas fa-bed text-3xl text-gold mb-4"></i>
-                        <h4 class="font-semibold text-charcoal mb-2">Dormitórios</h4>
-                        <p class="text-sm text-gray-600">Quartos completos</p>
+                    <!-- Banheiros e Lavabos -->
+                    <div class="flex items-start space-x-6 p-6 bg-gray-50 rounded-2xl hover:bg-white hover:shadow-lg transition-all duration-300">
+                        <div class="flex-shrink-0 w-16 h-16 bg-gold/10 rounded-full flex items-center justify-center"><i class="fas fa-bath text-3xl text-gold"></i></div>
+                        <div>
+                            <h4 class="font-semibold text-charcoal text-lg mb-2">Banheiros e Lavabos</h4>
+                            <p class="text-sm text-gray-600">Gabinetes e armários que otimizam o espaço com resistência à umidade.</p>
+                        </div>
+                    </div>
+                    <!-- Áreas de Serviço -->
+                    <div class="flex items-start space-x-6 p-6 bg-gray-50 rounded-2xl hover:bg-white hover:shadow-lg transition-all duration-300">
+                        <div class="flex-shrink-0 w-16 h-16 bg-gold/10 rounded-full flex items-center justify-center"><i class="fas fa-soap text-3xl text-gold"></i></div>
+                        <div>
+                            <h4 class="font-semibold text-charcoal text-lg mb-2">Áreas de Serviço</h4>
+                            <p class="text-sm text-gray-600">Soluções inteligentes para organizar sua lavanderia de forma prática e discreta.</p>
+                        </div>
+                    </div>
+                    <!-- Projetos Comerciais -->
+                    <div class="flex items-start space-x-6 p-6 bg-gray-50 rounded-2xl hover:bg-white hover:shadow-lg transition-all duration-300">
+                        <div class="flex-shrink-0 w-16 h-16 bg-gold/10 rounded-full flex items-center justify-center"><i class="fas fa-store text-3xl text-gold"></i></div>
+                        <div>
+                            <h4 class="font-semibold text-charcoal text-lg mb-2">Projetos Comerciais</h4>
+                            <p class="text-sm text-gray-600">Móveis para lojas, escritórios e recepções, unindo a identidade da sua marca com funcionalidade.</p>
+                        </div>
                     </div>
                 </div>
-                <div class="text-center mt-8">
-                    <p class="text-gray-600 mb-4">Para outros móveis, entre em contato para orçamento personalizado</p>
-                    <button onclick="scrollToSection('contato')" class="bg-charcoal text-white px-8 py-3 rounded-lg font-semibold hover:bg-gray-800 transition-colors duration-300">
-                        <i class="fas fa-phone mr-2"></i>
-                        Solicitar Orçamento
-                    </button>
-                </div>
+            </div>
+
+            <!-- CTA Final -->
+            <div class="text-center mt-16">
+                <p class="text-gray-600 mb-4">Tem uma ideia diferente? Nós tiramos do papel.</p>
+                <button onclick="scrollToSection('contato')" class="bg-charcoal text-white px-8 py-3 rounded-lg font-semibold hover:bg-gray-800 transition-colors duration-300">
+                    <i class="fas fa-comments mr-2"></i>
+                    Fale com um Especialista
+                </button>
             </div>
         </div>
     </section>
 
     <!-- Diferenciais -->
     <section class="py-20 bg-charcoal text-white">
-        <div class="container mx-auto px-6">
+        <div class="container mx-auto px-4 sm:px-6">
             <div class="text-center mb-16">
                 <h2 class="font-montserrat font-bold text-4xl md:text-5xl mb-6">
                     Nossos <span class="text-gold">Diferenciais</span>
@@ -383,7 +377,7 @@
 
     <!-- Nosso Processo -->
     <section id="processo" class="py-20 bg-white">
-        <div class="container mx-auto px-6">
+        <div class="container mx-auto px-4 sm:px-6">
             <div class="text-center mb-16">
                 <h2 class="font-montserrat font-bold text-4xl md:text-5xl text-charcoal mb-6">
                     Nosso <span class="text-gold">Processo</span>
@@ -457,7 +451,7 @@
 
     <!-- Galeria -->
     <section id="galeria" class="py-20 bg-gray-50">
-        <div class="container mx-auto px-6">
+        <div class="container mx-auto px-4 sm:px-6">
             <div class="text-center mb-16">
                 <h2 class="font-montserrat font-bold text-4xl md:text-5xl text-charcoal mb-6">
                     Nossa <span class="text-gold">Galeria</span>
@@ -1044,7 +1038,7 @@
 
     <!-- Depoimentos -->
     <section class="py-20 bg-gray-50">
-        <div class="container mx-auto px-6">
+        <div class="container mx-auto px-4 sm:px-6">
             <div class="text-center mb-16">
                 <h2 class="font-montserrat font-bold text-4xl md:text-5xl text-charcoal mb-6">
                     O que nossos <span class="text-gold">clientes dizem</span>
@@ -1127,7 +1121,7 @@
 
     <!-- Contato -->
     <section id="contato" class="py-20">
-        <div class="container mx-auto px-6">
+        <div class="container mx-auto px-4 sm:px-6">
             <div class="text-center mb-16">
                 <h2 class="font-montserrat font-bold text-4xl md:text-5xl text-charcoal mb-6">
                     Entre em <span class="text-gold">Contato</span>
@@ -1257,7 +1251,7 @@
 
     <!-- Footer -->
     <footer class="bg-charcoal text-white no-print">
-        <div class="container mx-auto px-6">
+        <div class="container mx-auto px-4 sm:px-6">
             
             <!-- CTA Integrado -->
             <div class="text-center pt-12 pb-10">
