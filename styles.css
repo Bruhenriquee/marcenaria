@@ -516,32 +516,45 @@ input[type="radio"]:not(.sr-only):checked::after {
 /* === Estilos do Menu Mobile Aprimorado === */
 .mobile-menu-link {
     opacity: 0;
-    transition: opacity 0.4s ease-out, transform 0.4s ease-out;
-    transform: translateY(20px);
+    transform: translateX(20px);
+    /* A transição de cor/bg é separada para ser mais rápida que a de entrada */
+    transition: opacity 0.4s ease-out, transform 0.4s ease-out, background-color 0.2s ease-in-out, color 0.2s ease-in-out;
 }
 
 /* Aplica a animação quando o menu está aberto */
 #mobile-menu.is-open .mobile-menu-link {
     opacity: 1;
-    transform: translateY(0);
+    transform: translateX(0);
 }
 
-/* Efeito de hover para os links de navegação no menu */
-#mobile-menu .flex-grow a.mobile-menu-link:hover {
-    background-color: rgba(212, 175, 55, 0.1); /* gold/10 */
-    color: #D4AF37; /* gold */
+/* Estilo base dos links (agora com flexbox para o ícone) */
+#mobile-menu nav a.mobile-menu-link {
+    display: flex;
+    align-items: center;
+    gap: 1rem; /* space-x-4 */
+    padding: 0.875rem 1rem; /* py-3.5 px-4 */
+    border-radius: 0.5rem; /* rounded-lg */
+    font-family: 'Montserrat', sans-serif;
+    font-size: 1.125rem; /* text-lg */
+    color: #D1D5DB; /* text-gray-300 */
+    text-decoration: none;
+}
+
+/* Feedback de toque (tap) para os links */
+#mobile-menu nav a.mobile-menu-link:active {
+    background-color: rgba(212, 175, 55, 0.15); /* gold/15 */
+    color: white;
 }
 
 /* Atraso em cascata para cada item do menu */
-#mobile-menu.is-open .flex-grow > .mobile-menu-link:nth-child(1) { transition-delay: 0.20s; }
-#mobile-menu.is-open .flex-grow > .mobile-menu-link:nth-child(2) { transition-delay: 0.25s; }
-#mobile-menu.is-open .flex-grow > .mobile-menu-link:nth-child(3) { transition-delay: 0.30s; }
-#mobile-menu.is-open .flex-grow > .mobile-menu-link:nth-child(4) { transition-delay: 0.35s; }
-#mobile-menu.is-open .flex-grow > .mobile-menu-link:nth-child(5) { transition-delay: 0.40s; }
-#mobile-menu.is-open .flex-grow > .mobile-menu-link:nth-child(6) { transition-delay: 0.45s; }
-#mobile-menu.is-open .flex-grow > .mobile-menu-link:nth-child(7) { transition-delay: 0.50s; }
-#mobile-menu.is-open .flex-grow > .mobile-menu-link:nth-child(8) { transition-delay: 0.55s; } /* Separador HR */
-#mobile-menu.is-open .flex-grow > .mobile-menu-link:nth-child(9) { transition-delay: 0.60s; } /* Botão */
+#mobile-menu.is-open nav > .mobile-menu-link:nth-child(1) { transition-delay: 0.20s; }
+#mobile-menu.is-open nav > .mobile-menu-link:nth-child(2) { transition-delay: 0.25s; }
+#mobile-menu.is-open nav > .mobile-menu-link:nth-child(3) { transition-delay: 0.30s; }
+#mobile-menu.is-open nav > .mobile-menu-link:nth-child(4) { transition-delay: 0.35s; }
+#mobile-menu.is-open nav > .mobile-menu-link:nth-child(5) { transition-delay: 0.40s; }
+#mobile-menu.is-open nav > .mobile-menu-link:nth-child(6) { transition-delay: 0.45s; }
+#mobile-menu.is-open nav > .mobile-menu-link:nth-child(7) { transition-delay: 0.50s; }
+#mobile-menu.is-open nav > .mobile-menu-link:nth-child(8) { transition-delay: 0.55s; } /* Botão */
 
 /* === Estilos do Navbar Aprimorado === */
 
@@ -591,4 +604,40 @@ input[type="radio"]:not(.sr-only):checked::after {
 .nav-link.active {
     color: #D4AF37; /* gold */
     font-weight: 700;
+}
+
+/* === Header Scroll & Shrink Effects === */
+
+/* Add transitions to the elements that will change */
+#header {
+    /* The main header transition for background and shadow */
+    transition: background-color 0.4s ease, box-shadow 0.4s ease, backdrop-filter 0.4s ease;
+}
+#header nav {
+    transition: padding 0.4s ease;
+}
+#header svg, #header h1 {
+    transition: all 0.4s ease;
+}
+
+.logo-subtitle {
+    max-height: 20px; /* Give it a max-height to transition from */
+    overflow: hidden;
+    /* Transition max-height and opacity for a smooth disappearance */
+    transition: max-height 0.4s ease-in-out, opacity 0.3s ease-in-out;
+}
+
+/* --- Shrunk State (when scrolled) --- */
+#header.header-shrunk nav {
+    padding-top: 0.5rem;    /* py-2 */
+    padding-bottom: 0.5rem; /* py-2 */
+}
+#header.header-shrunk .logo-subtitle {
+    /* Animate the subtitle out */
+    max-height: 0;
+    opacity: 0;
+}
+#header.header-shrunk svg {
+    width: 2rem;  /* w-8 */
+    height: 2rem; /* h-8 */
 }

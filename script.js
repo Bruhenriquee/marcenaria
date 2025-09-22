@@ -106,36 +106,20 @@ function closeMobileMenu() {
 
 // Scroll effects
 function setupScrollEffects() {
-    let lastScrollY = window.scrollY;
-    const heroImage = document.querySelector('#inicio img');
-    let isTicking = false;
-
     const handleScroll = () => {
-        if (isMenuOpen) return; // Ignora o scroll quando o menu está aberto
+        if (isMenuOpen) return; // Ignore scroll effects when menu is open
+        
         const currentScrollY = window.scrollY;
 
-        if (!isTicking) {
-            window.requestAnimationFrame(() => {
-                // 1. Header background and shadow
-                if (header) {
-                    header.classList.toggle('shadow-lg', currentScrollY > 50);
-                }
-
-                // 2. Hide/show header on scroll
-                if (header) {
-                    if (currentScrollY > lastScrollY && currentScrollY > 100) {
-                        header.style.transform = 'translateY(-100%)'; // Scrolling down
-                    } else {
-                        header.style.transform = 'translateY(0)'; // Scrolling up
-                    }
-                }
-
-                lastScrollY = currentScrollY <= 0 ? 0 : currentScrollY;
-                isTicking = false;
-            });
-            isTicking = true;
+        if (header) {
+            const isScrolled = currentScrollY > 50;
+            // When scrolled, it's shrunk.
+            header.classList.toggle('header-shrunk', isScrolled);
         }
     };
+
+    // Run handler once on page load to set initial state
+    handleScroll();
 
     window.addEventListener('scroll', handleScroll);
 }
