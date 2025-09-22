@@ -853,7 +853,7 @@ function setupSimulator() {
         customColor: '',
         extras: [],
         customer: { name: '', email: '', phone: '' },
-        quote: { area: 0, sheets: 0, total: 0, basePrice: 0, extrasPrice: 0 }
+        quote: { area: 0, sheets: 0, total: 0, basePrice: 0, extrasPrice: 0, extrasBreakdown: [] }
     };
 
     // --- DOM ELEMENTS ---
@@ -1048,6 +1048,7 @@ function setupSimulator() {
         toggleBtn.addEventListener('click', () => {
             const isHidden = breakdownDiv.classList.toggle('hidden');
             toggleBtn.querySelector('i').classList.toggle('rotate-180', !isHidden);
+            updateContainerHeight();
         });
     }
 
@@ -1402,7 +1403,7 @@ function setupSimulator() {
         const basePrice = frontArea * pricePerM2;
 
         // --- Extras Calculation ---
-        let extrasPrice = 0;
+        const extrasBreakdown = [];
         if (state.hardwareType === 'softclose') {
             let hardwareUnits = 0;
             if (hasDoors) {
@@ -1413,7 +1414,8 @@ function setupSimulator() {
                 }
             }
             hardwareUnits += Math.floor(width * 2);
-            extrasPrice += hardwareUnits * config.EXTRAS_COST.HARDWARE_SOFT_CLOSE_PER_UNIT;
+            const cost = hardwareUnits * config.EXTRAS_COST.HARDWARE_SOFT_CLOSE_PER_UNIT;
+            if (cost > 0) extrasBreakdown.push({ label: 'Ferragens com Amortecimento', cost });
         }
 
         // --- Handle Cost Calculation ---
@@ -1436,21 +1438,25 @@ function setupSimulator() {
 
             if (totalHandleLength > 0) {
                 const numBarsNeeded = Math.ceil(totalHandleLength / hardwareConfig.HANDLE_BAR_LENGTH);
-                extrasPrice += numBarsNeeded * hardwareConfig.HANDLE_BAR_COST.premium;
+                const cost = numBarsNeeded * hardwareConfig.HANDLE_BAR_COST.premium;
+                if (cost > 0) extrasBreakdown.push({ label: `Puxadores Perfil ${state.handleType.charAt(0).toUpperCase() + state.handleType.slice(1)}`, cost });
             }
         }
 
         if (state.doorType === 'correr' && hasDoors) {
-            extrasPrice += config.EXTRAS_COST['Portas de Correr'] * frontArea;
+            const cost = config.EXTRAS_COST['Portas de Correr'] * frontArea;
+            if (cost > 0) extrasBreakdown.push({ label: 'Sistema de Portas de Correr', cost });
         }
 
         if (state.projectOption === 'create') {
-            extrasPrice += SIMULATOR_CONFIG.COMMON_COSTS.PROJECT_3D;
+            const cost = SIMULATOR_CONFIG.COMMON_COSTS.PROJECT_3D;
+            if (cost > 0) extrasBreakdown.push({ label: 'Criação do Projeto 3D', cost });
         }
 
         state.extras.forEach(extra => {
             const cost = config.EXTRAS_COST[extra] || SIMULATOR_CONFIG.COMMON_COSTS[extra] || 0;
-            extrasPrice += (extra === 'Iluminação LED') ? cost * width : cost;
+            const finalCost = (extra === 'Iluminação LED') ? cost * width : cost;
+            if (finalCost > 0) extrasBreakdown.push({ label: extra, cost: finalCost });
         });
 
         // Estimate material area for display purposes
@@ -1459,13 +1465,13 @@ function setupSimulator() {
         const internalArea = frontArea * 1.5;
         const totalMaterialArea = doorsArea + carcassArea + internalArea;
 
-        return { basePrice, extrasPrice, totalMaterialArea };
+        return { basePrice, extrasBreakdown, totalMaterialArea };
     }
 
     function calculateKitchenQuote() {
         const config = SIMULATOR_CONFIG.KITCHEN;
-        let extrasPrice = 0;
         let basePrice = 0;
+        const extrasBreakdown = [];
 
         // Material area calculation
         const totalFrontArea = state.dimensions.walls.reduce((acc, wall) => acc + (wall.width * wall.height), 0);
@@ -1487,12 +1493,14 @@ function setupSimulator() {
         // --- Extras Calculation ---
         if (state.kitchenHasSinkCabinet && state.sinkStoneWidth > 0) {
             const sinkCabinetWidth = Math.max(0, state.sinkStoneWidth - 0.05);
-            extrasPrice += sinkCabinetWidth * config.EXTRAS_COST.SINK_CABINET_PER_METER;
+            const cost = sinkCabinetWidth * config.EXTRAS_COST.SINK_CABINET_PER_METER;
+            if (cost > 0) extrasBreakdown.push({ label: 'Balcão de Pia', cost });
         }
 
         if (state.hasHotTower) {
             const hotTowerHeight = 2.2; // Use a fixed default height
-            extrasPrice += hotTowerHeight * config.EXTRAS_COST.HOT_TOWER_PER_METER;
+            const cost = hotTowerHeight * config.EXTRAS_COST.HOT_TOWER_PER_METER;
+            if (cost > 0) extrasBreakdown.push({ label: 'Torre Quente', cost });
         }
 
         const totalWidth = state.dimensions.walls.reduce((acc, wall) => acc + wall.width, 0);
@@ -1507,31 +1515,37 @@ function setupSimulator() {
         const numDrawers = totalUnits - numDoors;
 
         const hingeCostPerDoor = config.HARDWARE.HINGE_COST[state.hardwareType];
-        extrasPrice += numDoors * hingeCostPerDoor;
+        const hingeCost = numDoors * hingeCostPerDoor;
+        if (hingeCost > 0) extrasBreakdown.push({ label: `Dobradiças (${state.hardwareType})`, cost: hingeCost });
 
         const slideCostPerDrawer = config.HARDWARE.SLIDE_COST_PER_DRAWER;
-        extrasPrice += numDrawers * slideCostPerDrawer;
+        const slideCost = numDrawers * slideCostPerDrawer;
+        if (slideCost > 0) extrasBreakdown.push({ label: 'Corrediças de Gaveta', cost: slideCost });
 
         const totalHandleUnits = numDoors + numDrawers;
         const totalHandleLength = totalHandleUnits * UNIT_WIDTH;
         const numBarsNeeded = Math.ceil(totalHandleLength / config.HARDWARE.HANDLE_BAR_LENGTH);
 
         if (state.handleType === 'aluminio') {
-            extrasPrice += numBarsNeeded * config.HARDWARE.HANDLE_BAR_COST.aluminio;
+            const cost = numBarsNeeded * config.HARDWARE.HANDLE_BAR_COST.aluminio;
+            if (cost > 0) extrasBreakdown.push({ label: 'Puxadores Perfil Alumínio', cost });
         } else {
-            extrasPrice += (numBarsNeeded * config.HARDWARE.HANDLE_BAR_COST.premium) + (totalHandleUnits * config.HARDWARE.HANDLE_PREMIUM_EXTRA_PER_UNIT);
+            const cost = (numBarsNeeded * config.HARDWARE.HANDLE_BAR_COST.premium) + (totalHandleUnits * config.HARDWARE.HANDLE_PREMIUM_EXTRA_PER_UNIT);
+            if (cost > 0) extrasBreakdown.push({ label: `Puxadores Perfil ${state.handleType.charAt(0).toUpperCase() + state.handleType.slice(1)}`, cost });
         }
 
         if (state.projectOption === 'create') {
-            extrasPrice += SIMULATOR_CONFIG.COMMON_COSTS.PROJECT_3D;
+            const cost = SIMULATOR_CONFIG.COMMON_COSTS.PROJECT_3D;
+            if (cost > 0) extrasBreakdown.push({ label: 'Criação do Projeto 3D', cost });
         }
 
         state.extras.forEach(extra => {
             const cost = config.EXTRAS_COST[extra] || SIMULATOR_CONFIG.COMMON_COSTS[extra] || 0;
-            extrasPrice += (extra === 'Iluminação LED') ? cost * totalWidth : cost;
+            const finalCost = (extra === 'Iluminação LED') ? cost * totalWidth : cost;
+            if (finalCost > 0) extrasBreakdown.push({ label: extra, cost: finalCost });
         });
 
-        return { basePrice, extrasPrice, totalMaterialArea };
+        return { basePrice, extrasBreakdown, totalMaterialArea };
     }
 
     function calculateQuote() {
@@ -1542,7 +1556,8 @@ function setupSimulator() {
             quoteDetails = calculateKitchenQuote();
         }
 
-        const { basePrice, extrasPrice, totalMaterialArea } = quoteDetails;
+        const { basePrice, extrasBreakdown, totalMaterialArea } = quoteDetails;
+        const extrasPrice = extrasBreakdown.reduce((acc, item) => acc + item.cost, 0);
         const sheetSize = state.furnitureType === 'Cozinha' ? SIMULATOR_CONFIG.KITCHEN.MDF_SHEET_SIZE : SIMULATOR_CONFIG.WARDROBE.MDF_SHEET_SIZE;
         
         state.quote = { 
@@ -1550,7 +1565,8 @@ function setupSimulator() {
             sheets: Math.ceil(totalMaterialArea / sheetSize), 
             total: basePrice + extrasPrice,
             basePrice: basePrice,
-            extrasPrice: extrasPrice
+            extrasPrice: extrasPrice,
+            extrasBreakdown: extrasBreakdown
         };
     }
 
@@ -1574,7 +1590,7 @@ function setupSimulator() {
             customColor: '',
             extras: [],
             customer: { name: '', email: '', phone: '' },
-            quote: { area: 0, sheets: 0, total: 0, basePrice: 0, extrasPrice: 0 }
+            quote: { area: 0, sheets: 0, total: 0, basePrice: 0, extrasPrice: 0, extrasBreakdown: [] }
         });
     }
 
@@ -1715,21 +1731,93 @@ function setupSimulator() {
     }
 
     function renderResult() {
-        document.getElementById('result-furniture').textContent = state.furnitureType;
+        const specsContainer = document.getElementById('result-specs');
+        if (!specsContainer) return;
+
+        specsContainer.innerHTML = ''; // Clear previous results
+
+        const createSpecCard = (icon, label, value) => {
+            if (!value) return ''; // Don't create a card if the value is null/empty
+            return `
+                <div class="spec-card">
+                    <i class="fas ${icon} text-2xl text-gold mb-2"></i>
+                    <span class="text-xs text-gray-500">${label}</span>
+                    <p class="font-bold text-charcoal">${value}</p>
+                </div>
+            `;
+        };
+
+        let specsHTML = '';
+        specsHTML += createSpecCard('fa-couch', 'Móvel', state.furnitureType);
+
         let dimsText = '';
         if (state.furnitureType === 'Guarda-Roupa') {
             dimsText = `Paredes: ${state.dimensions.walls.map(w => w.width).join('m + ')}m | Altura: ${state.dimensions.height}m`;
         } else { // Cozinha
-            dimsText = state.dimensions.walls.map(w => `${w.width}m (L) x ${w.height}m (A)`).join(' | ');
+            dimsText = state.dimensions.walls.map(w => `${w.width}m x ${w.height}m`).join(' | ');
         }
-        document.getElementById('result-dims').textContent = dimsText;
-        document.getElementById('result-sheets').textContent = `${state.quote.sheets} chapas`;
-        document.getElementById('result-extras').textContent = state.extras.length > 0 ? state.extras.join(', ') : 'Nenhum';
+        specsHTML += createSpecCard('fa-ruler-combined', 'Dimensões', dimsText);
+        specsHTML += createSpecCard('fa-palette', 'Material', state.material);
+
+        // Wardrobe specific details
+        if (state.furnitureType === 'Guarda-Roupa') {
+            let formatText = state.wardrobeFormat === 'reto' ? 'Reto' : 'Closet';
+            if (state.wardrobeFormat === 'closet') {
+                formatText += state.closetHasDoors ? ' (Fechado)' : ' (Aberto)';
+            }
+            specsHTML += createSpecCard('fa-vector-square', 'Formato', formatText);
+
+            const hasDoors = !(state.wardrobeFormat === 'closet' && !state.closetHasDoors);
+            if (hasDoors) {
+                specsHTML += createSpecCard('fa-door-open', 'Portas', state.doorType === 'abrir' ? 'De Abrir' : 'De Correr');
+            }
+        }
+
+        // Common details
+        const hasDoors = state.furnitureType === 'Cozinha' || (state.wardrobeFormat === 'reto' || (state.wardrobeFormat === 'closet' && state.closetHasDoors));
+        if (hasDoors) {
+            specsHTML += createSpecCard('fa-grip-horizontal', 'Puxador', `Perfil ${state.handleType.charAt(0).toUpperCase() + state.handleType.slice(1)}`);
+        }
+        specsHTML += createSpecCard('fa-cogs', 'Ferragens', state.hardwareType === 'padrao' ? 'Padrão' : 'Soft-close');
+
+        const extrasText = state.extras.length > 0 ? state.extras.join(', ') : 'Nenhum';
+        specsHTML += createSpecCard('fa-plus-circle', 'Extras', extrasText);
+
+        specsContainer.innerHTML = specsHTML;
+
+        // Update total and breakdown
+        const basePriceEl = document.getElementById('result-base-price');
+        const extrasPriceEl = document.getElementById('result-extras-price');
+        const extrasListContainer = document.getElementById('extras-breakdown-list');
+
         document.getElementById('result-total').textContent = `R$ ${state.quote.total.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
- 
-        // Render breakdown
-        document.getElementById('result-base-price').textContent = `R$ ${state.quote.basePrice.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
-        document.getElementById('result-extras-price').textContent = `R$ ${state.quote.extrasPrice.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+        basePriceEl.textContent = `R$ ${state.quote.basePrice.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`;
+        
+        extrasListContainer.innerHTML = ''; // Clear previous
+        if (state.quote.extrasBreakdown && state.quote.extrasBreakdown.length > 0) {
+            let extrasHTML = '<h5 class="font-semibold text-charcoal mb-2">Acabamentos e Personalização:</h5>';
+            state.quote.extrasBreakdown.forEach(item => {
+                extrasHTML += `
+                    <div class="flex justify-between items-center text-sm">
+                        <span class="text-gray-600">${item.label}</span>
+                        <span class="font-semibold text-charcoal">+ R$ ${item.cost.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</span>
+                    </div>
+                `;
+            });
+            extrasListContainer.innerHTML = extrasHTML;
+        }
+
+        // Update visual breakdown bar
+        const basePriceBar = document.getElementById('base-price-bar');
+        const extrasPriceBar = document.getElementById('extras-price-bar');
+        const totalForBar = state.quote.basePrice + state.quote.extrasPrice;
+
+        if (basePriceBar && extrasPriceBar && totalForBar > 0) {
+            const basePercentage = (state.quote.basePrice / totalForBar) * 100;
+            basePriceBar.style.width = `${basePercentage}%`;
+            extrasPriceBar.style.width = `${100 - basePercentage}%`;
+            extrasPriceBar.style.left = `${basePercentage}%`;
+        }
     }
 
     function getQuoteAsText() {
@@ -1766,24 +1854,15 @@ function setupSimulator() {
 
         const handleName = state.handleType.charAt(0).toUpperCase() + state.handleType.slice(1);
 
-        return `*Orçamento de Móveis Planejados*\n---------------------------------\n*Cliente:* ${state.customer.name}\n*Móvel:* ${state.furnitureType}${formatDetails}${kitchenDetails}\n${details}${projectDetails}\n*Material:* ${state.material} ${state.customColor ? `(Cor: ${state.customColor})` : ''}\n*Puxador:* Perfil ${handleName}${hardwareDetails}\n*Extras:* ${state.extras.join(', ') || 'Nenhum'}\n---------------------------------\n*Total Estimado: ${document.getElementById('result-total').textContent}*\n\n_Este é um orçamento informativo. O valor final será definido após visita técnica._`;
-    }
+        let breakdownText = `\n\n*Detalhamento do Valor:*\n- Estrutura e Produção: R$ ${state.quote.basePrice.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`;
+        if (state.quote.extrasBreakdown && state.quote.extrasBreakdown.length > 0) {
+            breakdownText += '\n*Acabamentos e Personalização:*';
+            state.quote.extrasBreakdown.forEach(item => {
+                breakdownText += `\n  - ${item.label}: + R$ ${item.cost.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`;
+            });
+        }
 
-    function getPdfData() {
-        return {
-            date: new Date().toLocaleDateString('pt-BR'),
-            'quote-id': Date.now(),
-            name: state.customer.name,
-            email: state.customer.email,
-            phone: state.customer.phone,
-            furniture: state.furnitureType,
-            dims: document.getElementById('result-dims').textContent,
-            material: state.material,
-            color: state.customColor || 'N/A',
-            project: state.projectOption === 'create' ? 'Sim' : (state.projectOption === 'upload' ? 'Fornecido pelo cliente' : 'Não'),
-            extras: state.extras.join(', ') || 'Nenhum',
-            total: document.getElementById('result-total').textContent
-        };
+        return `*Orçamento de Móveis Planejados*\n---------------------------------\n*Cliente:* ${state.customer.name}\n*Móvel:* ${state.furnitureType}${formatDetails}${kitchenDetails}\n${details}${projectDetails}\n*Material:* ${state.material} ${state.customColor ? `(Cor: ${state.customColor})` : ''}\n*Puxador:* Perfil ${handleName}${hardwareDetails}\n*Extras:* ${state.extras.join(', ') || 'Nenhum'}\n---------------------------------\n*Total Estimado: ${document.getElementById('result-total').textContent}*${breakdownText}\n\n_Este é um orçamento informativo. O valor final será definido após visita técnica._`;
     }
 
     async function generatePDF() {
@@ -1791,23 +1870,77 @@ function setupSimulator() {
         const originalBtnHTML = pdfBtn.innerHTML;
         pdfBtn.disabled = true;
         pdfBtn.innerHTML = '<div class="spinner mr-2"></div>Gerando...';
-
+    
         try {
             const { jsPDF } = window.jspdf;
             const pdfTemplate = document.getElementById('pdf-template');
-            const pdfData = getPdfData();
-
-            ['date', 'quote-id', 'name', 'email', 'phone', 'furniture', 'dims', 'material', 'color', 'project', 'extras', 'total'].forEach(id => {
-                const el = document.getElementById(`pdf-${id}`);
-                if (el) el.textContent = pdfData[id];
-            });
-
+    
+            // --- Populate Template ---
+            const quoteId = Date.now().toString().slice(-6);
+            document.getElementById('pdf-quote-id').textContent = quoteId;
+            document.getElementById('pdf-date').textContent = new Date().toLocaleDateString('pt-BR');
+            
+            document.getElementById('pdf-name').textContent = state.customer.name;
+            document.getElementById('pdf-email').textContent = state.customer.email || 'Não informado';
+            document.getElementById('pdf-phone').textContent = state.customer.phone;
+    
+            // Populate Specs Table
+            const specsContainer = document.getElementById('pdf-specs-table');
+            specsContainer.innerHTML = ''; // Clear previous
+            const createSpecRow = (label, value) => {
+                if (!value) return '';
+                return `<div class="py-2 border-b border-gray-200"><strong class="text-gray-500">${label}:</strong><p class="font-semibold">${value}</p></div>`;
+            };
+            
+            let specsHTML = '';
+            specsHTML += createSpecRow('Tipo de Móvel', state.furnitureType);
+            
+            let dimsText = '';
+            if (state.furnitureType === 'Guarda-Roupa') {
+                dimsText = `Paredes: ${state.dimensions.walls.map(w => w.width).join('m + ')}m | Altura: ${state.dimensions.height}m`;
+            } else { // Cozinha
+                dimsText = state.dimensions.walls.map(w => `${w.width}m x ${w.height}m`).join(' | ');
+            }
+            specsHTML += createSpecRow('Dimensões', dimsText);
+            specsHTML += createSpecRow('Material', state.material);
+            if (state.customColor) {
+                specsHTML += createSpecRow('Cor Personalizada', state.customColor);
+            }
+            const hasDoors = state.furnitureType === 'Cozinha' || (state.wardrobeFormat === 'reto' || (state.wardrobeFormat === 'closet' && state.closetHasDoors));
+            if (hasDoors) {
+                specsHTML += createSpecRow('Tipo de Porta', state.doorType === 'abrir' ? 'De Abrir' : 'De Correr');
+                specsHTML += createSpecRow('Puxador', `Perfil ${state.handleType.charAt(0).toUpperCase() + state.handleType.slice(1)}`);
+            }
+            specsHTML += createSpecRow('Ferragens', state.hardwareType === 'padrao' ? 'Padrão' : 'Soft-close');
+            specsHTML += createSpecRow('Projeto 3D', state.projectOption === 'create' ? 'Sim' : (state.projectOption === 'upload' ? 'Fornecido pelo cliente' : 'Não'));
+            
+            specsContainer.innerHTML = specsHTML;
+    
+            // Populate Pricing
+            const formatCurrency = (value) => `R$ ${value.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`;
+            document.getElementById('pdf-base-price').textContent = formatCurrency(state.quote.basePrice);
+            document.getElementById('pdf-total').textContent = formatCurrency(state.quote.total);
+    
+            const extrasContainer = document.getElementById('pdf-extras-breakdown');
+            extrasContainer.innerHTML = '';
+            if (state.quote.extrasBreakdown && state.quote.extrasBreakdown.length > 0) {
+                let extrasHTML = '<p class="font-semibold text-charcoal">Acabamentos e Personalização:</p><div class="pl-4 border-l-2 border-gold/50 space-y-1 mt-1">';
+                state.quote.extrasBreakdown.forEach(item => {
+                    extrasHTML += `<div class="flex justify-between items-center text-sm"><span class="text-gray-600">${item.label}</span><span class="font-semibold">+ ${formatCurrency(item.cost)}</span></div>`;
+                });
+                extrasHTML += '</div>';
+                extrasContainer.innerHTML = extrasHTML;
+            }
+            // --- End Populate ---
+    
             pdfTemplate.classList.remove('hidden');
-            const canvas = await html2canvas(pdfTemplate.firstElementChild, { scale: 2 });
+            const canvas = await html2canvas(pdfTemplate.firstElementChild, { scale: 2, useCORS: true });
             const imgData = canvas.toDataURL('image/png');
             const pdf = new jsPDF('p', 'mm', 'a4');
-            pdf.addImage(imgData, 'PNG', 0, 0, pdf.internal.pageSize.getWidth(), (canvas.height * pdf.internal.pageSize.getWidth()) / canvas.width);
-            pdf.save(`orcamento-${state.customer.name.split(' ')[0] || 'cliente'}.pdf`);
+            const pdfWidth = pdf.internal.pageSize.getWidth();
+            const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
+            pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
+            pdf.save(`orcamento-ronimarceneiro-${quoteId}.pdf`);
             pdfTemplate.classList.add('hidden');
         } catch (error) {
             console.error("PDF Generation Error:", error);

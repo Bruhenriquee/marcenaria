@@ -31,8 +31,8 @@
             theme: {
                 extend: {
                     fontFamily: {
-                        'montserrat': ['Montserrat', 'sans-serif'],
-                        'roboto': ['Roboto', 'sans-serif'],
+                    'montserrat': ['Montserrat', 'sans-serif'],
+                    'roboto': ['Roboto', 'sans-serif'],
                     },
                     colors: {
                         'wood': '#8B4513',
@@ -53,16 +53,9 @@
                 <!-- Logo SVG -->
                 <a href="#inicio" class="flex items-center space-x-2 sm:space-x-3 group focus:outline-none focus:ring-2 focus:ring-gold focus:ring-offset-2 rounded-lg">
                     <div class="flex items-center space-x-2 sm:space-x-3">
-                        <svg class="w-10 h-10 group-hover:scale-105" viewBox="0 0 50 50" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-                            <rect x="10" y="15" width="30" height="20" rx="2" fill="#8B4513" stroke="#D4AF37" stroke-width="1"/>
-                            <rect x="15" y="20" width="5" height="10" fill="#D4AF37"/>
-                            <rect x="22.5" y="20" width="5" height="10" fill="#D4AF37"/>
-                            <rect x="30" y="20" width="5" height="10" fill="#D4AF37"/>
-                            <text x="25" y="45" text-anchor="middle" font-family="Montserrat" font-size="8" font-weight="600" fill="#2F2F2F">RM</text>
-                        </svg>
-                        <div>
-                            <h1 class="font-montserrat font-bold text-lg sm:text-xl text-charcoal">Roni Marceneiro</h1>
-                            <p class="text-xs text-gray-600 logo-subtitle">Móveis Planejados</p>
+                        <div class="text-center">
+                            <h1 class="font-montserrat font-bold text-xl lg:text-2xl text-charcoal tracking-tight transition-all duration-300">Roni Marceneiro</h1>
+                            <p class="text-[10px] lg:text-xs text-gold tracking-wider lg:tracking-widest uppercase logo-subtitle whitespace-nowrap">Móveis Planejados</p>
                         </div>
                     </div>
                 </a>
@@ -105,16 +98,9 @@
         <div id="mobile-menu" class="md:hidden fixed top-0 right-0 w-4/5 max-w-sm bg-gradient-to-b from-charcoal to-gray-900 shadow-2xl z-50 transform translate-x-full transition-transform duration-500 ease-in-out flex flex-col rounded-bl-2xl">
             <!-- Menu Header -->
             <div class="p-6 border-b border-gold/20 flex items-center space-x-3 flex-shrink-0">
-                <svg class="w-8 h-8" viewBox="0 0 50 50" xmlns="http://www.w3.org/2000/svg">
-                    <rect x="10" y="15" width="30" height="20" rx="2" fill="#D4AF37"/>
-                    <rect x="15" y="20" width="5" height="10" fill="#2F2F2F"/>
-                    <rect x="22.5" y="20" width="5" height="10" fill="#2F2F2F"/>
-                    <rect x="30" y="20" width="5" height="10" fill="#2F2F2F"/>
-                    <text x="25" y="45" text-anchor="middle" font-family="Montserrat" font-size="8" font-weight="600" fill="#D4AF37">RM</text>
-                </svg>
-                <div>
-                    <h2 class="font-montserrat font-bold text-lg text-white">Roni Marceneiro</h2>
-                    <p class="text-xs text-gray-400">Menu de Navegação</p>
+                <div class="text-center">
+                    <h2 class="font-montserrat font-bold text-xl text-white tracking-tight">Roni Marceneiro</h2>
+                    <p class="text-xs text-gold tracking-widest uppercase">Móveis Planejados</p>
                 </div>
             </div>
 
@@ -170,8 +156,8 @@
         <div class="relative z-10 container mx-auto px-4 sm:px-6 reveal reveal-up">
             <div class="max-w-3xl mx-auto text-center">
                 <h1 class="font-montserrat text-white mb-5 leading-tight shadow-text">
-                    <span class="font-bold tracking-wider uppercase block text-6xl md:text-7xl">Móveis Planejados</span>
-                    <span class="font-light text-gold text-3xl md:text-4xl tracking-[0.2em] uppercase [text-shadow:0_0_10px_rgba(0,0,0,0.7)]">de Alta Qualidade</span>
+                    <span class="font-bold tracking-wider uppercase block text-5xl sm:text-6xl lg:text-7xl">Móveis Planejados</span>
+                    <span class="font-light text-gold text-2xl sm:text-3xl lg:text-4xl tracking-[0.2em] uppercase [text-shadow:0_0_10px_rgba(0,0,0,0.7)]">de Alta Qualidade</span>
                 </h1>
                 <div class="w-48 h-px bg-gold mx-auto mb-5"></div>
                 <p class="text-xl text-gray-200 mb-8 font-light leading-relaxed max-w-xl mx-auto">
@@ -1010,21 +996,63 @@
                             <div class="bg-white rounded-2xl shadow-lg mb-8 overflow-hidden">
                                 <div class="p-8">
                                     <h4 class="font-montserrat font-bold text-xl text-charcoal mb-6 border-b pb-4">Resumo da Simulação</h4>
-                                    <div class="space-y-4 text-gray-700">
-                                        <div class="flex justify-between items-center py-2 border-b border-gray-200/80"><span class="flex items-center"><i class="fas fa-couch w-6 text-gold"></i>Móvel</span><span id="result-furniture" class="font-bold text-charcoal text-right"></span></div>
-                                        <div class="flex justify-between items-center py-2 border-b border-gray-200/80"><span class="flex items-center"><i class="fas fa-ruler-combined w-6 text-gold"></i>Dimensões</span><span id="result-dims" class="font-bold text-charcoal text-right"></span></div>
-                                        <div class="flex justify-between items-center py-2 border-b border-gray-200/80"><span class="flex items-center"><i class="fas fa-layer-group w-6 text-gold"></i>Chapas de MDF</span><span id="result-sheets" class="font-bold text-charcoal text-right"></span></div>
-                                        <div class="flex justify-between items-center py-2"><span class="flex items-center"><i class="fas fa-plus-circle w-6 text-gold"></i>Extras</span><span id="result-extras" class="font-bold text-charcoal text-right">Nenhum</span></div>
+                                    <div id="result-specs" class="grid grid-cols-2 md:grid-cols-3 gap-4">
+                                        <!-- Specs will be dynamically inserted here by JS -->
                                     </div>
                                 </div>
-                                <div id="result-breakdown-container" class="bg-gray-50 p-8">
-                                    <button id="toggle-breakdown-btn" class="w-full text-center text-gold font-semibold mb-4">
-                                        Ver Detalhamento <i class="fas fa-chevron-down ml-1 transition-transform"></i>
+                                <div id="result-breakdown-container" class="bg-gray-100 p-8">
+                                    <button id="toggle-breakdown-btn" class="w-full text-center text-charcoal font-semibold mb-4 hover:text-gold transition-colors">
+                                        Entenda seu Orçamento <i class="fas fa-chevron-down ml-1 transition-transform"></i>
                                     </button>
                                     <div id="result-breakdown" class="hidden">
-                                        <div class="space-y-2 text-gray-600">
-                                            <div class="flex justify-between items-center"><span class="flex items-center"><i class="fas fa-box-open w-5 mr-2 text-gray-400"></i>Custo Base (Materiais)</span><span id="result-base-price" class="font-semibold text-charcoal">R$ 0,00</span></div>
-                                            <div class="flex justify-between items-center"><span class="flex items-center"><i class="fas fa-star w-5 mr-2 text-gray-400"></i>Adicionais e Acabamentos</span><span id="result-extras-price" class="font-semibold text-charcoal">R$ 0,00</span></div>
+                                        <div class="space-y-6 text-gray-700">
+                                            <div>
+                                                <div class="flex justify-between items-center">
+                                                    <span class="font-semibold text-charcoal">Estrutura e Produção</span>
+                                                    <span id="result-base-price" class="font-semibold text-charcoal">R$ 0,00</span>
+                                                </div>
+                                                <p class="text-xs text-gray-500 mt-1">Inclui todo o MDF para a estrutura do móvel, fabricação com cortes de precisão e montagem inicial.</p>
+                                            </div>
+                                            
+                                            <!-- Dynamic Extras List -->
+                                            <div id="extras-breakdown-list" class="space-y-3 border-t border-b border-gray-200 py-4">
+                                                <!-- Items will be inserted here by JS -->
+                                            </div>
+
+                                            <!-- Visual Breakdown Bar -->
+                                            <div class="pt-2">
+                                                <div class="relative w-full bg-gray-200 rounded-full h-3 overflow-hidden">
+                                                    <div id="base-price-bar" class="absolute top-0 left-0 h-full bg-charcoal transition-all duration-500 ease-in-out"></div>
+                                                    <div id="extras-price-bar" class="absolute top-0 h-full bg-gold transition-all duration-500 ease-in-out"></div>
+                                                </div>
+                                                <div class="flex justify-between mt-2 text-xs">
+                                                    <span class="flex items-center"><i class="fas fa-circle text-charcoal mr-2"></i>Estrutura</span>
+                                                    <span class="flex items-center"><i class="fas fa-circle text-gold mr-2"></i>Personalização</span>
+                                                </div>
+                                            </div>
+                                        
+                                        <!-- What's Included (New Grid Layout) -->
+                                        <div class="pt-6">
+                                            <h5 class="font-semibold text-charcoal mb-4 text-center">Serviços Inclusos no seu Projeto</h5>
+                                            <div class="grid grid-cols-2 gap-4">
+                                                <div class="included-item-card">
+                                                    <i class="fas fa-ruler-combined text-gold text-2xl"></i>
+                                                    <p>Visita Técnica</p>
+                                                </div>
+                                                <div class="included-item-card">
+                                                    <i class="fas fa-truck text-gold text-2xl"></i>
+                                                    <p>Entrega e Montagem</p>
+                                                </div>
+                                                <div class="included-item-card">
+                                                    <i class="fas fa-broom text-gold text-2xl"></i>
+                                                    <p>Limpeza Pós-Obra</p>
+                                                </div>
+                                                <div class="included-item-card">
+                                                    <i class="fas fa-shield-alt text-gold text-2xl"></i>
+                                                    <p>Garantia de 5 Anos</p>
+                                                </div>
+                                            </div>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
@@ -1336,17 +1364,11 @@
 
                 <!-- Logo e Copyright -->
                 <div class="flex flex-col items-center gap-4">
-                    <div class="flex items-center space-x-2">
-                        <svg class="w-8 h-8" viewBox="0 0 50 50" xmlns="http://www.w3.org/2000/svg">
-                            <rect x="10" y="15" width="30" height="20" rx="2" fill="#D4AF37" stroke="#D4AF37" stroke-width="1"/>
-                            <rect x="15" y="20" width="5" height="10" fill="#2F2F2F"/>
-                            <rect x="22.5" y="20" width="5" height="10" fill="#2F2F2F"/>
-                            <rect x="30" y="20" width="5" height="10" fill="#2F2F2F"/>
-                            <text x="25" y="45" text-anchor="middle" font-family="Montserrat" font-size="8" font-weight="600" fill="#D4AF37">RM</text>
-                        </svg>
-                        <span class="font-montserrat font-bold text-lg">Roni Marceneiro</span>
+                    <div class="text-center">
+                        <h3 class="font-montserrat font-bold text-xl text-white tracking-tight">Roni Marceneiro</h3>
+                        <p class="text-xs text-gold tracking-widest uppercase">Móveis Planejados</p>
                     </div>
-                    <div class="text-gray-500 text-xs flex flex-col sm:flex-row gap-x-3">
+                    <div class="text-gray-500 text-xs flex flex-col sm:flex-row gap-x-3 mt-2">
                         <span>© 2024. Todos os direitos reservados.</span>
                         <span class="hidden sm:inline">|</span>
                         <button id="open-terms-modal-footer" class="underline hover:text-gold">Termos e Política de Privacidade</button>
@@ -1459,45 +1481,68 @@
     </div>
 
     <!-- Hidden Template for PDF Generation -->
-    <div id="pdf-template" class="hidden">
-        <div class="p-10 font-sans">
-            <header class="flex justify-between items-center border-b-2 pb-4">
-                <div>
-                    <h1 class="text-3xl font-bold text-charcoal">Roni Marceneiro</h1>
-                    <p class="text-gray-500">Orçamento de Móveis Planejados</p>
+    <div id="pdf-template" class="hidden font-roboto">
+        <div class="p-10 bg-white text-charcoal w-[210mm]">
+            <!-- Header -->
+            <header class="flex justify-between items-start pb-6 border-b-2 border-gold">
+                <div class="text-left">
+                    <h1 class="font-montserrat font-bold text-3xl text-charcoal tracking-tight">Roni Marceneiro</h1>
+                    <p class="text-sm text-gold tracking-widest uppercase">Móveis Planejados</p>
                 </div>
                 <div class="text-right">
-                    <p><strong>Data:</strong> <span id="pdf-date"></span></p>
-                    <p><strong>Orçamento #:</strong> <span id="pdf-quote-id"></span></p>
+                    <h2 class="font-montserrat font-bold text-2xl text-gray-400">ORÇAMENTO</h2>
+                    <p class="text-sm"><strong>Nº:</strong> <span id="pdf-quote-id"></span></p>
+                    <p class="text-sm"><strong>Data:</strong> <span id="pdf-date"></span></p>
                 </div>
             </header>
-            <section class="my-6">
-                <h2 class="text-xl font-bold mb-2">Dados do Cliente</h2>
-                <p><strong>Nome:</strong> <span id="pdf-name"></span></p>
-                <p><strong>E-mail:</strong> <span id="pdf-email"></span></p>
-                <p><strong>Telefone:</strong> <span id="pdf-phone"></span></p>
+    
+            <!-- Client Info -->
+            <section class="grid grid-cols-2 gap-8 my-8">
+                <div>
+                    <h3 class="font-semibold text-gray-500 mb-2 text-sm">PREPARADO PARA:</h3>
+                    <p id="pdf-name" class="font-bold"></p>
+                    <p id="pdf-email" class="text-sm"></p>
+                    <p id="pdf-phone" class="text-sm"></p>
+                </div>
+                <div class="text-right">
+                    <h3 class="font-semibold text-gray-500 mb-2 text-sm">PREPARADO POR:</h3>
+                    <p class="font-bold">Roni Marceneiro</p>
+                    <p class="text-sm">contato@ronimarceneiro.com</p>
+                    <p class="text-sm">(11) 99999-9999</p>
+                </div>
             </section>
-            <section class="my-6">
-                <h2 class="text-xl font-bold mb-2">Resumo do Projeto</h2>
-                <table class="w-full">
-                    <thead><tr class="bg-gray-200"><th class="p-2 text-left">Item</th><th class="p-2 text-right">Detalhe</th></tr></thead>
-                    <tbody>
-                        <tr class="border-b"><td class="p-2">Tipo de Móvel</td><td id="pdf-furniture" class="p-2 text-right"></td></tr>
-                        <tr class="border-b"><td class="p-2">Dimensões</td><td id="pdf-dims" class="p-2 text-right"></td></tr>
-                        <tr class="border-b"><td class="p-2">Material</td><td id="pdf-material" class="p-2 text-right"></td></tr>
-                        <tr class="border-b"><td class="p-2">Cor Personalizada</td><td id="pdf-color" class="p-2 text-right"></td></tr>
-                        <tr class="border-b"><td class="p-2">Projeto 3D</td><td id="pdf-project" class="p-2 text-right"></td></tr>
-                        <tr class="border-b"><td class="p-2">Extras</td><td id="pdf-extras" class="p-2 text-right"></td></tr>
-                    </tbody>
-                </table>
+    
+            <!-- Project Details -->
+            <section>
+                <h2 class="font-montserrat font-bold text-xl bg-gray-100 p-3 rounded-t-lg">Detalhes do Projeto</h2>
+                <div id="pdf-specs-table" class="border-l border-r border-b rounded-b-lg p-4 grid grid-cols-2 gap-x-6 gap-y-4">
+                    <!-- Specs will be dynamically inserted here -->
+                </div>
             </section>
-            <section class="my-6 text-right">
-                <p class="text-gray-600">Valor Estimado:</p>
-                <p id="pdf-total" class="text-3xl font-bold text-charcoal"></p>
+    
+            <!-- Pricing -->
+            <section class="mt-8">
+                <h2 class="font-montserrat font-bold text-xl bg-gray-100 p-3 rounded-t-lg">Detalhamento do Valor</h2>
+                <div class="border-l border-r border-b rounded-b-lg p-4 space-y-3">
+                    <div class="flex justify-between items-center">
+                        <span>Estrutura e Produção</span>
+                        <span id="pdf-base-price" class="font-semibold"></span>
+                    </div>
+                    <div id="pdf-extras-breakdown">
+                        <!-- Extras breakdown will be inserted here -->
+                    </div>
+                    <div class="flex justify-between items-center text-xl font-bold border-t-2 border-gold pt-3 mt-3">
+                        <span>TOTAL ESTIMADO</span>
+                        <span id="pdf-total"></span>
+                    </div>
+                </div>
             </section>
-            <footer class="mt-10 pt-4 border-t-2">
-                <h3 class="font-bold mb-2">Condições e Observações</h3>
-                <p class="text-sm text-gray-600">Este é um orçamento informativo. O valor final será definido após visita técnica. Validade da proposta: 15 dias. Condições de pagamento: 12x no cartão ou 10% de desconto à vista.</p>
+    
+            <!-- Footer -->
+            <footer class="mt-10 pt-6 border-t text-center text-xs text-gray-500">
+                <p class="font-bold mb-2">Obrigado pelo seu interesse!</p>
+                <p>Este é um orçamento informativo e o valor final será confirmado após visita técnica. Validade: 15 dias.</p>
+                <p>Condições de pagamento: 12x no cartão (sujeito a taxas) ou desconto para pagamento à vista.</p>
             </footer>
         </div>
     </div>
