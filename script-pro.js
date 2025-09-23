@@ -1,267 +1,13 @@
-// Global variables
-let isMenuOpen = false;
-
 // =================================================================
-// DOM Elements
+// SIMULATOR PRO LOGIC
+// This script is dedicated to the marceneiro.html page.
 // =================================================================
-// DOM Elements
-const mobileMenuToggle = document.getElementById('mobile-menu-toggle');
-const mobileMenu = document.getElementById('mobile-menu');
-const header = document.getElementById('header');
-const pageOverlay = document.getElementById('page-overlay');
-const contactForm = document.getElementById('contact-form');
-const fileInput = document.getElementById('attachment');
 
-
-
-
-// Initialize when DOM is loaded
 document.addEventListener('DOMContentLoaded', function() {
-    initializeApp();
+    setupSimulator();
 });
 
-// Main initialization function
-function initializeApp() {
-    // Setup all interactive components of the site
-    setupMobileMenu();
-    setupScrollEffects();
-    // Add smooth scrolling to all anchor links
-    setupSmoothScrolling();
-    setupContactForm();
-    // Initialize AOS-like animations
-    observeElements();    setupGalleryLightbox();
-    setupPdfViewer();    setupTermsModal();
-    setupOtherFurnitureModal();
-    setupSimulator(); // Re-ativando o simulador da página inicial
-    setupLazyLoading();
-    setupActiveNavLinks(); // Highlight active nav link on scroll
-
-    console.log('Roni Marceneiro website initialized successfully!');
-}
-
-// Mobile menu functionality
-function setupMobileMenu() {
-    if (mobileMenuToggle && mobileMenu) {
-        mobileMenuToggle.addEventListener('click', (e) => {
-            e.stopPropagation();
-            isMenuOpen ? closeMobileMenu() : openMobileMenu();
-        });
-
-        // Close menu when clicking on links
-        const mobileLinks = mobileMenu.querySelectorAll('a, button');
-        mobileLinks.forEach(link => {
-            link.addEventListener('click', closeMobileMenu);
-        });
-        
-        // Impede que cliques dentro do menu mobile o fechem imediatamente
-        mobileMenu.addEventListener('click', (e) => {
-            e.stopPropagation();
-        });
-
-        // Close menu when clicking on the overlay
-        if (pageOverlay) {
-            pageOverlay.addEventListener('click', closeMobileMenu);
-        }
-    }
-}
-
-function openMobileMenu() {
-    if (isMenuOpen) return;
-    isMenuOpen = true;
-
-    const barsIcon = mobileMenuToggle.querySelector('.fa-bars');
-    const timesIcon = mobileMenuToggle.querySelector('.fa-times');
-
-    // Animate icons
-    barsIcon.classList.add('opacity-0', 'scale-50', 'rotate-90');
-    timesIcon.classList.remove('opacity-0', 'scale-50');
-
-    // Show menu
-    mobileMenu.classList.remove('translate-x-full');
-    mobileMenu.classList.add('is-open'); // For staggered animations
-    pageOverlay.classList.remove('opacity-0', 'invisible');
-    mobileMenuToggle.setAttribute('aria-expanded', 'true');
-    document.body.style.overflow = 'hidden';
-}
-
-function closeMobileMenu() {
-    if (!isMenuOpen) return;
-    isMenuOpen = false;
-
-    const barsIcon = mobileMenuToggle.querySelector('.fa-bars');
-    const timesIcon = mobileMenuToggle.querySelector('.fa-times');
-
-    // Animate icons back
-    barsIcon.classList.remove('opacity-0', 'scale-50', 'rotate-90');
-    timesIcon.classList.add('opacity-0', 'scale-50');
-
-    mobileMenu.classList.add('translate-x-full');
-    mobileMenu.classList.remove('is-open');
-    pageOverlay.classList.add('opacity-0', 'invisible');
-    mobileMenuToggle.setAttribute('aria-expanded', 'false');
-    document.body.style.overflow = 'auto';
-}
-
-// Scroll effects
-function setupScrollEffects() {
-    const handleScroll = () => {
-        if (isMenuOpen) return; // Ignore scroll effects when menu is open
-        
-        const currentScrollY = window.scrollY;
-
-        if (header) {
-            const isScrolled = currentScrollY > 50;
-            // When scrolled, it's shrunk.
-            header.classList.toggle('header-shrunk', isScrolled);
-        }
-    };
-
-    // Run handler once on page load to set initial state
-    handleScroll();
-
-    window.addEventListener('scroll', handleScroll);
-}
-
-// Smooth scrolling functionality
-function setupSmoothScrolling() {
-    const links = document.querySelectorAll('a[href^="#"]');
-    
-    links.forEach(link => {
-        link.addEventListener('click', (e) => {
-            e.preventDefault();
-            const targetId = link.getAttribute('href');
-            const targetElement = document.querySelector(targetId);
-            
-            if (targetElement) {
-                const headerHeight = header ? header.offsetHeight : 0;
-                const targetPosition = targetElement.offsetTop - headerHeight - 20;
-                
-                window.scrollTo({
-                    top: targetPosition,
-                    behavior: 'smooth'
-                });
-                
-                // Close mobile menu if open
-                if (isMenuOpen) {
-                    closeMobileMenu();
-                }
-            }
-        });
-    });
-}
-
-// Scroll to section function (used by buttons)
-function scrollToSection(sectionId) {
-    const targetElement = document.getElementById(sectionId);
-    if (targetElement) {
-        const headerHeight = header ? header.offsetHeight : 0;
-        const targetPosition = targetElement.offsetTop - headerHeight - 20;
-        
-        window.scrollTo({
-            top: targetPosition,
-            behavior: 'smooth'
-        });
-    }
-}
-
-// Contact form functionality
-function setupContactForm() {
-    if (contactForm) {
-        contactForm.addEventListener('submit', handleContactFormSubmit);
-    }
-    if (fileInput) {
-        fileInput.addEventListener('change', () => {
-            const fileNameSpan = document.getElementById('file-name');
-            if (fileInput.files.length > 0) {
-                fileNameSpan.textContent = fileInput.files[0].name;
-            } else {
-                fileNameSpan.textContent = 'Escolher arquivo (planta, foto, etc.)';
-            }
-        });
-
-        const newMessageBtn = document.getElementById('new-message-btn');
-        if (newMessageBtn) {
-            newMessageBtn.addEventListener('click', () => {
-                document.getElementById('contact-form-container').classList.remove('hidden');
-                document.getElementById('contact-success-message').classList.add('hidden');
-            });
-        }
-    }
-}
-
-async function handleContactFormSubmit(e) {
-    e.preventDefault();
-
-    // --- Validação do Arquivo ---
-    if (fileInput && fileInput.files.length > 0) {
-        const file = fileInput.files[0];
-        const MAX_SIZE = 5 * 1024 * 1024; // 5MB
-        const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'application/pdf'];
-
-        if (file.size > MAX_SIZE) {
-            showNotification('O arquivo é muito grande. O tamanho máximo é 5MB.', 'error');
-            return;
-        }
-
-        if (!ALLOWED_TYPES.includes(file.type)) {
-            showNotification('Tipo de arquivo inválido. Apenas JPG, PNG e PDF são permitidos.', 'error');
-            return;
-        }
-    }
-    // --- Fim da Validação ---
-
-    
-    const requiredInputs = contactForm.querySelectorAll('[required]');
-    let isValid = true;
-    for (const input of requiredInputs) {
-        if (!input.value.trim()) {
-            isValid = false;
-            showNotification(`O campo "${input.labels[0].textContent.replace('*', '').trim()}" é obrigatório.`, 'error');
-            break;
-        }
-    }
-    if (!isValid) {
-        return;
-    }
-
-    const submitButton = contactForm.querySelector('button[type="submit"]');
-    const originalText = submitButton.innerHTML;
-    
-    // Show loading state
-    submitButton.innerHTML = '<div class="spinner mr-2"></div>Enviando...';
-    submitButton.disabled = true;
-    
-    const formData = new FormData(contactForm);
-    
-    try {
-        const response = await fetch(contactForm.action, {
-            method: 'POST',
-            body: formData,
-            headers: {
-                'Accept': 'application/json'
-            }
-        });
-
-        if (response.ok) {
-            contactForm.reset();
-            document.getElementById('contact-form-container').classList.add('hidden');
-            document.getElementById('contact-success-message').classList.remove('hidden');
-            if (document.getElementById('file-name')) { // Reset file name on success
-                document.getElementById('file-name').textContent = 'Escolher arquivo (planta, foto, etc.)';
-            }
-        } else {
-            showNotification('Ocorreu um erro ao enviar a mensagem. Tente novamente.', 'error');
-        }
-    } catch (error) {
-        showNotification('Ocorreu um erro de rede. Verifique sua conexão e tente novamente.', 'error');
-    } finally {
-        // Reset button
-        submitButton.innerHTML = originalText;
-        submitButton.disabled = false;
-    }
-}
-
-// Notification system
+// Notification system (kept for user feedback)
 function showNotification(message, type = 'info') {
     const notification = document.createElement('div');
     notification.className = `
@@ -304,349 +50,6 @@ function showNotification(message, type = 'info') {
     }, 5000);
 }
 
-// Function to animate numbers
-function animateCounter(element, start, end, duration, suffix = '') {
-    let startTime = null;
-
-    const animation = (currentTime) => {
-        if (!startTime) startTime = currentTime;
-        const progress = Math.min((currentTime - startTime) / duration, 1);
-        const currentValue = Math.floor(progress * (end - start) + start);
-        element.textContent = currentValue + suffix;
-        if (progress < 1) {
-            requestAnimationFrame(animation);
-        }
-    }
-    requestAnimationFrame(animation);
-}
-
-// Intersection Observer for animations
-function observeElements() {
-    const observer = new IntersectionObserver((entries, observer) => {
-        entries.forEach(entry => {
-            if (entry.isIntersecting) {
-                // Only act if the element has not been revealed yet
-                if (!entry.target.classList.contains('revealed')) {
-                    entry.target.classList.add('revealed');
-    
-                    // Check for counters inside the revealed element
-                    const counters = entry.target.querySelectorAll('.counter');
-                    counters.forEach(counter => {
-                        if (counter.dataset.animated === 'true') return;
-                        const target = +counter.dataset.countTo;
-                        const suffix = counter.dataset.suffix || '';
-                        animateCounter(counter, 0, target, 2000, suffix);
-                        counter.dataset.animated = 'true';
-                    });
-                }
-            }
-        });
-    }, {
-        threshold: 0.1,
-        rootMargin: '0px 0px -50px 0px'
-    });
-    
-    // Observe elements for animation
-    const elementsToAnimate = document.querySelectorAll('.reveal');
-    elementsToAnimate.forEach(element => {
-        observer.observe(element);
-    });
-}
-
-// Service/Portfolio Filter
-function setupServiceFilters() {
-    const filtersContainer = document.getElementById('service-filters');
-    const servicesGrid = document.getElementById('services-grid');
-
-    if (!filtersContainer || !servicesGrid) return;
-
-    const filterButtons = filtersContainer.querySelectorAll('.service-filter-btn');
-    const serviceCards = servicesGrid.querySelectorAll('.service-card');
-
-    filtersContainer.addEventListener('click', (e) => {
-        const targetButton = e.target.closest('.service-filter-btn');
-        if (!targetButton) return;
-
-        const filter = targetButton.dataset.filter;
-
-        // Update active button
-        filterButtons.forEach(btn => btn.classList.remove('active'));
-        targetButton.classList.add('active');
-
-        // Filter cards
-        serviceCards.forEach(card => {
-            const category = card.dataset.category;
-            const shouldShow = filter === 'all' || category === filter;
-            
-            // The 'hidden' class from Tailwind handles display:none
-            card.classList.toggle('hidden', !shouldShow);
-        });
-    });
-}
-
-// Gallery Lightbox functionality
-function setupGalleryLightbox() {
-    const projectItems = document.querySelectorAll('[data-gallery-project]');
-    const lightbox = document.getElementById('gallery-lightbox');
-    const lightboxImage = document.getElementById('lightbox-image');
-    const closeButton = document.getElementById('lightbox-close');
-    const prevButton = document.getElementById('lightbox-prev');
-    const nextButton = document.getElementById('lightbox-next');
-    const lightboxTitle = document.getElementById('lightbox-title');
-    const lightboxDescription = document.getElementById('lightbox-description');
-    const thumbnailsContainer = document.getElementById('lightbox-thumbnails');
-
-    if (!projectItems.length || !lightbox) return;
-
-    let currentProjectImages = [];
-    let currentIndex = 0;
-
-    function updateThumbnails() {
-        thumbnailsContainer.innerHTML = '';
-        currentProjectImages.forEach((src, i) => {
-            const thumb = document.createElement('img');
-            thumb.src = src;
-            thumb.className = `w-16 h-16 object-cover rounded-md cursor-pointer border-2 transition-all ${i === currentIndex ? 'border-gold' : 'border-transparent opacity-60 hover:opacity-100'}`;
-            thumb.onclick = () => showImage(i);
-            thumbnailsContainer.appendChild(thumb);
-        });
-        thumbnailsContainer.classList.toggle('hidden', currentProjectImages.length <= 1);
-    }
-
-    function showImage(index, isOpening = false) {
-        if (index < 0 || index >= currentProjectImages.length) return;
-        currentIndex = index;
-        lightboxImage.src = currentProjectImages[currentIndex];
-        updateThumbnails();
-
-        if (isOpening) {
-            lightbox.classList.remove('hidden');
-            document.body.style.overflow = 'hidden';
-            closeButton.focus();
-        }
-    }
-
-    function openLightbox(projectElement) {
-        const images = projectElement.dataset.images.split(',').map(s => s.trim());
-        const title = projectElement.dataset.title || '';
-        const description = projectElement.dataset.description || '';
-
-        currentProjectImages = images;
-        lightboxTitle.textContent = title;
-        lightboxDescription.textContent = description;
-
-        showImage(0, true);
-    }
-
-    function closeLightbox() {
-        lightbox.classList.add('hidden');
-        document.body.style.overflow = 'auto';
-        thumbnailsContainer.innerHTML = ''; // Clean up
-    }
-
-    function showNext() {
-        const nextIndex = (currentIndex + 1) % currentProjectImages.length;
-        showImage(nextIndex);
-    }
-
-    function showPrev() {
-        const prevIndex = (currentIndex - 1 + currentProjectImages.length) % currentProjectImages.length;
-        showImage(prevIndex);
-    }
-
-    projectItems.forEach(item => {
-        item.addEventListener('click', () => {
-            openLightbox(item);
-        });
-    });
-
-    closeButton.addEventListener('click', closeLightbox);
-    nextButton.addEventListener('click', showNext);
-    prevButton.addEventListener('click', showPrev);
-
-    lightbox.addEventListener('click', (e) => {
-        if (e.target === lightbox) {
-            closeLightbox();
-        }
-    });
-
-    document.addEventListener('keydown', (e) => {
-        if (lightbox.classList.contains('hidden')) return;
-
-        if (e.key === 'Escape') closeLightbox();
-        if (e.key === 'ArrowRight') showNext();
-        if (e.key === 'ArrowLeft') showPrev();
-    });
-}
-
-// PDF Viewer Modal Logic
-function setupPdfViewer() {
-    const pdfModal = document.getElementById('pdf-viewer-modal');
-    const closeBtn = document.getElementById('pdf-viewer-close');
-    const pdfIframe = document.getElementById('pdf-viewer-iframe');
-    const pdfTitle = document.getElementById('pdf-viewer-title');
-
-    if (!pdfModal || !closeBtn || !pdfIframe || !pdfTitle) return;
-
-    const openPdfViewer = (url, title) => {
-        if (!url) {
-            console.error('PDF URL is missing.');
-            alert('Desculpe, o catálogo não está disponível no momento.');
-            return;
-        }
-        pdfIframe.src = url;
-        pdfTitle.textContent = title || 'Catálogo';
-        pdfModal.classList.remove('hidden');
-        document.body.style.overflow = 'hidden';
-    };
-
-    const closePdfViewer = () => {
-        pdfModal.classList.add('hidden');
-        pdfIframe.src = ''; // Stop loading PDF to save resources
-        document.body.style.overflow = 'auto';
-    };
-
-    // Use event delegation on the document body
-    document.body.addEventListener('click', (e) => {
-        const trigger = e.target.closest('[data-pdf-src]');
-        if (trigger) {
-            const url = trigger.dataset.pdfSrc;
-            const title = trigger.dataset.pdfTitle;
-            openPdfViewer(url, title);
-        }
-    });
-
-    closeBtn.addEventListener('click', closePdfViewer);
-    pdfModal.addEventListener('click', (e) => {
-        if (e.target === pdfModal) {
-            closePdfViewer();
-        }
-    });
-}
-
-// Terms Modal Logic
-function setupTermsModal() {
-    const termsModal = document.getElementById('terms-modal');
-    if (!termsModal) return;
-
-    const closeBtn = document.getElementById('terms-modal-close');
-    const openTriggers = document.querySelectorAll('#open-terms-modal-footer, #open-terms-modal-simulator');
-
-    const openModal = () => {
-        termsModal.classList.remove('hidden');
-        document.body.style.overflow = 'hidden';
-    };
-
-    const closeModal = () => {
-        termsModal.classList.add('hidden');
-        document.body.style.overflow = 'auto';
-    };
-
-    openTriggers.forEach(trigger => {
-        trigger.addEventListener('click', (e) => {
-            e.preventDefault(); // Prevent default link behavior if it's an <a>
-            openModal();
-        });
-    });
-
-    closeBtn.addEventListener('click', closeModal);
-
-    termsModal.addEventListener('click', (e) => {
-        if (e.target === termsModal) {
-            closeModal();
-        }
-    });
-
-    document.addEventListener('keydown', (e) => {
-        if (e.key === 'Escape' && !termsModal.classList.contains('hidden')) {
-            closeModal();
-        }
-    });
-}
-
-// Other Furniture Modal Logic
-function setupOtherFurnitureModal() {
-    const modal = document.getElementById('other-furniture-modal');
-    if (!modal) return;
-
-    const openBtn = document.getElementById('other-furniture-btn');
-    const closeBtn = document.getElementById('other-furniture-modal-close');
-
-    const openModal = () => {
-        modal.classList.remove('hidden');
-        document.body.style.overflow = 'hidden';
-    };
-
-    const closeModal = () => {
-        modal.classList.add('hidden');
-        document.body.style.overflow = 'auto';
-    };
-
-    if (openBtn) {
-        openBtn.addEventListener('click', openModal);
-    }
-
-    if (closeBtn) {
-        closeBtn.addEventListener('click', closeModal);
-    }
-
-    modal.addEventListener('click', (e) => {
-        if (e.target === modal) {
-            closeModal();
-        }
-    });
-
-    document.addEventListener('keydown', (e) => {
-        if (e.key === 'Escape' && !modal.classList.contains('hidden')) {
-            closeModal();
-        }
-    });
-}
-
-// Active navigation link highlighting on scroll
-function setupActiveNavLinks() {
-    const sections = document.querySelectorAll('section[id]');
-    const navLinks = document.querySelectorAll('header nav a.nav-link');
-
-    if (!sections.length || !navLinks.length) return;
-
-    const observer = new IntersectionObserver((entries) => {
-        entries.forEach(entry => {
-            const id = entry.target.getAttribute('id');
-            const navLink = document.querySelector(`header nav a[href="#${id}"]`);
-            
-            if (navLink && entry.isIntersecting) {
-                // Remove 'active' from all links
-                navLinks.forEach(link => link.classList.remove('active'));
-                // Add 'active' to the intersecting one
-                navLink.classList.add('active');
-            }
-        });
-    }, {
-        rootMargin: '-50% 0px -50% 0px', // Trigger when the section is in the middle of the viewport
-    });
-
-    sections.forEach(section => observer.observe(section));
-}
-// Lazy loading for images
-function setupLazyLoading() {
-    const images = document.querySelectorAll('img[loading="lazy"]');
-    
-    if ('IntersectionObserver' in window) {
-        const imageObserver = new IntersectionObserver((entries) => {
-            entries.forEach(entry => {
-                if (entry.isIntersecting) {
-                    const img = entry.target;
-                    img.classList.add('fade-in');
-                    imageObserver.unobserve(img);
-                }
-            });
-        });
-        
-        images.forEach(img => imageObserver.observe(img));
-    }
-}
-
 // Phone mask function
 function maskPhone(event) {
     const input = event.target;
@@ -660,85 +63,6 @@ function maskPhone(event) {
     }
     input.value = value;
 }
-
-// Error handling
-window.addEventListener('error', (e) => {
-    console.error('JavaScript Error:', e.error);
-    // In production, you might want to send this to an error tracking service
-});
-
-// SEO and Analytics helpers
-function trackEvent(eventName, parameters = {}) {
-    // Google Analytics 4 event tracking
-    if (typeof gtag !== 'undefined') {
-        gtag('event', eventName, parameters);
-    }
-    
-    // Console log for development
-    console.log('Event tracked:', eventName, parameters);
-}
-
-// Track important interactions
-document.addEventListener('click', (e) => {
-    const target = e.target.closest('button, a');
-    if (target) {
-        const text = target.textContent.trim();
-        const href = target.getAttribute('href');
-        
-        if (href && href.startsWith('#')) {
-            trackEvent('navigation_click', {
-                section: href.substring(1),
-                text: text
-            });
-        } else if (target.tagName === 'BUTTON') {
-            trackEvent('button_click', {
-                button_text: text,
-                location: window.location.pathname
-            });
-        }
-        
-        // Track WhatsApp clicks
-        if (href && href.includes('wa.me')) {
-            trackEvent('whatsapp_click', {
-                source: 'float_button'
-            });
-        }
-    }
-});
-
-// Track form submissions
-document.addEventListener('submit', (e) => {
-    const form = e.target;
-    const formId = form.id || 'unknown_form';
-    
-    trackEvent('form_submit', {
-        form_id: formId,
-        form_name: formId.replace('-', ' ')
-    });
-});
-
-// Service Worker registration (for PWA capabilities)
-// O arquivo sw.js não existe, então registrar um Service Worker causará um erro 404.
-// Comentado para evitar o erro e melhorar a performance.
-// if ('serviceWorker' in navigator) {
-//     window.addEventListener('load', () => {
-//         navigator.serviceWorker.register('/sw.js')
-//             .then(registration => {
-//                 console.log('SW registered: ', registration);
-//             })
-//             .catch(registrationError => {
-//                 console.log('SW registration failed: ', registrationError);
-//             });
-//     });
-// }
-
-// Export functions for global access
-window.scrollToSection = scrollToSection;
-window.maskPhone = maskPhone;
-
-// =================================================================
-// SIMULATOR LOGIC
-// =================================================================
 
 // --- CONFIGURATION OBJECT ---
 // Valores PADRÃO de custo. Na versão PRO, esses valores são sobrescritos pelos inputs do painel.
@@ -829,9 +153,9 @@ const SIMULATOR_CONFIG = {
             // Custo por METRO LINEAR de armário de pia (balcão inferior).
             'SINK_CABINET_PER_METER': 450,
             // Custo por METRO LINEAR de altura da torre quente (para forno/micro-ondas).
-            'HOT_TOWER_PER_METER': 600,
+            'HOT_TOWER_PER_METER': 600
         }
-    },
+    }
 };
 
 function setupSimulator() {
@@ -839,6 +163,7 @@ function setupSimulator() {
     let currentStep = 1;
     const totalSteps = 6;
     const state = {
+        quoteId: null, // To track saved quotes
         furnitureType: null,
         dimensions: { height: 2.7, depth: 60, walls: [{width: 3.0, height: 2.7}] },
         wardrobeFormat: null,
@@ -858,22 +183,24 @@ function setupSimulator() {
         customColor: '',
         extras: [],
         customer: { name: '', email: '', phone: '' },
-        quote: { area: 0, sheets: 0, total: 0, basePrice: 0, extrasPrice: 0, extrasBreakdown: [] }
+        quote: { area: 0, sheets: 0, total: 0, basePrice: 0, extrasPrice: 0, costPrice: 0, profitAmount: 0, extrasBreakdown: [] }
     };
 
     // --- DOM ELEMENTS ---
-    const disclaimerCheckbox = document.getElementById('accept-disclaimer-checkbox');
-    if (!disclaimerCheckbox) return; // Don't run if simulator HTML is not on the page
-    
-    const simulatorOverlay = document.getElementById('simulator-overlay');
+    let proControlsPanel;
     const steps = document.querySelectorAll('.form-step');
     const stepsContainer = document.getElementById('steps-container');
     const progressBarSteps = document.querySelectorAll('.progress-step');
     const progressBarLines = document.querySelectorAll('.progress-line');
 
+
     // --- INITIALIZATION ---
     function init() {
+    proControlsPanel = document.getElementById('marceneiro-controls');
+    setupProPanel();
         setupEventListeners();
+        setupQuoteManagement();
+        setupPdfViewer();
         // Recalculate height on window resize to handle responsive changes. Debounce is defined inline.
         window.addEventListener('resize', debounce(updateContainerHeight, 200));
         updateUI(false); // Pass false to prevent scrolling on initial load
@@ -898,7 +225,6 @@ function setupSimulator() {
         Object.assign(state, newState);
     }
     function setupEventListeners() {
-        disclaimerCheckbox.addEventListener('change', handleDisclaimer);
         // Event delegation for navigation buttons
         document.getElementById('simulator-content').addEventListener('click', (e) => {
             if (e.target.closest('.next-btn')) {
@@ -911,6 +237,10 @@ function setupSimulator() {
                 handleReset();
             } else if (e.target.closest('.remove-wall-btn')) {
                 handleRemoveWall(e.target.closest('.remove-wall-btn'));
+            } else if (e.target.closest('#recalculate-btn')) {
+                handleRecalculate();
+            } else if (e.target.closest('#save-quote-btn')) {
+                handleSaveQuote();
             }
         });
 
@@ -1045,10 +375,10 @@ function setupSimulator() {
         });
         
         // Step 6: Lead Capture & Result
-        document.getElementById('view-quote-btn').addEventListener('click', handleViewQuote);
-        document.getElementById('pdf-btn').addEventListener('click', generatePDF);
+        document.getElementById('view-quote-btn').addEventListener('click', () => handleViewQuote(false));
+        document.getElementById('pdf-btn-internal').addEventListener('click', () => generatePDF('internal'));
+        document.getElementById('pdf-btn-client').addEventListener('click', () => generatePDF('client'));
         document.getElementById('whatsapp-btn').addEventListener('click', generateWhatsAppLink);
-        document.getElementById('email-btn').addEventListener('click', generateEmailLink);
 
         // Step 6: Breakdown toggle
         const toggleBtn = document.getElementById('toggle-breakdown-btn');
@@ -1060,20 +390,201 @@ function setupSimulator() {
         });
     }
 
-    // --- UI & NAVIGATION ---
-    function handleDisclaimer() {
-        // Add a check to prevent errors if the element is not found
-        if (simulatorOverlay && disclaimerCheckbox) {
-            simulatorOverlay.classList.toggle('is-hidden', disclaimerCheckbox.checked);
+    function setupQuoteManagement() {
+        const tabBtnCosts = document.getElementById('tab-btn-costs');
+        const tabBtnQuotes = document.getElementById('tab-btn-quotes');
+        const tabContentCosts = document.getElementById('tab-content-costs');
+        const tabContentQuotes = document.getElementById('tab-content-quotes');
+        const searchInput = document.getElementById('search-quotes-input');
+
+        tabBtnCosts.addEventListener('click', () => {
+            tabContentCosts.classList.remove('hidden');
+            tabContentQuotes.classList.add('hidden');
+            tabBtnCosts.classList.add('bg-gold', 'text-charcoal');
+            tabBtnQuotes.classList.remove('bg-gold', 'text-charcoal');
+        });
+
+        tabBtnQuotes.addEventListener('click', () => {
+            tabContentQuotes.classList.remove('hidden');
+            tabContentCosts.classList.add('hidden');
+            tabBtnQuotes.classList.add('bg-gold', 'text-charcoal');
+            tabBtnCosts.classList.remove('bg-gold', 'text-charcoal');
+            renderSavedQuotes();
+        });
+
+        searchInput.addEventListener('input', () => renderSavedQuotes(searchInput.value));
+
+        // Delegate events for saved quote actions
+        document.getElementById('saved-quotes-list').addEventListener('click', (e) => {
+            const quoteId = e.target.closest('[data-quote-id]')?.dataset.quoteId;
+            if (!quoteId) return;
+
+            if (e.target.closest('.load-quote-btn')) {
+                handleLoadQuote(quoteId);
+            } else if (e.target.closest('.delete-quote-btn')) {
+                handleDeleteQuote(quoteId);
+            } else if (e.target.closest('.duplicate-quote-btn')) {
+                handleDuplicateQuote(quoteId);
+            }
+        });
+
+        renderSavedQuotes();
+    }
+
+    // --- LocalStorage Quote Functions ---
+    function getSavedQuotes() {
+        try {
+            const quotes = localStorage.getItem('roni_saved_quotes');
+            return quotes ? JSON.parse(quotes) : [];
+        } catch (e) {
+            console.error("Error reading quotes from localStorage", e);
+            return [];
         }
     }
 
+    function saveQuotes(quotes) {
+        try {
+            localStorage.setItem('roni_saved_quotes', JSON.stringify(quotes));
+        } catch (e) {
+            console.error("Error saving quotes to localStorage", e);
+            showNotification("Erro ao salvar orçamentos.", "error");
+        }
+    }
+
+    function handleSaveQuote() {
+        if (!state.customer.name) {
+            showNotification("Preencha o nome do cliente para salvar.", "error");
+            return;
+        }
+
+        const quotes = getSavedQuotes();
+        const quoteData = JSON.parse(JSON.stringify(state)); // Deep copy of state
+
+        if (state.quoteId) { // Update existing quote
+            const index = quotes.findIndex(q => q.quoteId === state.quoteId);
+            if (index !== -1) {
+                quotes[index] = quoteData;
+                showNotification("Orçamento atualizado com sucesso!", "success");
+            }
+        } else { // Save new quote
+            quoteData.quoteId = Date.now();
+            state.quoteId = quoteData.quoteId; // Update current state with new ID
+            quotes.unshift(quoteData); // Add to the beginning of the list
+            showNotification("Orçamento salvo com sucesso!", "success");
+        }
+
+        saveQuotes(quotes);
+        document.getElementById('save-quote-btn').innerHTML = '<i class="fas fa-check mr-2"></i>Salvo!';
+    }
+
+    function handleDeleteQuote(quoteId) {
+        if (confirm("Tem certeza que deseja excluir este orçamento? Esta ação não pode ser desfeita.")) {
+            let quotes = getSavedQuotes();
+            quotes = quotes.filter(q => q.quoteId !== parseInt(quoteId));
+            saveQuotes(quotes);
+            showNotification("Orçamento excluído.", "info");
+            renderSavedQuotes();
+        }
+    }
+
+    // PDF Viewer Modal Logic
+    function setupPdfViewer() {
+        const pdfModal = document.getElementById('pdf-viewer-modal');
+        const closeBtn = document.getElementById('pdf-viewer-close');
+        const pdfIframe = document.getElementById('pdf-viewer-iframe');
+        const pdfTitle = document.getElementById('pdf-viewer-title');
+
+        if (!pdfModal || !closeBtn || !pdfIframe || !pdfTitle) return;
+
+        const openPdfViewer = (url, title) => {
+            if (!url) {
+                console.error('PDF URL is missing.');
+                alert('Desculpe, o catálogo não está disponível no momento.');
+                return;
+            }
+            pdfIframe.src = url;
+            pdfTitle.textContent = title || 'Catálogo';
+            pdfModal.classList.remove('hidden');
+            document.body.style.overflow = 'hidden';
+        };
+
+        const closePdfViewer = () => {
+            pdfModal.classList.add('hidden');
+            pdfIframe.src = ''; // Stop loading PDF to save resources
+            document.body.style.overflow = 'auto';
+        };
+
+        // Use event delegation on the document body
+        document.body.addEventListener('click', (e) => {
+            const trigger = e.target.closest('[data-pdf-src]');
+            if (trigger) {
+                const url = trigger.dataset.pdfSrc;
+                const title = trigger.dataset.pdfTitle;
+                openPdfViewer(url, title);
+            }
+        });
+
+        closeBtn.addEventListener('click', closePdfViewer);
+        pdfModal.addEventListener('click', (e) => {
+            if (e.target === pdfModal) {
+                closePdfViewer();
+            }
+        });
+    }
+
+    function setupProPanel() {
+        const toggleBtn = document.getElementById('toggle-controls-btn');
+        const mainContent = document.getElementById('main-content');
+        const closeBtn = document.getElementById('close-controls-btn');
+
+        toggleBtn.addEventListener('click', () => {
+            let panel = proControlsPanel || document.getElementById('marceneiro-controls');
+            if (!panel) return;
+            panel.classList.remove('-translate-x-full');
+            panel.classList.add('translate-x-0');
+            // Para desktop, aplica margem; para mobile, não mexe na margem
+            if (window.innerWidth >= 768) {
+                mainContent.style.marginLeft = '320px';
+            } else {
+                mainContent.style.marginLeft = '0';
+            }
+        });
+
+        if (closeBtn) {
+            closeBtn.addEventListener('click', () => {
+                let panel = proControlsPanel || document.getElementById('marceneiro-controls');
+                if (!panel) return;
+                panel.classList.remove('translate-x-0');
+                panel.classList.add('-translate-x-full');
+                mainContent.style.marginLeft = '0';
+            });
+        }
+
+        // Botão de reset dos valores do painel
+        const resetPanelBtn = document.getElementById('reset-panel-btn');
+        if (resetPanelBtn) {
+            resetPanelBtn.addEventListener('click', () => {
+                document.getElementById('mdf-branco-cost').value = 240;
+                document.getElementById('mdf-premium-cost').value = 400;
+                document.getElementById('edge-tape-cost').value = 2.5;
+                document.getElementById('hinge-cost').value = 20;
+                document.getElementById('slide-cost').value = 25;
+                document.getElementById('shipping-cost').value = 150;
+                document.getElementById('daily-rate-cost').value = 200;
+                document.getElementById('profit-margin').value = 80;
+                document.getElementById('discount-extra').value = 0;
+                showNotification('Valores padrão restaurados!', 'success');
+            });
+        }
+    }
+
+    // --- UI & NAVIGATION ---
     function handleReset() {
+        state.quoteId = null; // Clear quote ID on reset
         currentStep = 1;
         resetState(); // Resets the internal state object
         resetFormUI(); // Resets the form inputs in the DOM
-        updateUI(); // Updates which step is visible
-        handleDisclaimer(); // Re-applies the overlay
+        updateUI(); 
     }
 
     function handleNextStep() {
@@ -1094,11 +605,11 @@ function setupSimulator() {
 
     function handleRestart() {
         if (confirm('Tem certeza que deseja recomeçar a simulação? Todos os dados preenchidos serão perdidos.')) {
+            state.quoteId = null; // Clear quote ID on restart
             resetState();
             resetFormUI();
             currentStep = 1; 
-            updateUI(false); // Vai para o passo 1 sem scroll
-            handleDisclaimer(); // Re-aplica o overlay
+            updateUI(false);
         }
     }
 
@@ -1382,6 +893,16 @@ function setupSimulator() {
         return true;
     }
 
+    function handleRecalculate() {
+        if (currentStep === totalSteps && !document.getElementById('result-container').classList.contains('hidden')) {
+            showNotification('Recalculando com novos custos...', 'info');
+            handleViewQuote(true); // Passa um flag para indicar que é um recálculo
+        } else {
+            showNotification('Vá até a tela de resultados para recalcular.', 'error');
+        }
+    }
+
+
     function updateWardrobeRecommendation() {
         const recommendationDiv = document.getElementById('wardrobe-recommendation');
         const recommendationText = document.getElementById('recommendation-text');
@@ -1408,6 +929,28 @@ function setupSimulator() {
     }
 
     function calculateWardrobeQuote() {
+        // Sobrescreve a configuração com os valores do painel Pro
+        const mdfBrancoCost = parseFloat(document.getElementById('mdf-branco-cost').value);
+        const mdfPremiumCost = parseFloat(document.getElementById('mdf-premium-cost').value);
+
+        // Get new costs from panel
+        const hingeCostPerUnit = parseFloat(document.getElementById('hinge-cost').value) || 0;
+        const slideCostPerDrawer = parseFloat(document.getElementById('slide-cost').value) || 0;
+        const edgeTapeCostPerMeter = parseFloat(document.getElementById('edge-tape-cost').value) || 0;
+        const shippingCost = parseFloat(document.getElementById('shipping-cost').value) || 0;
+        const dailyRateCost = parseFloat(document.getElementById('daily-rate-cost').value) || 0;
+
+        if (!isNaN(mdfBrancoCost)) {
+            SIMULATOR_CONFIG.WARDROBE.MDF_SHEET_PRICING['Branco'] = mdfBrancoCost;
+            SIMULATOR_CONFIG.KITCHEN.MDF_SHEET_PRICING['Branco'] = mdfBrancoCost;
+        }
+        if (!isNaN(mdfPremiumCost)) {
+            SIMULATOR_CONFIG.WARDROBE.MDF_SHEET_PRICING['Premium'] = mdfPremiumCost;
+            SIMULATOR_CONFIG.KITCHEN.MDF_SHEET_PRICING['Premium'] = mdfPremiumCost;
+        }
+        SIMULATOR_CONFIG.WARDROBE.HARDWARE.HINGE_COST_PER_UNIT[state.hardwareType] = hingeCostPerUnit;
+        SIMULATOR_CONFIG.WARDROBE.HARDWARE.SLIDE_COST_PER_DRAWER = slideCostPerDrawer;
+
         const config = SIMULATOR_CONFIG.WARDROBE;
 
         const { height } = state.dimensions;
@@ -1443,7 +986,7 @@ function setupSimulator() {
 
         // 2. Hardware Cost (Hinges, Slides, Handles)
         const numDrawers = Math.floor(width * 2); // Estimate: 2 drawers per meter of width
-        const slideCost = numDrawers * config.HARDWARE.SLIDE_COST_PER_DRAWER;
+        const slideCost = numDrawers * slideCostPerDrawer;
         if (slideCost > 0) baseBreakdown.push({ label: 'Pares de Corrediças de Gaveta', quantity: numDrawers, cost: slideCost });
 
         let numDoors = 0;
@@ -1453,7 +996,7 @@ function setupSimulator() {
             } else { // 'abrir'
                 numDoors = Math.max(2, Math.round(width / 0.45));
                 const totalHinges = numDoors * hingesPerDoor;
-                const hingeCost = totalHinges * config.HARDWARE.HINGE_COST_PER_UNIT[state.hardwareType];
+                const hingeCost = totalHinges * hingeCostPerUnit;
                 const hingeLabel = state.hardwareType === 'softclose' ? 'Dobradiças Soft-close' : 'Dobradiças Padrão';
                 if (hingeCost > 0) baseBreakdown.push({ label: hingeLabel, quantity: totalHinges, cost: hingeCost });
             }
@@ -1470,6 +1013,13 @@ function setupSimulator() {
         const productionCost = frontArea * config.PRODUCTION_COST_PER_M2;
         if (productionCost > 0) baseBreakdown.push({ label: 'Custos de Fabricação e Montagem', quantity: null, cost: productionCost });
 
+        // 3.5 Edge Tape Cost
+        const estimatedPerimeter = totalMaterialArea * 1.5; // Rough estimation
+        const edgeTapeCost = estimatedPerimeter * edgeTapeCostPerMeter;
+        if (edgeTapeCost > 0) {
+            baseBreakdown.push({ label: 'Fita de Borda', quantity: Math.round(estimatedPerimeter), cost: edgeTapeCost });
+        }
+
         // 4. Optional Extras
         if (state.projectOption === 'create') {
             const cost = SIMULATOR_CONFIG.COMMON_COSTS.PROJECT_3D;
@@ -1482,10 +1032,38 @@ function setupSimulator() {
             if (finalCost > 0) extrasBreakdown.push({ label: extra, cost: finalCost });
         });
 
+        // 5. Expenses
+        if (shippingCost > 0) {
+            extrasBreakdown.push({ label: 'Frete e Deslocamento', cost: shippingCost });
+        }
+        const installationDays = Math.ceil(frontArea / 5); // Estimate 1 day for every 5m²
+        const installationCost = installationDays * dailyRateCost;
+        if (installationCost > 0) extrasBreakdown.push({ label: `Instalação (${installationDays} diária(s))`, cost: installationCost });
+
         return { baseBreakdown, extrasBreakdown, totalMaterialArea };
     }
 
     function calculateKitchenQuote() {
+        // Sobrescreve a configuração com os valores do painel Pro
+        const mdfBrancoCost = parseFloat(document.getElementById('mdf-branco-cost').value);
+        const mdfPremiumCost = parseFloat(document.getElementById('mdf-premium-cost').value);
+
+        // Get new costs from panel
+        const hingeCostPerUnit = parseFloat(document.getElementById('hinge-cost').value) || 0;
+        const slideCostPerDrawer = parseFloat(document.getElementById('slide-cost').value) || 0;
+        const edgeTapeCostPerMeter = parseFloat(document.getElementById('edge-tape-cost').value) || 0;
+        const shippingCost = parseFloat(document.getElementById('shipping-cost').value) || 0;
+        const dailyRateCost = parseFloat(document.getElementById('daily-rate-cost').value) || 0;
+
+        if (!isNaN(mdfBrancoCost)) {
+            SIMULATOR_CONFIG.KITCHEN.MDF_SHEET_PRICING['Branco'] = mdfBrancoCost;
+        }
+        if (!isNaN(mdfPremiumCost)) {
+            SIMULATOR_CONFIG.KITCHEN.MDF_SHEET_PRICING['Premium'] = mdfPremiumCost;
+        }
+        SIMULATOR_CONFIG.KITCHEN.HARDWARE.HINGE_COST_PER_UNIT[state.hardwareType] = hingeCostPerUnit;
+        SIMULATOR_CONFIG.KITCHEN.HARDWARE.SLIDE_COST_PER_DRAWER = slideCostPerDrawer;
+
         const config = SIMULATOR_CONFIG.KITCHEN;
         const baseBreakdown = [];
         const extrasBreakdown = [];
@@ -1536,11 +1114,10 @@ function setupSimulator() {
         // Lógica de dobradiças aprimorada para cozinha (padrão de 2 por porta)
         const hingesPerDoor = 2;
         const totalHinges = numDoors * hingesPerDoor;
-        const hingeCost = totalHinges * config.HARDWARE.HINGE_COST_PER_UNIT[state.hardwareType];
+        const hingeCost = totalHinges * hingeCostPerUnit;
         const hingeLabel = state.hardwareType === 'softclose' ? 'Dobradiças Soft-close' : 'Dobradiças Padrão';
         if (hingeCost > 0) baseBreakdown.push({ label: hingeLabel, quantity: totalHinges, cost: hingeCost });
 
-        const slideCostPerDrawer = config.HARDWARE.SLIDE_COST_PER_DRAWER;
         const slideCost = numDrawers * slideCostPerDrawer;
         if (slideCost > 0) baseBreakdown.push({ label: 'Pares de Corrediças de Gaveta', quantity: numDrawers, cost: slideCost });
 
@@ -1556,6 +1133,13 @@ function setupSimulator() {
             if (cost > 0) baseBreakdown.push({ label: `Barras de Puxador Perfil ${state.handleType}`, quantity: numBarsNeeded, cost: cost });
         }
 
+        // Edge Tape Cost
+        const estimatedPerimeter = totalMaterialArea * 1.5; // Rough estimation
+        const edgeTapeCost = estimatedPerimeter * edgeTapeCostPerMeter;
+        if (edgeTapeCost > 0) {
+            baseBreakdown.push({ label: 'Fita de Borda', quantity: Math.round(estimatedPerimeter), cost: edgeTapeCost });
+        }
+
         if (state.projectOption === 'create') {
             const cost = SIMULATOR_CONFIG.COMMON_COSTS.PROJECT_3D;
             if (cost > 0) extrasBreakdown.push({ label: 'Criação do Projeto 3D', cost });
@@ -1566,6 +1150,14 @@ function setupSimulator() {
             const finalCost = (extra === 'Iluminação LED') ? cost * totalWidth : cost;
             if (finalCost > 0) extrasBreakdown.push({ label: extra, cost: finalCost });
         });
+
+        // Expenses
+        if (shippingCost > 0) {
+            extrasBreakdown.push({ label: 'Frete e Deslocamento', cost: shippingCost });
+        }
+        const installationDays = Math.ceil(totalFrontArea / 4); // Estimate 1 day for every 4m² of kitchen
+        const installationCost = installationDays * dailyRateCost;
+        if (installationCost > 0) extrasBreakdown.push({ label: `Instalação (${installationDays} diária(s))`, cost: installationCost });
 
         return { baseBreakdown, extrasBreakdown, totalMaterialArea };
     }
@@ -1581,22 +1173,40 @@ function setupSimulator() {
         const { baseBreakdown, extrasBreakdown, totalMaterialArea } = quoteDetails;
         const basePrice = baseBreakdown.reduce((acc, item) => acc + item.cost, 0);
         const extrasPrice = extrasBreakdown.reduce((acc, item) => acc + item.cost, 0);
-        
+
+        const costPrice = basePrice + extrasPrice;
+        let finalTotal = costPrice;
+        let profitAmount = 0;
+
+        const profitMarginInput = document.getElementById('profit-margin');
+        const profitMargin = profitMarginInput ? (parseFloat(profitMarginInput.value) || 0) : 40;
+        profitAmount = costPrice * (profitMargin / 100);
+        finalTotal = costPrice + profitAmount;
+
+        // Desconto ou acréscimo
+        const discountExtraInput = document.getElementById('discount-extra');
+        const discountExtra = discountExtraInput ? (parseFloat(discountExtraInput.value) || 0) : 0;
+        finalTotal += discountExtra;
+
         const sheetSize = state.furnitureType === 'Cozinha' ? SIMULATOR_CONFIG.KITCHEN.MDF_SHEET_SIZE : SIMULATOR_CONFIG.WARDROBE.MDF_SHEET_SIZE;
-        
-        state.quote = { 
-            area: totalMaterialArea, 
-            sheets: Math.ceil(totalMaterialArea / sheetSize), 
-            total: basePrice + extrasPrice,
+
+        state.quote = {
+            area: totalMaterialArea,
+            sheets: Math.ceil(totalMaterialArea / sheetSize),
+            total: finalTotal,
+            costPrice: costPrice,
+            profitAmount: profitAmount,
             basePrice: basePrice,
             baseBreakdown: baseBreakdown,
             extrasPrice: extrasPrice,
-            extrasBreakdown: extrasBreakdown
+            extrasBreakdown: extrasBreakdown,
+            discountExtra: discountExtra
         };
     }
 
     function resetState() {
         Object.assign(state, {
+            quoteId: null,
             furnitureType: null,
             dimensions: { height: 2.7, depth: 60, walls: [{width: 3.0, height: 2.7}] },
             material: null,
@@ -1615,16 +1225,14 @@ function setupSimulator() {
             customColor: '',
             extras: [],
             customer: { name: '', email: '', phone: '' },
-            quote: { area: 0, sheets: 0, total: 0, basePrice: 0, baseBreakdown: [], extrasPrice: 0, extrasBreakdown: [] }
+            quote: { area: 0, sheets: 0, total: 0, basePrice: 0, costPrice: 0, profitAmount: 0, baseBreakdown: [], extrasPrice: 0, extrasBreakdown: [] }
         });
     }
 
     function resetFormUI() {
         // Uncheck all radio buttons and checkboxes within the simulator
         document.querySelectorAll('#simulador input[type="radio"], #simulador input[type="checkbox"]').forEach(input => {
-            if (!input.closest('#accept-disclaimer-checkbox')) { // Don't reset the disclaimer
-                input.checked = false;
-            }
+            input.checked = false;
         });
 
         // Reset specific input values to their defaults
@@ -1648,11 +1256,10 @@ function setupSimulator() {
         document.getElementById('project-file-name').textContent = 'Escolher arquivo do projeto';
         document.getElementById('leadName').value = '';
         document.getElementById('leadEmail').value = '';
-        document.getElementById('leadPhone').value = ''; // This line was duplicated, removing one.
-        disclaimerCheckbox.checked = false;
+        document.getElementById('leadPhone').value = '';
     }
 
-    async function handleViewQuote() {
+    async function handleViewQuote(isRecalculation = false) {
         const viewQuoteBtn = document.getElementById('view-quote-btn');
         const originalBtnText = viewQuoteBtn.innerHTML;
         const leadNameInput = document.getElementById('leadName');
@@ -1668,14 +1275,14 @@ function setupSimulator() {
         // 1. Validate inputs
         Object.assign(state.customer, { name: leadNameInput.value, email: leadEmailInput.value, phone: leadPhoneInput.value });
 
-        if (!state.customer.name) {
-            showNotification('Por favor, preencha seu nome para continuar.', 'error');
+        if (!isRecalculation && !state.customer.name) {
+            showNotification('Por favor, preencha o nome do cliente.', 'error');
             leadNameInput.classList.add('invalid');
             leadNameInput.focus();
             return;
         }
-        if (!state.customer.phone) {
-            showNotification('Por favor, preencha seu WhatsApp para continuar.', 'error');
+        if (!isRecalculation && !state.customer.phone) {
+            showNotification('Por favor, preencha o WhatsApp do cliente.', 'error');
             leadPhoneInput.classList.add('invalid');
             leadPhoneInput.focus();
             return;
@@ -1683,38 +1290,8 @@ function setupSimulator() {
 
         // --- Validação Avançada de Celular (Brasil) ---
         const phoneDigits = state.customer.phone.replace(/\D/g, '');
-        if (phoneDigits.length !== 11) {
+        if (!isRecalculation && phoneDigits.length !== 11) {
             showNotification('Por favor, insira um WhatsApp válido com DDD (11 dígitos).', 'error');
-            leadPhoneInput.classList.add('invalid');
-            leadPhoneInput.focus();
-            return;
-        }
-
-        const ddd = phoneDigits.substring(0, 2);
-        const validDDDs = [
-            '11', '12', '13', '14', '15', '16', '17', '18', '19', '21', '22', '24',
-            '27', '28', '31', '32', '33', '34', '35', '37', '38', '41', '42', '43',
-            '44', '45', '46', '47', '48', '49', '51', '53', '54', '55', '61', '62',
-            '63', '64', '65', '66', '67', '68', '69', '71', '73', '74', '75', '77',
-            '79', '81', '82', '83', '84', '85', '86', '87', '88', '89', '91', '92',
-            '93', '94', '95', '96', '97', '98', '99'
-        ];
-        if (!validDDDs.includes(ddd)) {
-            showNotification('O DDD informado é inválido.', 'error');
-            leadPhoneInput.classList.add('invalid');
-            leadPhoneInput.focus();
-            return;
-        }
-
-        const numberPart = phoneDigits.substring(2);
-        if (numberPart[0] !== '9') {
-            showNotification('O número de celular deve começar com 9 após o DDD.', 'error');
-            leadPhoneInput.classList.add('invalid');
-            leadPhoneInput.focus();
-            return;
-        }
-        if (/^(\d)\1+$/.test(numberPart.substring(1))) {
-            showNotification('Este número de celular parece inválido (sequência repetida).', 'error');
             leadPhoneInput.classList.add('invalid');
             leadPhoneInput.focus();
             return;
@@ -1746,13 +1323,116 @@ function setupSimulator() {
             document.getElementById('lead-capture-form').classList.add('hidden');
             document.getElementById('result-container').classList.remove('hidden');
             updateContainerHeight(); // Ajusta a altura do container para mostrar o resultado
+
+            const saveBtn = document.getElementById('save-quote-btn');
+            saveBtn.innerHTML = '<i class="fas fa-save mr-2"></i>Salvar Orçamento';
         } catch (error) {
             console.error("Error calculating quote:", error);
             showNotification('Ocorreu um erro ao calcular o orçamento. Tente novamente.', 'error');
-            // Restore button on error
+        } finally {
+            // Restore button
             viewQuoteBtn.disabled = false;
             viewQuoteBtn.innerHTML = originalBtnText;
         }
+    }
+
+    function handleLoadQuote(quoteId) {
+        const quotes = getSavedQuotes();
+        const quoteToLoad = quotes.find(q => q.quoteId === parseInt(quoteId));
+
+        if (quoteToLoad) {
+            // Deep copy to avoid modifying the saved object directly
+            const loadedState = JSON.parse(JSON.stringify(quoteToLoad));
+            
+            // Restore state
+            Object.assign(state, loadedState);
+
+            // Update UI from state
+            updateFormFromState();
+
+            // Go to the last step and show results
+            currentStep = totalSteps;
+            updateUI(false);
+            renderResult();
+            document.getElementById('lead-capture-form').classList.add('hidden');
+            document.getElementById('result-container').classList.remove('hidden');
+            updateContainerHeight();
+
+            showNotification(`Orçamento de "${state.customer.name}" carregado.`, "success");
+            
+            // Close the side panel
+            document.getElementById('marceneiro-controls').classList.add('-translate-x-full');
+            document.getElementById('main-content').style.marginLeft = '0';
+        } else {
+            showNotification("Orçamento não encontrado.", "error");
+        }
+    }
+
+    function handleDuplicateQuote(quoteId) {
+        handleLoadQuote(quoteId);
+        // After loading, unset the ID and modify the name to indicate it's a copy
+        state.quoteId = null;
+        state.customer.name = `(Cópia) ${state.customer.name}`;
+        document.getElementById('leadName').value = state.customer.name;
+        showNotification("Orçamento duplicado. Modifique e salve como um novo.", "info");
+    }
+
+    function updateFormFromState() {
+        // Reset all inputs first
+        resetFormUI();
+
+        // Step 1: Furniture Type
+        document.querySelector(`input[name="furnitureType"][value="${state.furnitureType}"]`)?.click();
+
+        // Step 2: Dimensions & Sub-options
+        if (state.furnitureType === 'Guarda-Roupa') {
+            document.querySelector(`input[name="wardrobeFormat"][value="${state.wardrobeFormat}"]`)?.click();
+            if (state.wardrobeFormat === 'closet') {
+                document.querySelector(`input[name="closetDoors"][value="${state.closetHasDoors ? 'sim' : 'nao'}"]`)?.click();
+            }
+            // Restore walls
+            const wardrobeWallsContainer = document.getElementById('wardrobe-walls-container');
+            Array.from(wardrobeWallsContainer.children).slice(1).forEach(wall => wall.remove());
+            state.dimensions.walls.slice(1).forEach(() => addWardrobeWall());
+            document.querySelectorAll('#wardrobe-walls-container input[name="wardrobe-width"]').forEach((input, i) => {
+                input.value = state.dimensions.walls[i]?.width || 0;
+            });
+            document.getElementById('wardrobe-height').value = state.dimensions.height;
+        } else { // Cozinha
+            document.querySelector(`input[name="kitchenSink"][value="${state.kitchenHasSinkCabinet ? 'sim' : 'nao'}"]`)?.click();
+            document.querySelector(`input[name="hasHotTower"][value="${state.hasHotTower ? 'sim' : 'nao'}"]`)?.click();
+            document.querySelector(`input[name="stoveType"][value="${state.stoveType}"]`)?.click();
+            if (state.stoveType === 'cooktop') {
+                document.querySelector(`input[name="cooktopLocation"][value="${state.cooktopLocation}"]`)?.click();
+            }
+            document.getElementById('sinkStoneWidth').value = state.sinkStoneWidth;
+            // Restore walls
+            const kitchenWallsContainer = document.getElementById('kitchen-walls-container');
+            Array.from(kitchenWallsContainer.children).slice(1).forEach(wall => wall.remove());
+            state.dimensions.walls.slice(1).forEach(() => addKitchenWall());
+            document.querySelectorAll('input[name="kitchen-wall-width"]').forEach((input, i) => input.value = state.dimensions.walls[i]?.width || 0);
+            document.querySelectorAll('input[name="kitchen-wall-height"]').forEach((input, i) => input.value = state.dimensions.walls[i]?.height || 0);
+        }
+
+        // Step 3: Material
+        document.querySelector(`input[name="material"][value="${state.material}"]`)?.click();
+        document.getElementById('customColor').value = state.customColor;
+
+        // Step 4: Extras
+        document.querySelector(`input[name="doorType"][value="${state.doorType}"]`)?.click();
+        document.querySelector(`input[name="handleType"][value="${state.handleType}"]`)?.click();
+        document.querySelector(`input[name="hardwareType"][value="${state.hardwareType}"]`)?.click();
+        state.extras.forEach(extra => {
+            document.querySelector(`input[name="extras"][value="${extra}"]`).checked = true;
+        });
+
+        // Step 5: Project
+        document.querySelector(`input[name="projectOption"][value="${state.projectOption}"]`)?.click();
+
+        // Step 6: Customer Info
+        document.getElementById('leadName').value = state.customer.name;
+        document.getElementById('leadEmail').value = state.customer.email;
+        document.getElementById('leadPhone').value = state.customer.phone;
     }
 
     function renderResult() {
@@ -1811,54 +1491,97 @@ function setupSimulator() {
         specsContainer.innerHTML = specsHTML;
 
         // Update total and breakdown
-        const baseListContainer = document.getElementById('base-price-breakdown-list');
-        const extrasListContainer = document.getElementById('extras-breakdown-list');
+        const breakdownContainer = document.getElementById('result-breakdown');
+        const formatCurrency = (value) => `R$ ${value.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 
-        document.getElementById('result-total').textContent = `R$ ${state.quote.total.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
-        
-        baseListContainer.innerHTML = ''; // Clear previous
+        document.getElementById('result-total').textContent = formatCurrency(state.quote.total);
+        document.getElementById('result-cost-price').textContent = formatCurrency(state.quote.costPrice);
+        document.getElementById('result-profit').textContent = formatCurrency(state.quote.profitAmount);
+
+        breakdownContainer.innerHTML = '';
+        let breakdownHTML = '';
+
         if (state.quote.baseBreakdown && state.quote.baseBreakdown.length > 0) {
-            let baseHTML = '<h5 class="font-semibold text-charcoal mb-2">Componentes do Projeto:</h5><div class="pl-4 border-l-2 border-gold/50 space-y-2">';
+            breakdownHTML += '<h5 class="font-semibold text-charcoal mb-2">Componentes do Projeto:</h5><div class="pl-4 border-l-2 border-gold/50 space-y-2">';
             state.quote.baseBreakdown.forEach(item => {
                 const quantityText = item.quantity ? `<span class="text-gray-500 text-xs">(Qtd. Aprox: ${item.quantity})</span>` : '';
-                baseHTML += `
+                breakdownHTML += `
                     <div class="flex justify-between items-center text-sm">
                         <span class="text-gray-600">${item.label} ${quantityText}</span>
-                        <span class="font-semibold text-charcoal">R$ ${item.cost.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</span>
+                        <span class="font-semibold text-charcoal">${formatCurrency(item.cost)}</span>
                     </div>
                 `;
             });
-            baseListContainer.innerHTML = baseHTML + '</div>';
+            breakdownHTML += '</div>';
         }
 
-        extrasListContainer.innerHTML = ''; // Clear previous
         if (state.quote.extrasBreakdown && state.quote.extrasBreakdown.length > 0) {
-            let extrasHTML = '<h5 class="font-semibold text-charcoal mb-2">Acabamentos e Personalização:</h5>';
+            breakdownHTML += '<h5 class="font-semibold text-charcoal mb-2 mt-4">Acabamentos e Personalização:</h5><div class="pl-4 border-l-2 border-gold/50 space-y-2">';
             state.quote.extrasBreakdown.forEach(item => {
-                extrasHTML += `
+                breakdownHTML += `
                     <div class="flex justify-between items-center text-sm">
                         <span class="text-gray-600">${item.label}</span>
-                        <span class="font-semibold text-charcoal">+ R$ ${item.cost.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</span>
+                        <span class="font-semibold text-charcoal">+ ${formatCurrency(item.cost)}</span>
                     </div>
                 `;
             });
-            extrasListContainer.innerHTML = extrasHTML;
+            breakdownHTML += '</div>';
         }
 
-        // Update visual breakdown bar
-        const basePriceBar = document.getElementById('base-price-bar');
-        const extrasPriceBar = document.getElementById('extras-price-bar');
-        const totalForBar = state.quote.basePrice + state.quote.extrasPrice;
-
-        if (basePriceBar && extrasPriceBar && totalForBar > 0) {
-            const basePercentage = (state.quote.basePrice / totalForBar) * 100;
-            basePriceBar.style.width = `${basePercentage}%`;
-            extrasPriceBar.style.width = `${100 - basePercentage}%`;
-            extrasPriceBar.style.left = `${basePercentage}%`;
+        // Desconto/acréscimo
+        if (state.quote.discountExtra && state.quote.discountExtra !== 0) {
+            breakdownHTML += `<div class="flex justify-between items-center text-sm mt-4">
+                <span class="text-gray-600">Desconto/Acréscimo</span>
+                <span class="font-semibold text-blue-700">${state.quote.discountExtra > 0 ? '+' : ''}${formatCurrency(state.quote.discountExtra)}</span>
+            </div>`;
         }
+
+        // Comparativo de materiais
+        breakdownHTML += '<div class="mt-6 p-4 bg-gray-50 rounded-lg"><h5 class="font-semibold text-charcoal mb-2">Comparativo de Materiais:</h5>';
+        const mdfBranco = document.getElementById('mdf-branco-cost').value;
+        const mdfPremium = document.getElementById('mdf-premium-cost').value;
+        breakdownHTML += `<div class="flex justify-between text-sm"><span>MDF Branco</span><span class="font-semibold">${formatCurrency(Number(mdfBranco))} / chapa</span></div>`;
+        breakdownHTML += `<div class="flex justify-between text-sm"><span>MDF Premium</span><span class="font-semibold">${formatCurrency(Number(mdfPremium))} / chapa</span></div>`;
+        breakdownHTML += '</div>';
+
+        breakdownContainer.innerHTML = breakdownHTML;
+    }
+
+    function renderSavedQuotes(searchTerm = '') {
+        const listContainer = document.getElementById('saved-quotes-list');
+        const quotes = getSavedQuotes();
+        const filteredQuotes = quotes.filter(q => 
+            q.customer.name.toLowerCase().includes(searchTerm.toLowerCase())
+        );
+
+        if (filteredQuotes.length === 0) {
+            listContainer.innerHTML = `<p class="text-center text-gray-400 text-sm py-4">Nenhum orçamento salvo.</p>`;
+            return;
+        }
+
+        listContainer.innerHTML = filteredQuotes.map(q => {
+            const quoteDate = new Date(q.quoteId).toLocaleDateString('pt-BR');
+            return `
+                <div class="bg-gray-700 p-3 rounded-lg" data-quote-id="${q.quoteId}">
+                    <div class="flex justify-between items-center">
+                        <div class="flex-grow overflow-hidden">
+                            <p class="font-semibold text-white truncate">${q.customer.name}</p>
+                            <p class="text-xs text-gray-400">${q.furnitureType} - ${quoteDate}</p>
+                        </div>
+                        <div class="flex-shrink-0 flex items-center gap-1">
+                            <button class="quote-action-btn load-quote-btn" title="Carregar"><i class="fas fa-folder-open"></i></button>
+                            <button class="quote-action-btn duplicate-quote-btn" title="Duplicar"><i class="fas fa-copy"></i></button>
+                            <button class="quote-action-btn delete-quote-btn text-red-400 hover:bg-red-500/20" title="Excluir"><i class="fas fa-trash"></i></button>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }).join('');
     }
 
     function getQuoteAsText() {
+        const formatCurrency = (value) => `R$ ${value.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+
         let dimsText = '';
         if (state.furnitureType === 'Guarda-Roupa') {
             dimsText = `Paredes: ${state.dimensions.walls.map(w => w.width).join('m + ')}m | Altura: ${state.dimensions.height}m`;
@@ -1898,19 +1621,14 @@ function setupSimulator() {
 
         const handleName = state.handleType.charAt(0).toUpperCase() + state.handleType.slice(1);
 
-        let breakdownText = `\n\n*Detalhamento do Valor:*\n- Estrutura e Produção: R$ ${state.quote.basePrice.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`;
-        if (state.quote.extrasBreakdown && state.quote.extrasBreakdown.length > 0) {
-            breakdownText += '\n*Acabamentos e Personalização:*';
-            state.quote.extrasBreakdown.forEach(item => {
-                breakdownText += `\n  - ${item.label}: + R$ ${item.cost.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`;
-            });
-        }
+        // Para o marceneiro, o WhatsApp pode ser um resumo simples para o cliente
+        const breakdownText = `\n\n*Resumo para o Cliente:*`;
 
-        return `*Orçamento de Móveis Planejados*\n---------------------------------\n*Cliente:* ${state.customer.name}\n*Móvel:* ${state.furnitureType}${formatDetails}${kitchenDetails}\n${details}${projectDetails}\n*Material:* ${state.material} ${state.customColor ? `(Cor: ${state.customColor})` : ''}\n*Puxador:* Perfil ${handleName}${hardwareDetails}\n*Extras:* ${state.extras.join(', ') || 'Nenhum'}\n---------------------------------\n*Total Estimado: ${document.getElementById('result-total').textContent}*${breakdownText}\n\n_Este é um orçamento informativo. O valor final será definido após visita técnica._`;
+        return `*Orçamento de Móveis Planejados*\n---------------------------------\n*Cliente:* ${state.customer.name}\n*Móvel:* ${state.furnitureType}${formatDetails}${kitchenDetails}\n${details}${projectDetails}\n*Material:* ${state.material} ${state.customColor ? `(Cor: ${state.customColor})` : ''}\n*Puxador:* Perfil ${handleName}${hardwareDetails}\n*Extras:* ${state.extras.join(', ') || 'Nenhum'}\n---------------------------------\n*Total Estimado: ${formatCurrency(state.quote.total)}*${breakdownText}\n\n_Este é um orçamento informativo. O valor final será definido após visita técnica._`;
     }
 
-    async function generatePDF() {
-        const pdfBtn = document.getElementById('pdf-btn');
+    async function generatePDF(type = 'internal') {
+        const pdfBtn = document.getElementById(type === 'internal' ? 'pdf-btn-internal' : 'pdf-btn-client');
         const originalBtnHTML = pdfBtn.innerHTML;
         pdfBtn.disabled = true;
         pdfBtn.innerHTML = '<div class="spinner mr-2"></div>Gerando...';
@@ -1962,19 +1680,46 @@ function setupSimulator() {
     
             // Populate Pricing
             const formatCurrency = (value) => `R$ ${value.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`;
-            document.getElementById('pdf-base-price').textContent = formatCurrency(state.quote.basePrice);
-            document.getElementById('pdf-total').textContent = formatCurrency(state.quote.total);
-    
             const extrasContainer = document.getElementById('pdf-extras-breakdown');
             extrasContainer.innerHTML = '';
-            if (state.quote.extrasBreakdown && state.quote.extrasBreakdown.length > 0) {
-                let extrasHTML = '<p class="font-semibold text-charcoal">Acabamentos e Personalização:</p><div class="pl-4 border-l-2 border-gold/50 space-y-1 mt-1">';
-                state.quote.extrasBreakdown.forEach(item => {
-                    extrasHTML += `<div class="flex justify-between items-center text-sm"><span class="text-gray-600">${item.label}</span><span class="font-semibold">+ ${formatCurrency(item.cost)}</span></div>`;
-                });
-                extrasHTML += '</div>';
-                extrasContainer.innerHTML = extrasHTML;
+            let pdfBreakdownHTML = '';
+
+            // Conditional rendering based on PDF type
+            if (type === 'internal') {
+                document.getElementById('pdf-doc-title').textContent = 'ORDEM DE SERVIÇO';
+                document.getElementById('pdf-pricing-title').textContent = 'Detalhamento de Custos e Lucro';
+                document.getElementById('pdf-cost-section').classList.remove('hidden');
+                document.getElementById('pdf-total-label').textContent = 'PREÇO FINAL (CLIENTE)';
+
+                document.getElementById('pdf-base-price').textContent = formatCurrency(state.quote.costPrice);
+                document.getElementById('pdf-total').textContent = formatCurrency(state.quote.total);
+
+                // Full breakdown for internal PDF
+                if (state.quote.baseBreakdown?.length) {
+                    pdfBreakdownHTML += '<p class="font-semibold text-charcoal">Custos Base:</p><div class="pl-4 border-l-2 border-gold/50 space-y-1 mt-1">';
+                    state.quote.baseBreakdown.forEach(item => {
+                        pdfBreakdownHTML += `<div class="flex justify-between items-center text-sm"><span class="text-gray-600">${item.label}</span><span class="font-semibold">${formatCurrency(item.cost)}</span></div>`;
+                    });
+                    pdfBreakdownHTML += '</div>';
+                }
+                if (state.quote.extrasBreakdown?.length) {
+                    pdfBreakdownHTML += '<p class="font-semibold text-charcoal mt-2">Custos de Acabamentos e Despesas:</p><div class="pl-4 border-l-2 border-gold/50 space-y-1 mt-1">';
+                    state.quote.extrasBreakdown.forEach(item => {
+                        pdfBreakdownHTML += `<div class="flex justify-between items-center text-sm"><span class="text-gray-600">${item.label}</span><span class="font-semibold">+ ${formatCurrency(item.cost)}</span></div>`;
+                    });
+                    pdfBreakdownHTML += '</div>';
+                }
+                extrasContainer.innerHTML = pdfBreakdownHTML;
+
+            } else { // Client PDF
+                document.getElementById('pdf-doc-title').textContent = 'ORÇAMENTO';
+                document.getElementById('pdf-pricing-title').textContent = 'Valor do Investimento';
+                document.getElementById('pdf-cost-section').classList.add('hidden');
+                document.getElementById('pdf-total-label').textContent = 'VALOR TOTAL';
+                document.getElementById('pdf-total').textContent = formatCurrency(state.quote.total);
+                extrasContainer.innerHTML = '<p class="text-sm text-gray-600">Serviços como visita técnica, entrega, montagem e garantia de 5 anos estão inclusos.</p>';
             }
+
             // --- End Populate ---
     
             pdfTemplate.classList.remove('hidden');
@@ -1984,7 +1729,7 @@ function setupSimulator() {
             const pdfWidth = pdf.internal.pageSize.getWidth();
             const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
             pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
-            pdf.save(`orcamento-ronimarceneiro-${quoteId}.pdf`);
+            pdf.save(`orcamento_${type}_${state.customer.name.replace(/\s/g, '_')}_${quoteId}.pdf`);
             pdfTemplate.classList.add('hidden');
         } catch (error) {
             console.error("PDF Generation Error:", error);
@@ -2000,11 +1745,7 @@ function setupSimulator() {
         if (state.projectOption === 'upload' && state.projectFile) {
             text += '\n\n*(Anexei o arquivo do meu projeto no simulador. Por favor, me informe como posso enviá-lo.)*';
         }
-        window.open(`https://wa.me/5511999999999?text=${encodeURIComponent(text)}`, '_blank');
-    }
-
-    function generateEmailLink() {
-        window.location.href = `mailto:?subject=${encodeURIComponent(`Orçamento de Móveis: ${state.customer.name}`)}&body=${encodeURIComponent(getQuoteAsText())}`;
+        window.open(`https://wa.me/${state.customer.phone.replace(/\D/g, '')}?text=${encodeURIComponent(text)}`, '_blank');
     }
 
     init();

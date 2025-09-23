@@ -1,3 +1,8 @@
+/* Feedback visual para campos obrigatórios */
+.form-input.invalid {
+    border-color: #e53e3e !important;
+    box-shadow: 0 0 0 2px #e53e3e33;
+}
 /* Estilos personalizados adicionais */
 
 /* Smooth scrolling */

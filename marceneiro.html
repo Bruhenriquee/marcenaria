@@ -1,0 +1,696 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simulador Pro - Roni Marceneiro</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;700&family=Roboto:wght@400&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js" defer></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js" defer></script>
+    <link rel="stylesheet" href="styles.css">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: { 'montserrat': ['Montserrat', 'sans-serif'], 'roboto': ['Roboto', 'sans-serif'] },
+                    colors: { 'wood': '#8B4513', 'gold': '#D4AF37', 'charcoal': '#2F2F2F' }
+                }
+            }
+        }
+    </script>
+    <style>
+        #marceneiro-controls {
+            transition: transform 0.3s ease-in-out;
+        }
+        .panel-input {
+            width: 100%;
+            padding: 0.5rem 0.75rem;
+            border-radius: 0.5rem;
+            border: 2px solid #e5e7eb;
+            background: #222;
+            color: #fff;
+            font-size: 1rem;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+        .panel-input:focus {
+            border-color: #D4AF37;
+            background: #333;
+        }
+        .panel-label {
+            font-size: 0.95rem;
+            color: #e5e7eb;
+            margin-bottom: 0.25rem;
+            display: block;
+        }
+        .panel-subtitle {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: #D4AF37;
+            margin-bottom: 0.5rem;
+        }
+    </style>
+</head>
+<body class="font-roboto bg-gray-100">
+
+    <!-- Botão para abrir/fechar o painel -->
+    <button id="toggle-controls-btn" class="fixed top-5 left-4 bg-gold text-charcoal w-10 h-10 rounded-full z-40 shadow-lg flex items-center justify-center">
+    <span class="sr-only">Abrir configurações</span>
+    <i class="fas fa-sliders-h text-xl"></i>
+    </button>
+    <!-- Painel de Controle do Marceneiro (Fixo) -->
+    <div id="marceneiro-controls" class="fixed top-0 left-0 h-full bg-charcoal text-white shadow-2xl z-30 w-80 transform -translate-x-full flex flex-col transition-transform duration-300">
+        <div class="flex-shrink-0 p-4 border-b border-gold/20 flex items-center justify-between">
+            <div class="flex bg-gray-800 rounded-md p-1 flex-1">
+                <button id="tab-btn-costs" class="flex-1 py-2 text-sm font-semibold rounded-md transition-colors bg-gold text-charcoal">Custos</button>
+                <button id="tab-btn-quotes" class="flex-1 py-2 text-sm font-semibold rounded-md transition-colors text-gray-300 hover:bg-gray-700">Orçamentos</button>
+            </div>
+            <button id="close-controls-btn" class="ml-2 text-gray-300 hover:text-gold text-2xl p-2 rounded-full focus:outline-none" aria-label="Fechar painel"><i class="fas fa-times"></i></button>
+        </div>
+
+        <!-- Aba de Custos -->
+        <div id="tab-content-costs" class="flex-grow p-4 overflow-y-auto space-y-6">
+            <div class="space-y-4">
+                <h3 class="panel-subtitle">Material</h3>
+                <div>
+                    <label for="mdf-branco-cost" class="panel-label">Custo Chapa MDF Branco</label>
+                    <input type="number" id="mdf-branco-cost" value="240" class="panel-input">
+                </div>
+                <div>
+                    <label for="mdf-premium-cost" class="panel-label">Custo Chapa MDF Premium</label>
+                    <input type="number" id="mdf-premium-cost" value="400" class="panel-input">
+                </div>
+                <div>
+                    <label for="edge-tape-cost" class="panel-label">Custo Fita de Borda (p/ metro)</label>
+                    <input type="number" id="edge-tape-cost" value="2.5" step="0.1" class="panel-input">
+                </div>
+            </div>
+
+            <div class="space-y-4">
+                <h3 class="panel-subtitle">Ferragens</h3>
+                <div>
+                    <label for="hinge-cost" class="panel-label">Custo Dobradiça (unid.)</label>
+                    <input type="number"id="hinge-cost" value="20" class="panel-input">
+                </div>
+                <div>
+                    <label for="slide-cost" class="panel-label">Custo Corrediça (par)</label>
+                    <input type="number" id="slide-cost" value="25" class="panel-input">
+                </div>
+            </div>
+
+            <div class="space-y-4">
+                                <h3 class="panel-subtitle">Despesas e Lucro
+                                    <button id="reset-panel-btn" title="Restaurar valores padrão" class="ml-2 text-gold text-base hover:text-yellow-400"><i class="fas fa-undo"></i></button>
+                                </h3>
+                                <div class="relative">
+                                        <label for="shipping-cost" class="panel-label">Custo Frete / Deslocamento
+                                            <span class="ml-1" title="Valor estimado para transporte e entrega"><i class="fas fa-info-circle text-gold"></i></span>
+                                        </label>
+                                        <input type="number" id="shipping-cost" value="150" class="panel-input">
+                                </div>
+                                <div class="relative">
+                                        <label for="daily-rate-cost" class="panel-label">Custo Diária de Instalação
+                                            <span class="ml-1" title="Valor por dia de trabalho na montagem"><i class="fas fa-info-circle text-gold"></i></span>
+                                        </label>
+                                        <input type="number" id="daily-rate-cost" value="200" class="panel-input">
+                                </div>
+                                <div class="relative">
+                                        <label for="profit-margin" class="panel-label">Margem de Lucro (%)
+                                            <span class="ml-1" title="Percentual de lucro sobre o custo total"><i class="fas fa-info-circle text-gold"></i></span>
+                                        </label>
+                                        <input type="number" id="profit-margin" value="80" class="panel-input">
+                                </div>
+                                <div class="relative">
+                                        <label for="discount-extra" class="panel-label">Desconto ou Acréscimo (R$)
+                                            <span class="ml-1" title="Valor para desconto (-) ou acréscimo (+) no orçamento"><i class="fas fa-info-circle text-gold"></i></span>
+                                        </label>
+                                        <input type="number" id="discount-extra" value="0" class="panel-input">
+                                </div>
+            </div>
+        </div>
+
+        <!-- Aba de Orçamentos Salvos -->
+        <div id="tab-content-quotes" class="hidden flex-grow p-4 overflow-y-auto space-y-4">
+            <div class="relative">
+                <input type="text" id="search-quotes-input" placeholder="Buscar por cliente..." class="panel-input pl-8">
+                <i class="fas fa-search absolute left-2 top-1/2 -translate-y-1/2 text-gray-400"></i>
+            </div>
+            <div id="saved-quotes-list" class="space-y-3">
+                <!-- Orçamentos salvos serão inseridos aqui -->
+            </div>
+        </div>
+
+        <div class="flex-shrink-0 p-4 border-t border-gold/20">
+            <button id="recalculate-btn" class="w-full bg-gradient-to-r from-gold to-yellow-600 text-charcoal font-bold py-2 px-4 rounded-lg hover:shadow-xl transition-all duration-300">
+                <i class="fas fa-sync-alt mr-2"></i>Recalcular
+            </button>
+        </div>
+    </div>
+
+    <!-- Botão para abrir/fechar o painel -->
+
+    <!-- Conteúdo Principal do Simulador -->
+    <main class="pt-8 pb-20 transition-all duration-300 ease-in-out" id="main-content">
+    <section id="simulador">
+            <div class="container mx-auto p-4 md:p-8">
+                <header class="text-center mb-8">
+                    <h2 class="font-montserrat font-bold text-4xl md:text-5xl text-charcoal">Simulador <span class="text-gold">Pro</span></h2>
+                    <p class="text-lg text-gray-500 mt-2">Ferramenta de orçamento para o marceneiro.</p>
+                </header>
+        
+                <!-- Simulator Content Wrapper -->
+                <div id="simulator-content" class="relative">
+                    <!-- Progress Bar -->
+                    <div id="progress-bar" class="w-full max-w-4xl mx-auto mb-12">
+                        <div class="flex items-center justify-between">
+                            <div class="progress-step active" data-step="1"><i class="fas fa-couch"></i></div>
+                            <div class="progress-line"></div>
+                            <div class="progress-step" data-step="2"><i class="fas fa-ruler-combined"></i></div>
+                            <div class="progress-line"></div>
+                            <div class="progress-step" data-step="3"><i class="fas fa-palette"></i></div>
+                            <div class="progress-line"></div>
+                            <div class="progress-step" data-step="4"><i class="fas fa-plus-circle"></i></div>
+                            <div class="progress-line"></div>
+                            <div class="progress-step" data-step="5"><i class="fas fa-cube"></i></div>
+                            <div class="progress-line"></div>
+                            <div class="progress-step" data-step="6"><i class="fas fa-file-invoice-dollar"></i></div>
+                        </div>
+                    </div>
+            
+                    <!-- Steps Container (copiado do index.html) -->
+                    <div id="steps-container" class="max-w-4xl mx-auto">
+                        <!-- Step 1: Furniture Type -->
+                        <div class="form-step active" data-step="1">
+                            <h3 class="step-title">1. Qual tipo de móvel você deseja simular?</h3>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-2xl mx-auto">
+                                <label class="step-card">
+                                    <input type="radio" name="furnitureType" value="Guarda-Roupa" class="sr-only peer">
+                                    <div class="card-content">
+                                        <div class="check-icon"><i class="fas fa-check-circle"></i></div>
+                                        <i class="fas fa-tshirt text-3xl mb-3"></i><h4 class="font-semibold text-lg">Guarda-Roupa</h4>
+                                    </div>
+                                </label>
+                                <label class="step-card">
+                                    <input type="radio" name="furnitureType" value="Cozinha" class="sr-only peer">
+                                    <div class="card-content">
+                                        <div class="check-icon"><i class="fas fa-check-circle"></i></div>
+                                        <i class="fas fa-utensils text-3xl mb-3"></i><h4 class="font-semibold text-lg">Cozinha</h4>
+                                    </div>
+                                </label>
+                            </div>
+                            <div class="flex justify-between mt-12">
+                                <button class="prev-btn hidden bg-transparent border-2 border-gray-300 text-gray-500 font-bold py-3 px-6 rounded-lg hover:bg-gray-100 hover:border-gray-400 transition-all duration-300"><i class="fas fa-arrow-left mr-2"></i>Anterior</button>
+                                <button class="next-btn ml-auto bg-gradient-to-r from-gold to-yellow-600 text-white font-bold py-3 px-8 rounded-lg shadow-md hover:shadow-xl transform hover:-translate-y-1 transition-all duration-300">Próximo<i class="fas fa-arrow-right ml-2"></i></button>
+                            </div>
+                        </div>
+            
+                        <!-- Step 2: Dimensions -->
+                        <div class="form-step" data-step="2">
+                            <h3 class="step-title">2. Informe as dimensões do ambiente</h3>
+                            <div class="bg-white rounded-2xl p-6 md:p-8 shadow-sm">
+                                <div id="wardrobe-dims" class="space-y-8 hidden smooth-toggle">
+                                    <!-- Sub-step 2.1: Wardrobe Format -->
+                                    <div id="wardrobe-format-step">
+                                        <h4 class="font-semibold text-lg mb-4 text-charcoal text-center">Qual o formato do seu projeto?</h4>
+                                        <div class="grid md:grid-cols-2 gap-6">
+                                            <label class="step-card">
+                                                <input type="radio" name="wardrobeFormat" value="reto" class="sr-only peer">
+                                                <div class="card-content">
+                                                    <div class="check-icon"><i class="fas fa-check-circle"></i></div>
+                                                    <i class="fas fa-square text-3xl mb-3"></i><h4 class="font-semibold text-lg">Guarda-Roupa Reto</h4><p class="text-sm text-gray-500">Para uma única parede.</p>
+                                                </div>
+                                            </label>
+                                            <label class="step-card">
+                                                <input type="radio" name="wardrobeFormat" value="closet" class="sr-only peer">
+                                                <div class="card-content">
+                                                    <div class="check-icon"><i class="fas fa-check-circle"></i></div>
+                                                    <i class="fas fa-vector-square text-3xl mb-3"></i><h4 class="font-semibold text-lg">Closet (em L ou U)</h4><p class="text-sm text-gray-500">Para duas ou mais paredes.</p>
+                                                </div>
+                                            </label>
+                                        </div>
+                                    </div>
+
+                                    <!-- Sub-step 2.2: Closet Doors (conditional) -->
+                                    <div id="closet-door-step" class="hidden smooth-toggle">
+                                        <h4 class="font-semibold text-lg mb-4 text-charcoal text-center">Seu closet terá portas?</h4>
+                                        <div class="grid md:grid-cols-2 gap-6">
+                                            <label class="step-card">
+                                                <input type="radio" name="closetDoors" value="sim" class="sr-only peer">
+                                                <div class="card-content">
+                                                    <div class="check-icon"><i class="fas fa-check-circle"></i></div>
+                                                    <i class="fas fa-door-closed text-3xl mb-3"></i><h4 class="font-semibold text-lg">Sim, com Portas</h4><p class="text-sm text-gray-500">Closet fechado.</p>
+                                                </div>
+                                            </label>
+                                            <label class="step-card">
+                                                <input type="radio" name="closetDoors" value="nao" class="sr-only peer">
+                                                <div class="card-content">
+                                                    <div class="check-icon"><i class="fas fa-check-circle"></i></div>
+                                                    <i class="fas fa-th-large text-3xl mb-3"></i><h4 class="font-semibold text-lg">Não, sem Portas</h4><p class="text-sm text-gray-500">Closet aberto.</p>
+                                                </div>
+                                            </label>
+                                        </div>
+                                    </div>
+
+                                    <!-- Sub-step 2.3: Dimensions -->
+                                    <div id="wardrobe-dimension-inputs" class="space-y-6">
+                                        <div id="wardrobe-walls-container" class="space-y-4">
+                                            <div><label for="wardrobe-width1" class="block mb-2 font-semibold">Largura Parede 1 (m)</label><input type="number" id="wardrobe-width1" name="wardrobe-width" step="0.1" min="1" max="10" value="3.0" class="form-input"></div>
+                                        </div>
+                                        <button type="button" id="add-wardrobe-wall-btn" class="border-2 border-dashed border-gold text-gold px-4 py-2 rounded-lg hover:bg-gold/10 w-full hidden"><i class="fas fa-plus mr-2"></i>Adicionar Parede</button>
+                                        <div><label for="wardrobe-height" class="block mb-2 font-semibold">Altura (m)</label><input type="number" id="wardrobe-height" step="0.1" min="1.5" max="4" value="2.7" class="form-input"></div>
+                                        <div id="wardrobe-recommendation" class="mt-4 p-4 bg-blue-50 text-blue-800 rounded-lg text-center hidden">
+                                            <i class="fas fa-info-circle mr-2"></i>
+                                            <span id="recommendation-text"></span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div id="kitchen-dims" class="space-y-8 hidden smooth-toggle">
+                                    <!-- Sub-step 2.1: Sink Cabinet -->
+                                    <div id="kitchen-sink-step">
+                                        <h4 class="font-semibold text-lg mb-4 text-charcoal text-center">Seu projeto incluirá um armário para a pia?</h4>
+                                        <div class="grid md:grid-cols-2 gap-6">
+                                            <label class="step-card">
+                                                <input type="radio" name="kitchenSink" value="sim" class="sr-only peer">
+                                                <div class="card-content">
+                                                    <div class="check-icon"><i class="fas fa-check-circle"></i></div>
+                                                    <i class="fas fa-faucet text-3xl mb-3"></i><h4 class="font-semibold text-lg">Sim, incluir armário</h4>
+                                                </div>
+                                            </label>
+                                            <label class="step-card">
+                                                <input type="radio" name="kitchenSink" value="nao" class="sr-only peer">
+                                                <div class="card-content">
+                                                    <div class="check-icon"><i class="fas fa-check-circle"></i></div>
+                                                    <i class="fas fa-times-circle text-3xl mb-3"></i><h4 class="font-semibold text-lg">Não, apenas bancada</h4>
+                                                </div>
+                                            </label>
+                                        </div>
+                                    </div>
+                                    <!-- Sub-step 2.2: Hot Tower -->
+                                    <div id="kitchen-hot-tower-step">
+                                        <h4 class="font-semibold text-lg mb-4 text-charcoal text-center">Terá Torre Quente (para forno/micro-ondas)?</h4>
+                                        <div class="grid md:grid-cols-2 gap-6">
+                                            <label class="step-card">
+                                                <input type="radio" name="hasHotTower" value="sim" class="sr-only peer">
+                                                <div class="card-content">
+                                                    <div class="check-icon"><i class="fas fa-check-circle"></i></div>
+                                                    <i class="fas fa-thermometer-three-quarters text-3xl mb-3"></i><h4 class="font-semibold text-lg">Sim</h4>
+                                                </div>
+                                            </label>
+                                            <label class="step-card">
+                                                <input type="radio" name="hasHotTower" value="nao" class="sr-only peer">
+                                                <div class="card-content">
+                                                    <div class="check-icon"><i class="fas fa-check-circle"></i></div>
+                                                    <i class="fas fa-times-circle text-3xl mb-3"></i><h4 class="font-semibold text-lg">Não</h4>
+                                                </div>
+                                            </label>
+                                        </div>
+                                    </div>
+                                    <!-- Sub-step 2.3: Stove Type -->
+                                    <div id="kitchen-stove-type-step">
+                                        <h4 class="font-semibold text-lg mb-4 text-charcoal text-center">Qual o tipo de fogão?</h4>
+                                        <div class="grid md:grid-cols-2 gap-6">
+                                            <label class="step-card">
+                                                <input type="radio" name="stoveType" value="cooktop" class="sr-only peer">
+                                                <div class="card-content">
+                                                    <div class="check-icon"><i class="fas fa-check-circle"></i></div>
+                                                    <i class="fas fa-grip-horizontal text-3xl mb-3"></i><h4 class="font-semibold text-lg">Cooktop</h4><p class="text-sm text-gray-500">Instalado na bancada</p>
+                                                </div>
+                                            </label>
+                                            <label class="step-card">
+                                                <input type="radio" name="stoveType" value="piso" class="sr-only peer">
+                                                <div class="card-content">
+                                                    <div class="check-icon"><i class="fas fa-check-circle"></i></div>
+                                                    <i class="fas fa-square text-3xl mb-3"></i><h4 class="font-semibold text-lg">Fogão de Piso</h4><p class="text-sm text-gray-500">Tradicional, com forno</p>
+                                                </div>
+                                            </label>
+                                        </div>
+                                        <!-- Conditional question for cooktop -->
+                                        <div id="cooktop-location-step" class="mt-8 smooth-toggle hidden">
+                                            <h4 class="font-semibold text-lg mb-4 text-charcoal text-center">Onde o cooktop será instalado?</h4>
+                                            <div class="grid md:grid-cols-2 gap-6 max-w-lg mx-auto">
+                                                <label class="step-card">
+                                                    <input type="radio" name="cooktopLocation" value="pia" class="sr-only peer">
+                                                    <div class="card-content">
+                                                        <div class="check-icon"><i class="fas fa-check-circle"></i></div>
+                                                        <h4 class="font-semibold text-lg">Na pedra da pia</h4>
+                                                    </div>
+                                                </label>
+                                                <label class="step-card">
+                                                    <input type="radio" name="cooktopLocation" value="separado" class="sr-only peer">
+                                                    <div class="card-content">
+                                                        <div class="check-icon"><i class="fas fa-check-circle"></i></div>
+                                                        <h4 class="font-semibold text-lg">Bancada/Ilha separada</h4>
+                                                    </div>
+                                                </label>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <!-- Sub-step 2.4: Dimensions -->
+                                    <div id="kitchen-dimension-inputs" class="space-y-6">
+                                        <div id="sink-stone-width-container" class="hidden smooth-toggle">
+                                            <label for="sinkStoneWidth" class="block mb-2 font-semibold">Largura da pedra da pia (m)</label>
+                                            <input type="number" id="sinkStoneWidth" step="0.1" min="0.6" value="1.8" class="form-input">
+                                        </div>
+                                        <div id="kitchen-walls-container" class="space-y-6">
+                                            <div>
+                                                <label class="block mb-2 font-semibold">Parede 1 com armários</label>
+                                                <div class="grid grid-cols-2 gap-4">
+                                                    <div>
+                                                        <label for="kitchen-wall-width1" class="text-sm text-gray-600">Largura (m)</label>
+                                                        <input type="number" id="kitchen-wall-width1" name="kitchen-wall-width" step="0.1" min="0" value="2.2" class="form-input">
+                                                    </div>
+                                                    <div>
+                                                        <label for="kitchen-wall-height1" class="text-sm text-gray-600">Altura da parede (m)</label>
+                                                        <input type="number" id="kitchen-wall-height1" name="kitchen-wall-height" step="0.1" min="0" value="2.7" class="form-input">
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <button id="add-wall-btn" class="border-2 border-dashed border-gold text-gold px-4 py-2 rounded-lg hover:bg-gold/10 w-full"><i class="fas fa-plus mr-2"></i>Adicionar outra parede</button>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="flex justify-between mt-12">
+                                <button class="prev-btn hidden bg-transparent border-2 border-gray-300 text-gray-500 font-bold py-3 px-6 rounded-lg hover:bg-gray-100 hover:border-gray-400 transition-all duration-300"><i class="fas fa-arrow-left mr-2"></i>Anterior</button>
+                                <button class="next-btn ml-auto bg-gradient-to-r from-gold to-yellow-600 text-white font-bold py-3 px-8 rounded-lg shadow-md hover:shadow-xl transform hover:-translate-y-1 transition-all duration-300">Próximo<i class="fas fa-arrow-right ml-2"></i></button>
+                            </div>
+                        </div>
+            
+                        <!-- Step 3: Materials -->
+                        <div class="form-step" data-step="3">
+                            <h3 class="step-title">3. Escolha o material principal</h3>
+                            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                                <label class="step-card">
+                                    <input type="radio" name="material" value="Branco" class="sr-only peer">
+                                    <div class="card-content">
+                                        <div class="check-icon"><i class="fas fa-check-circle"></i></div>
+                                        <h4 class="font-semibold text-lg">MDF Branco</h4>
+                                        <p class="text-sm text-gray-500">A opção mais econômica e versátil.</p>
+                                    </div>
+                                </label>
+                                <label class="step-card flex-col p-0 overflow-hidden">
+                                    <div class="best-value-banner">
+                                        <i class="fas fa-star"></i>
+                                        <span>Melhor Custo-Benefício</span>
+                                    </div>
+                                    <input type="radio" name="material" value="Mesclada" class="sr-only peer">
+                                    <div class="card-content p-5">
+                                        <div class="check-icon"><i class="fas fa-check-circle"></i></div>
+                                        <h4 class="font-semibold text-lg">MDF Mesclado</h4>
+                                        <p class="text-sm text-gray-500">Estrutura interna branca com frentes coloridas. O visual de alto padrão com a economia que você busca.</p>
+                                    </div>
+                                </label>
+                                <label class="step-card">
+                                    <input type="radio" name="material" value="Premium" class="sr-only peer">
+                                    <div class="card-content"><div class="check-icon"><i class="fas fa-check-circle"></i></div><h4 class="font-semibold text-lg">MDF Premium/Colorido</h4><p class="text-sm text-gray-500">Cores e texturas especiais</p></div>
+                                </label>
+                            </div>
+                            <div id="premium-options" class="mt-6 space-y-4 hidden smooth-toggle">
+                                <div class="text-center">
+                                    <p class="text-gray-600 mb-4">Veja os catálogos de nossos fornecedores:</p>
+                                    <div class="grid sm:grid-cols-2 gap-4 max-w-md mx-auto">
+                                        <button type="button" data-pdf-src="catalogos/catalogo_guararapes.pdf" data-pdf-title="Catálogo Guararapes" class="w-full bg-white border-2 border-gray-200 text-charcoal font-semibold py-3 px-4 rounded-lg flex items-center justify-center hover:bg-gray-50 hover:border-gold transition-all duration-300">
+                                            <i class="fas fa-file-pdf mr-2 text-red-500"></i>Catálogo Guararapes</button>
+                                        <button type="button" data-pdf-src="catalogos/catalogo_duratex.pdf" data-pdf-title="Catálogo Duratex" class="w-full bg-white border-2 border-gray-200 text-charcoal font-semibold py-3 px-4 rounded-lg flex items-center justify-center hover:bg-gray-50 hover:border-gold transition-all duration-300">
+                                            <i class="fas fa-file-pdf mr-2 text-red-500"></i>Catálogo Duratex</button>
+                                    </div>
+                                </div>
+                                <div><label for="customColor" class="block mb-2 font-semibold">Gostou de alguma cor? Digite o nome aqui:</label><input type="text" id="customColor" placeholder="Ex: Cinza Sagrado" class="form-input"></div>
+                            </div>
+                            <div class="flex justify-between mt-12">
+                                <button class="prev-btn hidden bg-transparent border-2 border-gray-300 text-gray-500 font-bold py-3 px-6 rounded-lg hover:bg-gray-100 hover:border-gray-400 transition-all duration-300"><i class="fas fa-arrow-left mr-2"></i>Anterior</button>
+                                <button class="next-btn ml-auto bg-gradient-to-r from-gold to-yellow-600 text-white font-bold py-3 px-8 rounded-lg shadow-md hover:shadow-xl transform hover:-translate-y-1 transition-all duration-300">Próximo<i class="fas fa-arrow-right ml-2"></i></button>
+                            </div>
+                        </div>
+            
+                        <!-- Step 4: Extras -->
+                        <div class="form-step" data-step="4">
+                            <h3 class="step-title">4. Detalhes e Acabamentos</h3>
+                            <div class="space-y-8">
+                                <!-- Wardrobe Specific Options -->
+                                <div id="wardrobe-options" class="hidden space-y-8 smooth-toggle">
+                                    <div id="door-type-section" class="smooth-toggle">
+                                        <h4 class="font-semibold text-lg mb-4 text-charcoal">Tipo de Porta</h4>
+                                        <div class="grid md:grid-cols-2 gap-6">
+                                            <label class="step-card">
+                                                <input type="radio" name="doorType" value="abrir" class="sr-only peer">
+                                                <div class="card-content">
+                                                    <div class="check-icon"><i class="fas fa-check-circle"></i></div>
+                                                    <i class="fas fa-door-open text-3xl mb-3"></i><h4 class="font-semibold text-lg">Portas de Abrir</h4><p class="text-sm text-gray-500">Sistema tradicional</p>
+                                                </div>
+                                            </label>
+                                            <label class="step-card">
+                                                <input type="radio" name="doorType" value="correr" class="sr-only peer">
+                                                <div class="card-content">
+                                                    <div class="check-icon"><i class="fas fa-check-circle"></i></div>
+                                                    <i class="fas fa-arrows-alt-h text-3xl mb-3"></i><h4 class="font-semibold text-lg">Portas de Correr</h4><p class="text-sm text-gray-500">Otimiza o espaço</p>
+                                                </div>
+                                            </label>
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <h4 class="font-semibold text-lg mb-4 text-charcoal">Adicionais para Guarda-Roupa</h4>
+                                        <div class="space-y-4">
+                                            <label id="extra-mirror-door" class="extra-option-card"><input type="checkbox" name="extras" value="Porta com Espelho"><div class="flex-grow"><h4>Porta com Espelho</h4><p class="text-sm text-gray-500">Amplia e ilumina o ambiente.</p></div></label>
+                                            <label class="extra-option-card"><input type="checkbox" name="extras" value="Gaveteiro com Chave"><div class="flex-grow"><h4>Gaveteiro com Chave</h4><p class="text-sm text-gray-500">Mais segurança para seus pertences.</p></div></label>
+                                        </div>
+                                    </div>
+                                </div>
+    
+                                <!-- Kitchen Specific Options -->
+                                <div id="kitchen-options" class="hidden space-y-8 smooth-toggle">
+                                    <div class="space-y-4">
+                                        <h4 class="font-semibold text-lg mb-4 text-charcoal">Adicionais para Cozinha</h4>
+                                        <label class="extra-option-card"><input type="checkbox" name="extras" value="Porta-temperos"><div class="flex-grow"><h4>Porta-temperos Embutido</h4><p class="text-sm text-gray-500">Praticidade ao cozinhar.</p></div></label>
+                                        <label class="extra-option-card"><input type="checkbox" name="extras" value="Lixeira Embutida"><div class="flex-grow"><h4>Lixeira Embutida na Bancada</h4><p class="text-sm text-gray-500">Design limpo e funcional.</p></div></label>
+                                    </div>
+                                </div>
+    
+                                <!-- Common Extras -->
+                                <div id="handle-type-section" class="smooth-toggle">
+                                    <h4 class="font-semibold text-lg mb-4 text-charcoal">Tipo de Puxador (Perfil)</h4>
+                                    <div class="grid md:grid-cols-2 gap-6">
+                                        <label class="step-card"><input type="radio" name="handleType" value="aluminio" class="sr-only peer"><div class="card-content"><div class="check-icon"><i class="fas fa-check-circle"></i></div><h4 class="font-semibold text-lg">Alumínio</h4><p class="text-sm text-gray-500">Padrão moderno (Incluso)</p></div></label>
+                                        <label class="step-card"><input type="radio" name="handleType" value="inox" class="sr-only peer"><div class="card-content"><div class="check-icon"><i class="fas fa-check-circle"></i></div><h4 class="font-semibold text-lg">Inox</h4><p class="text-sm text-gray-500">Alta durabilidade</p></div></label>
+                                        <label class="step-card"><input type="radio" name="handleType" value="preto" class="sr-only peer"><div class="card-content"><div class="check-icon"><i class="fas fa-check-circle"></i></div><h4 class="font-semibold text-lg">Preto</h4><p class="text-sm text-gray-500">Acabamento sofisticado</p></div></label>
+                                        <label class="step-card"><input type="radio" name="handleType" value="dourado" class="sr-only peer"><div class="card-content"><div class="check-icon"><i class="fas fa-check-circle"></i></div><h4 class="font-semibold text-lg">Dourado</h4><p class="text-sm text-gray-500">Toque de luxo</p></div></label>
+                                    </div>
+                                </div>
+                                <div class="mt-8">
+                                    <h4 class="font-semibold text-lg mb-4 text-charcoal">Acabamento Interno (Ferragens)</h4>
+                                    <div class="grid md:grid-cols-2 gap-6">
+                                        <label class="step-card"><input type="radio" name="hardwareType" value="padrao" class="sr-only peer"><div class="card-content"><div class="check-icon"><i class="fas fa-check-circle"></i></div><i class="fas fa-cogs text-3xl mb-3"></i><h4 class="font-semibold text-lg">Padrão</h4><p class="text-sm text-gray-500">Ferragens convencionais (Incluso).</p></div></label>
+                                        <label class="step-card"><input type="radio" name="hardwareType" value="softclose" class="sr-only peer"><div class="card-content"><div class="check-icon"><i class="fas fa-check-circle"></i></div><i class="fas fa-feather-alt text-3xl mb-3"></i><h4 class="font-semibold text-lg">Com Amortecimento</h4><p class="text-sm text-gray-500">Fechamento suave (soft-close).</p></div></label>
+                                    </div>
+                                </div>
+                                <div class="mt-8">
+                                    <h4 class="font-semibold text-lg mb-4 text-charcoal">Outros Acabamentos</h4>
+                                    <div class="space-y-4"><label class="extra-option-card"><input type="checkbox" name="extras" value="Iluminação LED"><div class="flex-grow"><h4>Iluminação em LED</h4><p class="text-sm text-gray-500">Fitas de LED internas ou em nichos.</p></div></label></div>
+                                </div>
+                            </div>
+                            <div class="flex justify-between mt-12">
+                                <button class="prev-btn hidden bg-transparent border-2 border-gray-300 text-gray-500 font-bold py-3 px-6 rounded-lg hover:bg-gray-100 hover:border-gray-400 transition-all duration-300"><i class="fas fa-arrow-left mr-2"></i>Anterior</button>
+                                <button class="next-btn ml-auto bg-gradient-to-r from-gold to-yellow-600 text-white font-bold py-3 px-8 rounded-lg shadow-md hover:shadow-xl transform hover:-translate-y-1 transition-all duration-300">Próximo<i class="fas fa-arrow-right ml-2"></i></button>
+                            </div>
+                        </div>
+            
+                        <!-- Step 5: 3D Project -->
+                        <div class="form-step" data-step="5">
+                            <h3 class="step-title">5. E o projeto 3D?</h3>
+                            <div class="grid md:grid-cols-3 gap-6">
+                                <label class="step-card">
+                                    <input type="radio" name="projectOption" value="create" class="sr-only peer">
+                                    <div class="card-content">
+                                        <div class="check-icon"><i class="fas fa-check-circle"></i></div>
+                                        <i class="fas fa-drafting-compass text-3xl mb-3"></i><h4 class="font-semibold text-lg">Quero um projeto 3D</h4><p class="text-sm text-gray-500">Nossa equipe cria para você.</p>
+                                    </div>
+                                </label>
+                                <label class="step-card">
+                                    <input type="radio" name="projectOption" value="upload" class="sr-only peer">
+                                    <div class="card-content">
+                                        <div class="check-icon"><i class="fas fa-check-circle"></i></div>
+                                        <i class="fas fa-file-upload text-3xl mb-3"></i><h4 class="font-semibold text-lg">Já tenho o projeto</h4><p class="text-sm text-gray-500">Anexe seu arquivo.</p>
+                                    </div>
+                                </label>
+                                <label class="step-card">
+                                    <input type="radio" name="projectOption" value="none" class="sr-only peer">
+                                    <div class="card-content">
+                                        <div class="check-icon"><i class="fas fa-check-circle"></i></div>
+                                        <i class="fas fa-times text-3xl mb-3"></i><h4 class="font-semibold text-lg">Não preciso agora</h4><p class="text-sm text-gray-500">Apenas o orçamento.</p>
+                                    </div>
+                                </label>
+                            </div>
+                            <div id="project-upload-container" class="mt-8 text-center hidden smooth-toggle">
+                                <label for="project-file-input" class="file-input-label"><i class="fas fa-paperclip mr-2"></i><span id="project-file-name">Escolher arquivo do projeto</span></label>
+                                <input type="file" id="project-file-input" class="sr-only">
+                                <p class="text-xs text-gray-500 mt-1">Tamanho máximo: 5MB. Tipos: JPG, PNG, PDF.</p>
+                            </div>
+                            <div class="flex justify-between mt-12">
+                                <button class="prev-btn hidden bg-transparent border-2 border-gray-300 text-gray-500 font-bold py-3 px-6 rounded-lg hover:bg-gray-100 hover:border-gray-400 transition-all duration-300"><i class="fas fa-arrow-left mr-2"></i>Anterior</button>
+                                <button class="next-btn ml-auto bg-gradient-to-r from-gold to-yellow-600 text-white font-bold py-3 px-8 rounded-lg shadow-md hover:shadow-xl transform hover:-translate-y-1 transition-all duration-300">Próximo<i class="fas fa-arrow-right ml-2"></i></button>
+                            </div>
+                        </div>
+
+                        <!-- Step 6: Lead Capture & Result -->
+                        <div class="form-step" data-step="6">
+                            <!-- Lead Capture Form -->
+                            <div id="lead-capture-form" class="text-center">
+                                <h3 class="step-title">Informações do Cliente</h3>
+                                <div class="max-w-md mx-auto space-y-6">
+                                    <div class="relative"><input type="text" id="leadName" placeholder=" " required class="form-input peer"><label for="leadName" class="form-label">Nome do Cliente *</label></div>
+                                    <div class="relative"><input type="email" id="leadEmail" placeholder=" " class="form-input peer"><label for="leadEmail" class="form-label">E-mail do Cliente</label></div>
+                                    <div class="relative"><input type="tel" id="leadPhone" placeholder=" " required class="form-input peer" oninput="maskPhone(event)"><label for="leadPhone" class="form-label">WhatsApp do Cliente *</label></div>
+                                    <div class="flex flex-col sm:flex-row-reverse sm:items-center sm:justify-between gap-4 pt-4">
+                                        <button id="view-quote-btn" class="w-full sm:w-auto bg-gradient-to-r from-gold to-yellow-600 text-white font-bold py-3 px-8 rounded-lg shadow-md hover:shadow-xl transform hover:-translate-y-1 transition-all duration-300">Ver Orçamento</button>
+                                        <button class="prev-btn w-full sm:w-auto bg-transparent border-2 border-gray-300 text-gray-500 font-bold py-3 px-6 rounded-lg hover:bg-gray-100 hover:border-gray-400 transition-all duration-300"><i class="fas fa-arrow-left mr-2"></i>Anterior</button>
+                                    </div>
+                                </div>
+                            </div>
+                            <!-- Result Display -->
+                            <div id="result-container" class="hidden">
+                                <h3 class="step-title">Orçamento Detalhado</h3>
+                                <div class="bg-white rounded-2xl shadow-lg mb-8 overflow-hidden">
+                                    <div class="p-8">
+                                        <h4 class="font-montserrat font-bold text-xl text-charcoal mb-6 border-b pb-4">Resumo da Simulação</h4>
+                                        <div id="result-specs" class="grid grid-cols-2 md:grid-cols-3 gap-4">
+                                            <!-- Specs will be dynamically inserted here by JS -->
+                                        </div>
+                                    </div>
+                                    <div id="result-breakdown-container" class="bg-gray-100 p-8">
+                                        <button id="toggle-breakdown-btn" class="w-full text-center text-charcoal font-semibold mb-4 hover:text-gold transition-colors">
+                                            Ver Detalhamento de Custos <i class="fas fa-chevron-down ml-1 transition-transform"></i>
+                                        </button>
+                                        <div id="result-breakdown" class="hidden">
+                                            <!-- Breakdown content will be inserted here -->
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- PRO: Custo / Lucro / Preço Final -->
+                                <div class="grid md:grid-cols-3 gap-6 mb-8 text-center">
+                                    <div class="bg-red-50 border border-red-200 p-6 rounded-2xl">
+                                        <h4 class="text-lg text-red-800 font-semibold">Custo Total</h4>
+                                        <p id="result-cost-price" class="font-montserrat font-bold text-3xl text-red-600 my-2">R$ 0,00</p>
+                                    </div>
+                                    <div class="bg-yellow-50 border border-yellow-200 p-6 rounded-2xl">
+                                        <h4 class="text-lg text-yellow-800 font-semibold">Lucro</h4>
+                                        <p id="result-profit" class="font-montserrat font-bold text-3xl text-yellow-600 my-2">R$ 0,00</p>
+                                    </div>
+                                    <div class="bg-green-50 border border-green-200 p-6 rounded-2xl">
+                                        <h4 class="text-lg text-green-800 font-semibold">Preço Final (Cliente)</h4>
+                                        <p id="result-total" class="font-montserrat font-bold text-3xl text-green-600 my-2">R$ 0,00</p>
+                                    </div>
+                                </div>
+
+                                <!-- Ações -->
+                                <div class="mt-10 text-center">
+                                    <h4 class="font-montserrat font-bold text-2xl text-charcoal mb-3">Próximos Passos</h4>
+                                    <p class="text-gray-600 mb-6 max-w-2xl mx-auto">Salve este orçamento, envie para o cliente ou gere um PDF para seus registros.</p>
+                                    <div class="flex flex-col sm:flex-row items-center justify-center gap-4 mt-10 flex-wrap max-w-2xl mx-auto">
+                                        <button id="save-quote-btn" class="action-btn-pro bg-blue-600 hover:bg-blue-700"><i class="fas fa-save fa-fw mr-2"></i>Salvar Orçamento</button>
+                                        <button id="whatsapp-btn" class="action-btn-pro bg-green-500 hover:bg-green-600"><i class="fab fa-whatsapp fa-fw mr-2"></i>Enviar p/ Cliente</button>
+                                        <button id="pdf-btn-internal" class="action-btn-pro bg-red-500 hover:bg-red-600"><i class="fas fa-file-pdf fa-fw mr-2"></i>PDF Interno</button>
+                                        <button id="pdf-btn-client" class="action-btn-pro bg-purple-500 hover:bg-purple-600"><i class="fas fa-file-alt fa-fw mr-2"></i>PDF Cliente</button>
+                                    </div>
+                                    <div class="flex items-center justify-center gap-6 mt-8">
+                                        <button class="prev-btn bg-transparent text-gray-500 font-semibold py-2 px-4 hover:text-charcoal transition-colors"><i class="fas fa-edit mr-2"></i>Editar</button>
+                                        <button id="restart-btn" class="text-gray-600 hover:text-gold font-semibold transition-colors flex items-center gap-2"><i class="fas fa-redo text-green-500"></i>Novo</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+    </section>
+    </main>
+
+    <!-- Modals (copiados do index.html) -->
+    <!-- PDF Viewer Modal -->
+    <div id="pdf-viewer-modal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-[100] flex items-center justify-center p-4 hidden" role="dialog" aria-modal="true" aria-hidden="true">
+        <div class="bg-white rounded-lg w-full max-w-4xl h-[90vh] md:h-[95vh] flex flex-col shadow-2xl">
+            <div class="flex justify-between items-center p-4 border-b">
+                <h3 id="pdf-viewer-title" class="font-montserrat font-bold text-xl text-charcoal">Catálogo</h3>
+                <button id="pdf-viewer-close" class="text-charcoal text-2xl hover:text-gold transition-colors">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="flex-1 p-2 bg-gray-200">
+                <iframe id="pdf-viewer-iframe" src="" class="w-full h-full border-0 rounded-b-lg"></iframe>
+            </div>
+        </div>
+    </div>
+
+    <!-- Hidden Template for PDF Generation -->
+    <div id="pdf-template" class="hidden font-roboto">
+        <div class="p-10 bg-white text-charcoal w-[210mm]">
+            <!-- Header -->
+            <header class="flex justify-between items-start pb-6 border-b-2 border-gold">
+                <div class="text-left">
+                    <h1 class="font-montserrat font-bold text-3xl text-charcoal tracking-tight">Roni Marceneiro</h1>
+                    <p class="text-sm text-gold tracking-widest uppercase">Móveis Planejados</p>
+                </div>
+                <div class="text-right">
+                    <h2 id="pdf-doc-title" class="font-montserrat font-bold text-2xl text-gray-400">ORÇAMENTO</h2>
+                    <p class="text-sm"><strong>Nº:</strong> <span id="pdf-quote-id"></span></p>
+                    <p class="text-sm"><strong>Data:</strong> <span id="pdf-date"></span></p>
+                </div>
+            </header>
+    
+            <!-- Client Info -->
+            <section class="grid grid-cols-2 gap-8 my-8">
+                <div>
+                    <h3 class="font-semibold text-gray-500 mb-2 text-sm">PREPARADO PARA:</h3>
+                    <p id="pdf-name" class="font-bold"></p>
+                    <p id="pdf-email" class="text-sm"></p>
+                    <p id="pdf-phone" class="text-sm"></p>
+                </div>
+                <div class="text-right">
+                    <h3 class="font-semibold text-gray-500 mb-2 text-sm">PREPARADO POR:</h3>
+                    <p class="font-bold">Roni Marceneiro</p>
+                    <p class="text-sm">contato@ronimarceneiro.com</p>
+                    <p class="text-sm">(11) 99999-9999</p>
+                </div>
+            </section>
+    
+            <!-- Project Details -->
+            <section>
+                <h2 class="font-montserrat font-bold text-xl bg-gray-100 p-3 rounded-t-lg">Detalhes do Projeto</h2>
+                <div id="pdf-specs-table" class="border-l border-r border-b rounded-b-lg p-4 grid grid-cols-2 gap-x-6 gap-y-4">
+                    <!-- Specs will be dynamically inserted here -->
+                </div>
+            </section>
+    
+            <!-- Pricing -->
+            <section class="mt-8">
+                <h2 id="pdf-pricing-title" class="font-montserrat font-bold text-xl bg-gray-100 p-3 rounded-t-lg">Detalhamento do Valor</h2>
+                <div class="border-l border-r border-b rounded-b-lg p-4 space-y-3">
+                    <div id="pdf-extras-breakdown">
+                        <!-- Breakdown will be inserted here -->
+                    </div>
+                    <div id="pdf-cost-section" class="flex justify-between items-center text-lg border-t-2 border-gray-300 pt-3 mt-3 hidden">
+                        <span>CUSTO TOTAL</span>
+                        <span id="pdf-base-price" class="font-semibold"></span>
+                    </div>
+                    <div class="flex justify-between items-center text-xl font-bold border-t-2 border-gold pt-3 mt-3">
+                        <span id="pdf-total-label">VALOR TOTAL</span>
+                        <span id="pdf-total"></span>
+                    </div>
+                </div>
+            </section>
+    
+            <!-- Footer -->
+            <footer class="mt-10 pt-6 border-t text-center text-xs text-gray-500">
+                <p class="font-bold mb-2">Obrigado pelo seu interesse!</p>
+                <p>Este é um orçamento informativo e o valor final será confirmado após visita técnica. Validade: 15 dias.</p>
+            </footer>
+        </div>
+    </div>
+    
+    <script src="./script-pro.js"></script>
+
+</body>
+</html>
