@@ -761,12 +761,16 @@ const SIMULATOR_CONFIG = {
     // =========================================================================
     WARDROBE: {
         // O preço do guarda-roupa é calculado com base na ÁREA FRONTAL (largura x altura).
-        // Defina aqui o preço por METRO QUADRADO (m²) para cada tipo de material.
-        PRICING_PER_M2: {
-                'Branco': 800, // Preço/m² para MDF totalmente branco.
-                'Mesclada': 900, // Preço/m² para estrutura branca e portas coloridas.
-            'Premium': 1200,  // Preço/m² para MDF totalmente colorido/texturizado.
+        // O preço por m² é usado como base para o custo de produção.
+        PRODUCTION_COST_PER_M2: 450, // Custo de fabricação, montagem, etc. por m² de área frontal.
+        // Preço por CHAPA de MDF.
+        MDF_SHEET_PRICING: {
+            'Branco': 240,
+            'Premium': 400,
         },
+        // Fator de multiplicação para estimar a área total de material (carcaça, prateleiras) a partir da área frontal.
+        // Ex: 2.5 significa que a área total de MDF é 2.5x a área frontal.
+        MATERIAL_AREA_MULTIPLIER: 2.5,
         // Área total de uma chapa de MDF (padrão 2.75m * 1.85m = 5.0875 m²). Usado para estimar a quantidade de chapas.
         MDF_SHEET_SIZE: 5.09,
         // Custos de ferragens e puxadores para guarda-roupa.
@@ -777,11 +781,13 @@ const SIMULATOR_CONFIG = {
             },
             // Comprimento padrão de uma barra de puxador em metros. Usado para calcular quantas barras são necessárias.
             HANDLE_BAR_LENGTH: 3.0,
+            // Custo por UNIDADE de dobradiça. O sistema calcula a quantidade com base na altura da porta.
+            HINGE_COST_PER_UNIT: { 'padrao': 5.00, 'softclose': 20.00 },
+            // Custo do PAR de corrediças por GAVETA.
+            SLIDE_COST_PER_DRAWER: 20.00,
         },
         // Custos de itens extras específicos para guarda-roupa.
         EXTRAS_COST: {
-            // Custo ADICIONAL por m² de área frontal para usar o sistema de portas de correr.
-            'Portas de Correr': 250,
             // Custo FIXO por CADA porta que tiver espelho.
             'Porta com Espelho': 700,
             // Custo FIXO por CADA gaveteiro que tiver chave.
@@ -804,8 +810,8 @@ const SIMULATOR_CONFIG = {
         MDF_SHEET_SIZE: 5.09,
         // Custos detalhados de ferragens e puxadores.
         HARDWARE: {
-            // Custo por PORTA (considerando 2 dobradiças).
-            HINGE_COST: { 'padrao': 5.00, 'softclose': 10.00 },
+            // Custo por UNIDADE de dobradiça. Para cozinhas, o padrão é 2 por porta.
+            HINGE_COST_PER_UNIT: { 'padrao': 5.00, 'softclose': 20.00 },
             // Custo do PAR de corrediças por GAVETA.
             SLIDE_COST_PER_DRAWER: 20.00,
             // Custo por BARRA de 3 metros de puxador perfil.
@@ -899,8 +905,8 @@ function setupSimulator() {
                 handleNextStep();
             } else if (e.target.closest('.prev-btn')) {
                 handlePrevStep();
-            } else if (e.target.closest('.remove-wall-btn')) {
-                handleRemoveWall(e.target.closest('.remove-wall-btn'));
+            } else if (e.target.closest('#restart-btn')) {
+                handleRestart();
             } else if (e.target.closest('#reset-btn')) {
                 handleReset();
             }
@@ -1081,6 +1087,16 @@ function setupSimulator() {
         if (currentStep > 1) {
             currentStep--;
             updateUI();
+        }
+    }
+
+    function handleRestart() {
+        if (confirm('Tem certeza que deseja recomeçar a simulação? Todos os dados preenchidos serão perdidos.')) {
+            resetState();
+            resetFormUI();
+            currentStep = 1;
+            updateUI(false); // Vai para o passo 1 sem scroll
+            handleDisclaimer(); // Re-aplica o overlay
         }
     }
 
@@ -1392,62 +1408,67 @@ function setupSimulator() {
     function calculateWardrobeQuote() {
         const config = SIMULATOR_CONFIG.WARDROBE;
 
-        const { height, depth } = state.dimensions;
+        const { height } = state.dimensions;
         const width = state.dimensions.walls.reduce((acc, wall) => acc + wall.width, 0);
-        const depthM = depth / 100;
-        const frontArea = width * height;        
+        const frontArea = width * height;
         const hasDoors = !(state.wardrobeFormat === 'closet' && !state.closetHasDoors);
-        
-        // --- Base Price Calculation (based on m²) ---
-        const pricePerM2 = config.PRICING_PER_M2[state.material];
-        const basePrice = frontArea * pricePerM2;
 
-        // --- Extras Calculation ---
+        // Lógica aprimorada para quantidade de dobradiças por porta, com base na altura.
+        let hingesPerDoor = 2; // Mínimo
+        if (height > 1.5) hingesPerDoor = 3;
+        if (height > 2.0) hingesPerDoor = 4;
+        if (height > 2.5) hingesPerDoor = 5;
+
+        const baseBreakdown = [];
         const extrasBreakdown = [];
-        if (state.hardwareType === 'softclose') {
-            let hardwareUnits = 0;
-            if (hasDoors) {
-                if (state.doorType === 'correr') {
-                    hardwareUnits += Math.max(2, Math.round(width / 1.0));
-                } else {
-                    hardwareUnits += Math.max(2, Math.round(width / 0.45));
-                }
-            }
-            hardwareUnits += Math.floor(width * 2);
-            const cost = hardwareUnits * config.EXTRAS_COST.HARDWARE_SOFT_CLOSE_PER_UNIT;
-            if (cost > 0) extrasBreakdown.push({ label: 'Ferragens com Amortecimento', cost });
+
+        // 1. MDF Cost
+        const totalMaterialArea = frontArea * config.MATERIAL_AREA_MULTIPLIER;
+        if (state.material === 'Mesclada') {
+            // Lógica aprimorada: MDF Premium para a área frontal (portas) e Branco para a estrutura interna.
+            const internalArea = frontArea * (config.MATERIAL_AREA_MULTIPLIER - 1);
+            const numWhiteSheets = Math.ceil(internalArea / config.MDF_SHEET_SIZE);
+            const numColoredSheets = Math.ceil(frontArea / config.MDF_SHEET_SIZE);
+
+            if (numWhiteSheets > 0) baseBreakdown.push({ label: 'Chapas de MDF Branco (Interno)', quantity: numWhiteSheets, cost: numWhiteSheets * config.MDF_SHEET_PRICING['Branco'] });
+            if (numColoredSheets > 0) baseBreakdown.push({ label: 'Chapas de MDF Premium (Portas)', quantity: numColoredSheets, cost: numColoredSheets * config.MDF_SHEET_PRICING['Premium'] });
+        } else {
+            const numSheets = Math.ceil(totalMaterialArea / config.MDF_SHEET_SIZE);
+            const mdfCost = numSheets * config.MDF_SHEET_PRICING[state.material];
+            const materialLabel = state.material === 'Branco' ? 'Chapas de MDF Branco' : 'Chapas de MDF Premium';
+            if (mdfCost > 0) baseBreakdown.push({ label: materialLabel, quantity: numSheets, cost: mdfCost });
         }
 
-        // --- Handle Cost Calculation ---
-        if (hasDoors && state.handleType !== 'aluminio') {
-            const hardwareConfig = config.HARDWARE;
-            let numDoors = 0;
-            let totalHandleLength = 0;
+        // 2. Hardware Cost (Hinges, Slides, Handles)
+        const numDrawers = Math.floor(width * 2); // Estimate: 2 drawers per meter of width
+        const slideCost = numDrawers * config.HARDWARE.SLIDE_COST_PER_DRAWER;
+        if (slideCost > 0) baseBreakdown.push({ label: 'Pares de Corrediças de Gaveta', quantity: numDrawers, cost: slideCost });
 
+        let numDoors = 0;
+        if (hasDoors) {
             if (state.doorType === 'correr') {
                 numDoors = Math.max(2, Math.round(width / 1.0));
-                // Portas do meio precisam de puxador dos dois lados.
-                // Total de puxadores = 2 (pontas) + (numDoors - 2) * 2 (meio) = 2*numDoors - 2
-                if (numDoors >= 2) {
-                    totalHandleLength = (2 * numDoors - 2) * height;
-                }
             } else { // 'abrir'
                 numDoors = Math.max(2, Math.round(width / 0.45));
-                totalHandleLength = numDoors * height;
+                const totalHinges = numDoors * hingesPerDoor;
+                const hingeCost = totalHinges * config.HARDWARE.HINGE_COST_PER_UNIT[state.hardwareType];
+                const hingeLabel = state.hardwareType === 'softclose' ? 'Dobradiças Soft-close' : 'Dobradiças Padrão';
+                if (hingeCost > 0) baseBreakdown.push({ label: hingeLabel, quantity: totalHinges, cost: hingeCost });
             }
 
+            const totalHandleLength = (state.doorType === 'correr' && numDoors >= 2) ? (2 * numDoors - 2) * height : numDoors * height;
             if (totalHandleLength > 0) {
-                const numBarsNeeded = Math.ceil(totalHandleLength / hardwareConfig.HANDLE_BAR_LENGTH);
-                const cost = numBarsNeeded * hardwareConfig.HANDLE_BAR_COST.premium;
-                if (cost > 0) extrasBreakdown.push({ label: `Puxadores Perfil ${state.handleType.charAt(0).toUpperCase() + state.handleType.slice(1)}`, cost });
+                const numBarsNeeded = Math.ceil(totalHandleLength / config.HARDWARE.HANDLE_BAR_LENGTH);
+                const handleCost = numBarsNeeded * config.HARDWARE.HANDLE_BAR_COST.premium;
+                if (handleCost > 0) baseBreakdown.push({ label: `Barras de Puxador Perfil ${state.handleType}`, quantity: numBarsNeeded, cost: handleCost });
             }
         }
 
-        if (state.doorType === 'correr' && hasDoors) {
-            const cost = config.EXTRAS_COST['Portas de Correr'] * frontArea;
-            if (cost > 0) extrasBreakdown.push({ label: 'Sistema de Portas de Correr', cost });
-        }
+        // 3. Production Cost
+        const productionCost = frontArea * config.PRODUCTION_COST_PER_M2;
+        if (productionCost > 0) baseBreakdown.push({ label: 'Custos de Fabricação e Montagem', quantity: null, cost: productionCost });
 
+        // 4. Optional Extras
         if (state.projectOption === 'create') {
             const cost = SIMULATOR_CONFIG.COMMON_COSTS.PROJECT_3D;
             if (cost > 0) extrasBreakdown.push({ label: 'Criação do Projeto 3D', cost });
@@ -1459,18 +1480,12 @@ function setupSimulator() {
             if (finalCost > 0) extrasBreakdown.push({ label: extra, cost: finalCost });
         });
 
-        // Estimate material area for display purposes
-        const doorsArea = hasDoors ? frontArea : 0;
-        const carcassArea = (2 * height * depthM) + (width * depthM) + (width * height);
-        const internalArea = frontArea * 1.5;
-        const totalMaterialArea = doorsArea + carcassArea + internalArea;
-
-        return { basePrice, extrasBreakdown, totalMaterialArea };
+        return { baseBreakdown, extrasBreakdown, totalMaterialArea };
     }
 
     function calculateKitchenQuote() {
         const config = SIMULATOR_CONFIG.KITCHEN;
-        let basePrice = 0;
+        const baseBreakdown = [];
         const extrasBreakdown = [];
 
         // Material area calculation
@@ -1480,14 +1495,16 @@ function setupSimulator() {
         const totalInternalArea = totalFrontArea * 1.0;
         const totalMaterialArea = totalFrontArea + totalCarcassArea + totalInternalArea;
 
-        // --- Base Price Calculation (based on MDF sheets) ---
+        // 1. MDF Cost
         if (state.material === 'Mesclada') {
             const numWhiteSheets = Math.ceil((totalCarcassArea + totalInternalArea) / config.MDF_SHEET_SIZE);
             const numColoredSheets = Math.ceil(totalFrontArea / config.MDF_SHEET_SIZE);
-            basePrice = (numWhiteSheets * config.MDF_SHEET_PRICING['Branco']) + (numColoredSheets * config.MDF_SHEET_PRICING['Premium']);
+            if (numWhiteSheets > 0) baseBreakdown.push({ label: 'Chapas de MDF Branco', quantity: numWhiteSheets, cost: numWhiteSheets * config.MDF_SHEET_PRICING['Branco'] });
+            if (numColoredSheets > 0) baseBreakdown.push({ label: 'Chapas de MDF Premium', quantity: numColoredSheets, cost: numColoredSheets * config.MDF_SHEET_PRICING['Premium'] });
         } else {
             const numSheets = Math.ceil(totalMaterialArea / config.MDF_SHEET_SIZE);
-            basePrice = numSheets * config.MDF_SHEET_PRICING[state.material];
+            const mdfCost = numSheets * config.MDF_SHEET_PRICING[state.material];
+            if (mdfCost > 0) baseBreakdown.push({ label: `Chapas de MDF ${state.material}`, quantity: numSheets, cost: mdfCost });
         }
 
         // --- Extras Calculation ---
@@ -1514,13 +1531,16 @@ function setupSimulator() {
         const numDoors = Math.round(totalUnits * 0.75);
         const numDrawers = totalUnits - numDoors;
 
-        const hingeCostPerDoor = config.HARDWARE.HINGE_COST[state.hardwareType];
-        const hingeCost = numDoors * hingeCostPerDoor;
-        if (hingeCost > 0) extrasBreakdown.push({ label: `Dobradiças (${state.hardwareType})`, cost: hingeCost });
+        // Lógica de dobradiças aprimorada para cozinha (padrão de 2 por porta)
+        const hingesPerDoor = 2;
+        const totalHinges = numDoors * hingesPerDoor;
+        const hingeCost = totalHinges * config.HARDWARE.HINGE_COST_PER_UNIT[state.hardwareType];
+        const hingeLabel = state.hardwareType === 'softclose' ? 'Dobradiças Soft-close' : 'Dobradiças Padrão';
+        if (hingeCost > 0) baseBreakdown.push({ label: hingeLabel, quantity: totalHinges, cost: hingeCost });
 
         const slideCostPerDrawer = config.HARDWARE.SLIDE_COST_PER_DRAWER;
         const slideCost = numDrawers * slideCostPerDrawer;
-        if (slideCost > 0) extrasBreakdown.push({ label: 'Corrediças de Gaveta', cost: slideCost });
+        if (slideCost > 0) baseBreakdown.push({ label: 'Pares de Corrediças de Gaveta', quantity: numDrawers, cost: slideCost });
 
         const totalHandleUnits = numDoors + numDrawers;
         const totalHandleLength = totalHandleUnits * UNIT_WIDTH;
@@ -1528,10 +1548,10 @@ function setupSimulator() {
 
         if (state.handleType === 'aluminio') {
             const cost = numBarsNeeded * config.HARDWARE.HANDLE_BAR_COST.aluminio;
-            if (cost > 0) extrasBreakdown.push({ label: 'Puxadores Perfil Alumínio', cost });
+            if (cost > 0) baseBreakdown.push({ label: 'Barras de Puxador Perfil Alumínio', quantity: numBarsNeeded, cost: cost });
         } else {
             const cost = (numBarsNeeded * config.HARDWARE.HANDLE_BAR_COST.premium) + (totalHandleUnits * config.HARDWARE.HANDLE_PREMIUM_EXTRA_PER_UNIT);
-            if (cost > 0) extrasBreakdown.push({ label: `Puxadores Perfil ${state.handleType.charAt(0).toUpperCase() + state.handleType.slice(1)}`, cost });
+            if (cost > 0) baseBreakdown.push({ label: `Barras de Puxador Perfil ${state.handleType}`, quantity: numBarsNeeded, cost: cost });
         }
 
         if (state.projectOption === 'create') {
@@ -1545,7 +1565,7 @@ function setupSimulator() {
             if (finalCost > 0) extrasBreakdown.push({ label: extra, cost: finalCost });
         });
 
-        return { basePrice, extrasBreakdown, totalMaterialArea };
+        return { baseBreakdown, extrasBreakdown, totalMaterialArea };
     }
 
     function calculateQuote() {
@@ -1556,7 +1576,8 @@ function setupSimulator() {
             quoteDetails = calculateKitchenQuote();
         }
 
-        const { basePrice, extrasBreakdown, totalMaterialArea } = quoteDetails;
+        const { baseBreakdown, extrasBreakdown, totalMaterialArea } = quoteDetails;
+        const basePrice = baseBreakdown.reduce((acc, item) => acc + item.cost, 0);
         const extrasPrice = extrasBreakdown.reduce((acc, item) => acc + item.cost, 0);
         const sheetSize = state.furnitureType === 'Cozinha' ? SIMULATOR_CONFIG.KITCHEN.MDF_SHEET_SIZE : SIMULATOR_CONFIG.WARDROBE.MDF_SHEET_SIZE;
         
@@ -1565,6 +1586,7 @@ function setupSimulator() {
             sheets: Math.ceil(totalMaterialArea / sheetSize), 
             total: basePrice + extrasPrice,
             basePrice: basePrice,
+            baseBreakdown: baseBreakdown,
             extrasPrice: extrasPrice,
             extrasBreakdown: extrasBreakdown
         };
@@ -1590,7 +1612,7 @@ function setupSimulator() {
             customColor: '',
             extras: [],
             customer: { name: '', email: '', phone: '' },
-            quote: { area: 0, sheets: 0, total: 0, basePrice: 0, extrasPrice: 0, extrasBreakdown: [] }
+            quote: { area: 0, sheets: 0, total: 0, basePrice: 0, baseBreakdown: [], extrasPrice: 0, extrasBreakdown: [] }
         });
     }
 
@@ -1786,13 +1808,26 @@ function setupSimulator() {
         specsContainer.innerHTML = specsHTML;
 
         // Update total and breakdown
-        const basePriceEl = document.getElementById('result-base-price');
-        const extrasPriceEl = document.getElementById('result-extras-price');
+        const baseListContainer = document.getElementById('base-price-breakdown-list');
         const extrasListContainer = document.getElementById('extras-breakdown-list');
 
         document.getElementById('result-total').textContent = `R$ ${state.quote.total.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
-        basePriceEl.textContent = `R$ ${state.quote.basePrice.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`;
         
+        baseListContainer.innerHTML = ''; // Clear previous
+        if (state.quote.baseBreakdown && state.quote.baseBreakdown.length > 0) {
+            let baseHTML = '<h5 class="font-semibold text-charcoal mb-2">Componentes do Projeto:</h5><div class="pl-4 border-l-2 border-gold/50 space-y-2">';
+            state.quote.baseBreakdown.forEach(item => {
+                const quantityText = item.quantity ? `<span class="text-gray-500 text-xs">(Qtd. Aprox: ${item.quantity})</span>` : '';
+                baseHTML += `
+                    <div class="flex justify-between items-center text-sm">
+                        <span class="text-gray-600">${item.label} ${quantityText}</span>
+                        <span class="font-semibold text-charcoal">R$ ${item.cost.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</span>
+                    </div>
+                `;
+            });
+            baseListContainer.innerHTML = baseHTML + '</div>';
+        }
+
         extrasListContainer.innerHTML = ''; // Clear previous
         if (state.quote.extrasBreakdown && state.quote.extrasBreakdown.length > 0) {
             let extrasHTML = '<h5 class="font-semibold text-charcoal mb-2">Acabamentos e Personalização:</h5>';
