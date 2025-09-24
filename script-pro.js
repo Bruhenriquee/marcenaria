@@ -64,6 +64,20 @@ function maskPhone(event) {
     input.value = value;
 }
 
+// CPF and CEP mask functions
+function maskCpf(event) {
+    let value = event.target.value.replace(/\D/g, '').substring(0, 11);
+    value = value.replace(/(\d{3})(\d)/, '$1.$2');
+    value = value.replace(/(\d{3})(\d)/, '$1.$2');
+    value = value.replace(/(\d{3})(\d{1,2})$/, '$1-$2');
+    event.target.value = value;
+}
+
+function maskCep(event) {
+    let value = event.target.value.replace(/\D/g, '').substring(0, 8);
+    value = value.replace(/(\d{5})(\d)/, '$1-$2');
+    event.target.value = value;
+}
 // --- CONFIGURATION OBJECT ---
 // Valores PADRÃO de custo. Na versão PRO, esses valores são sobrescritos pelos inputs do painel.
 const SIMULATOR_CONFIG = {
@@ -158,6 +172,139 @@ const SIMULATOR_CONFIG = {
     }
 };
 
+function getWardrobeParts(width, height, depth) {
+    const thickness = 18; // MDF thickness in mm
+    const parts = [];
+
+    // Carcass
+    parts.push({ w: width, h: depth, description: 'Top' });
+    parts.push({ w: width, h: depth, description: 'Bottom' });
+    parts.push({ w: height - (2 * thickness), h: depth, description: 'Left Side' });
+    parts.push({ w: height - (2 * thickness), h: depth, description: 'Right Side' });
+    parts.push({ w: width, h: height, description: 'Back' });
+
+    // Shelves
+    const numShelves = Math.floor(height / 500);
+    for (let i = 0; i < numShelves; i++) {
+        parts.push({ w: width - (2 * thickness), h: depth, description: 'Shelf' });
+    }
+
+    // Doors
+    const numDoors = Math.max(2, Math.round(width / 500));
+    const doorWidth = width / numDoors;
+    for (let i = 0; i < numDoors; i++) {
+        parts.push({ w: doorWidth, h: height, description: 'Door' });
+    }
+
+    // Drawers
+    const numDrawers = Math.floor(width / 500);
+    for (let i = 0; i < numDrawers; i++) {
+        parts.push({ w: 500, h: 200, description: 'Drawer Front' });
+        parts.push({ w: 450, h: 180, description: 'Drawer Side' });
+        parts.push({ w: 450, h: 180, description: 'Drawer Side' });
+        parts.push({ w: 464, h: 180, description: 'Drawer Back' });
+        parts.push({ w: 464, h: 450, description: 'Drawer Bottom' });
+    }
+
+    return parts;
+}
+
+function getKitchenParts(walls) {
+    const thickness = 18; // MDF thickness in mm
+    const parts = [];
+
+    walls.forEach(wall => {
+        const { width, height } = wall;
+
+        // Upper cabinets
+        const numUpperCabinets = Math.floor(width / 600);
+        for (let i = 0; i < numUpperCabinets; i++) {
+            parts.push({ w: 600, h: 350, description: 'Upper Cabinet Top' });
+            parts.push({ w: 600, h: 350, description: 'Upper Cabinet Bottom' });
+            parts.push({ w: 700 - (2 * thickness), h: 350, description: 'Upper Cabinet Side' });
+            parts.push({ w: 700 - (2 * thickness), h: 350, description: 'Upper Cabinet Side' });
+            parts.push({ w: 600, h: 700, description: 'Upper Cabinet Back' });
+            parts.push({ w: 596, h: 696, description: 'Upper Cabinet Door' });
+        }
+
+        // Lower cabinets
+        const numLowerCabinets = Math.floor(width / 600);
+        for (let i = 0; i < numLowerCabinets; i++) {
+            parts.push({ w: 600, h: 600, description: 'Lower Cabinet Top' });
+            parts.push({ w: 600, h: 600, description: 'Lower Cabinet Bottom' });
+            parts.push({ w: 850 - (2 * thickness), h: 600, description: 'Lower Cabinet Side' });
+            parts.push({ w: 850 - (2 * thickness), h: 600, description: 'Lower Cabinet Side' });
+            parts.push({ w: 600, h: 850, description: 'Lower Cabinet Back' });
+            parts.push({ w: 596, h: 846, description: 'Lower Cabinet Door' });
+        }
+    });
+
+    return parts;
+}
+
+function optimizeCutting(parts, sheetWidth, sheetHeight) {
+    const packer = new Packer(sheetWidth, sheetHeight);
+    let unpacked = [];
+
+    // Ordena as peças da maior para a menor para otimizar o encaixe.
+    parts.sort((a, b) => Math.max(b.w, b.h) - Math.max(a.w, a.h));
+
+    // Tenta encaixar todas as peças na primeira chapa.
+    packer.fit(parts);
+
+    const sheets = [];
+    let currentSheet = 0;
+    sheets[currentSheet] = [];
+
+    // Separa as peças que couberam na primeira chapa daquelas que não couberam.
+    parts.forEach(part => {
+        if (part.fit) {
+            sheets[currentSheet].push(part);
+        } else {
+            // Garante que a propriedade 'fit' seja removida para a próxima tentativa.
+            delete part.fit;
+            unpacked.push(part);
+        }
+    });
+
+    // Processa as peças restantes em novas chapas.
+    let lastUnpackedCount = unpacked.length;
+    while (unpacked.length > 0) { // Loop para processar as peças que não couberam na primeira chapa.
+        currentSheet++;
+        sheets[currentSheet] = [];
+        const newPacker = new Packer(sheetWidth, sheetHeight);
+        
+        // Tenta encaixar as peças restantes em uma nova chapa. O método .fit() adiciona a propriedade 'fit' às peças que couberem.
+        newPacker.fit(unpacked);
+
+        const stillUnpacked = [];
+        unpacked.forEach(part => {
+            if (part.fit) {
+                // A peça coube. Adiciona à chapa atual e remove a propriedade 'fit' para não ser processada novamente.
+                sheets[currentSheet].push(part);
+            } else {
+                // A peça não coube. Adiciona à lista de "ainda não encaixadas" para a próxima iteração.
+                stillUnpacked.push(part);
+            }
+        });
+
+        // Se nenhuma peça foi empacotada nesta rodada, interrompe o loop para evitar travamento.
+        if (stillUnpacked.length === lastUnpackedCount) {
+            console.warn("Não foi possível encaixar as peças restantes:", stillUnpacked);
+            break;
+        }
+
+        // Prepara para a próxima iteração do loop com as peças que sobraram.
+        unpacked = stillUnpacked.map(part => {
+            delete part.fit; // Limpa a propriedade 'fit' para a próxima tentativa de encaixe.
+            return part;
+        });
+        lastUnpackedCount = unpacked.length;
+    }
+
+    return sheets;
+}
+
 function setupSimulator() {
     // --- STATE ---
     let currentStep = 1;
@@ -180,10 +327,23 @@ function setupSimulator() {
         handleType: null,
         projectOption: null,
         projectFile: null,
+        photos: [], // Para armazenar as fotos do local
         customColor: '',
         extras: [],
-        customer: { name: '', email: '', phone: '' },
-        quote: { area: 0, sheets: 0, total: 0, basePrice: 0, extrasPrice: 0, costPrice: 0, profitAmount: 0, extrasBreakdown: [] }
+        customer: {
+            name: '',
+            email: '',
+            phone: '',
+            cpf: '',
+            cep: '',
+            street: '',
+            number: '',
+            complement: '',
+            neighborhood: '',
+            city: '',
+            state: ''
+        },
+        quote: { area: 0, sheets: 0, total: 0, basePrice: 0, extrasPrice: 0, costPrice: 0, profitAmount: 0, extrasBreakdown: [], competitorPrice: 0 }
     };
 
     // --- DOM ELEMENTS ---
@@ -237,8 +397,6 @@ function setupSimulator() {
                 handleReset();
             } else if (e.target.closest('.remove-wall-btn')) {
                 handleRemoveWall(e.target.closest('.remove-wall-btn'));
-            } else if (e.target.closest('#recalculate-btn')) {
-                handleRecalculate();
             } else if (e.target.closest('#save-quote-btn')) {
                 handleSaveQuote();
             }
@@ -378,6 +536,7 @@ function setupSimulator() {
         document.getElementById('view-quote-btn').addEventListener('click', () => handleViewQuote(false));
         document.getElementById('pdf-btn-internal').addEventListener('click', () => generatePDF('internal'));
         document.getElementById('pdf-btn-client').addEventListener('click', () => generatePDF('client'));
+        document.getElementById('pdf-btn-contract').addEventListener('click', () => generatePDF('contract'));
         document.getElementById('whatsapp-btn').addEventListener('click', generateWhatsAppLink);
 
         // Step 6: Breakdown toggle
@@ -388,6 +547,17 @@ function setupSimulator() {
             toggleBtn.querySelector('i').classList.toggle('rotate-180', !isHidden);
             updateContainerHeight();
         });
+
+        // Event listeners para upload de fotos
+        document.getElementById('attach-photo-input').addEventListener('change', handlePhotoUpload);
+        document.getElementById('capture-photo-input').addEventListener('change', handlePhotoUpload);
+        document.getElementById('photo-previews').addEventListener('click', handleRemovePhoto);
+
+        // Listener para o botão de recalcular no painel
+        document.getElementById('recalculate-btn').addEventListener('click', handleRecalculate);
+
+        // Listener para busca de CEP
+        document.getElementById('cep-lookup-btn').addEventListener('click', handleCepLookup);
     }
 
     function setupQuoteManagement() {
@@ -893,14 +1063,23 @@ function setupSimulator() {
         return true;
     }
 
-    function handleRecalculate() {
+        async function handleRecalculate() {
         if (currentStep === totalSteps && !document.getElementById('result-container').classList.contains('hidden')) {
-            showNotification('Recalculando com novos custos...', 'info');
-            handleViewQuote(true); // Passa um flag para indicar que é um recálculo
-        } else {
-            showNotification('Vá até a tela de resultados para recalcular.', 'error');
+        // Fecha o painel para o usuário ver a atualização
+        const panel = proControlsPanel || document.getElementById('marceneiro-controls');
+        if (panel) {
+            panel.classList.remove('translate-x-0');
+            panel.classList.add('-translate-x-full');
+            document.getElementById('main-content').style.marginLeft = '0';
         }
+        showNotification('Recalculando com novos custos...', 'info');
+        await new Promise(resolve => setTimeout(resolve, 50)); // Pequeno delay para a UI atualizar
+        await handleViewQuote(true); // Garante que o recálculo seja concluído
+    } else {
+        showNotification('Vá até a tela de resultados para recalcular.', 'error');
     }
+    }
+
 
 
     function updateWardrobeRecommendation() {
@@ -968,21 +1147,15 @@ function setupSimulator() {
         const extrasBreakdown = [];
 
         // 1. MDF Cost
-        const totalMaterialArea = frontArea * config.MATERIAL_AREA_MULTIPLIER;
-        if (state.material === 'Mesclada') {
-            // Lógica aprimorada: MDF Premium para a área frontal (portas) e Branco para a estrutura interna.
-            const internalArea = frontArea * (config.MATERIAL_AREA_MULTIPLIER - 1);
-            const numWhiteSheets = Math.ceil(internalArea / config.MDF_SHEET_SIZE);
-            const numColoredSheets = Math.ceil(frontArea / config.MDF_SHEET_SIZE);
+        const parts = getWardrobeParts(width * 1000, height * 1000, state.dimensions.depth * 10);
+        const sheets = optimizeCutting(parts, 2750, 1850);
+        const numSheets = sheets.length;
+        const mdfCost = numSheets * config.MDF_SHEET_PRICING[state.material];
+        const materialLabel = state.material === 'Branco' ? 'Chapas de MDF Branco' : 'Chapas de MDF Premium';
+        if (mdfCost > 0) baseBreakdown.push({ label: materialLabel, quantity: numSheets, cost: mdfCost });
+        state.quote.cuttingPlan = sheets;
+        const totalMaterialArea = parts.reduce((acc, part) => acc + (part.w * part.h), 0) / 1000000;
 
-            if (numWhiteSheets > 0) baseBreakdown.push({ label: 'Chapas de MDF Branco (Interno)', quantity: numWhiteSheets, cost: numWhiteSheets * config.MDF_SHEET_PRICING['Branco'] });
-            if (numColoredSheets > 0) baseBreakdown.push({ label: 'Chapas de MDF Premium (Portas)', quantity: numColoredSheets, cost: numColoredSheets * config.MDF_SHEET_PRICING['Premium'] });
-        } else {
-            const numSheets = Math.ceil(totalMaterialArea / config.MDF_SHEET_SIZE);
-            const mdfCost = numSheets * config.MDF_SHEET_PRICING[state.material];
-            const materialLabel = state.material === 'Branco' ? 'Chapas de MDF Branco' : 'Chapas de MDF Premium';
-            if (mdfCost > 0) baseBreakdown.push({ label: materialLabel, quantity: numSheets, cost: mdfCost });
-        }
 
         // 2. Hardware Cost (Hinges, Slides, Handles)
         const numDrawers = Math.floor(width * 2); // Estimate: 2 drawers per meter of width
@@ -1069,23 +1242,14 @@ function setupSimulator() {
         const extrasBreakdown = [];
 
         // Material area calculation
-        const totalFrontArea = state.dimensions.walls.reduce((acc, wall) => acc + (wall.width * wall.height), 0);
-        const cabinetDepth = 0.6;
-        const totalCarcassArea = totalFrontArea * 1.2;
-        const totalInternalArea = totalFrontArea * 1.0;
-        const totalMaterialArea = totalFrontArea + totalCarcassArea + totalInternalArea;
+        const parts = getKitchenParts(state.dimensions.walls.map(wall => ({width: wall.width * 1000, height: wall.height * 1000})));
+        const sheets = optimizeCutting(parts, 2750, 1850);
+        const numSheets = sheets.length;
+        const mdfCost = numSheets * config.MDF_SHEET_PRICING[state.material];
+        if (mdfCost > 0) baseBreakdown.push({ label: `Chapas de MDF ${state.material}`, quantity: numSheets, cost: mdfCost });
+        state.quote.cuttingPlan = sheets;
+        const totalMaterialArea = parts.reduce((acc, part) => acc + (part.w * part.h), 0) / 1000000;
 
-        // 1. MDF Cost
-        if (state.material === 'Mesclada') {
-            const numWhiteSheets = Math.ceil((totalCarcassArea + totalInternalArea) / config.MDF_SHEET_SIZE);
-            const numColoredSheets = Math.ceil(totalFrontArea / config.MDF_SHEET_SIZE);
-            if (numWhiteSheets > 0) baseBreakdown.push({ label: 'Chapas de MDF Branco', quantity: numWhiteSheets, cost: numWhiteSheets * config.MDF_SHEET_PRICING['Branco'] });
-            if (numColoredSheets > 0) baseBreakdown.push({ label: 'Chapas de MDF Premium', quantity: numColoredSheets, cost: numColoredSheets * config.MDF_SHEET_PRICING['Premium'] });
-        } else {
-            const numSheets = Math.ceil(totalMaterialArea / config.MDF_SHEET_SIZE);
-            const mdfCost = numSheets * config.MDF_SHEET_PRICING[state.material];
-            if (mdfCost > 0) baseBreakdown.push({ label: `Chapas de MDF ${state.material}`, quantity: numSheets, cost: mdfCost });
-        }
 
         // --- Extras Calculation ---
         if (state.kitchenHasSinkCabinet && state.sinkStoneWidth > 0) {
@@ -1155,6 +1319,7 @@ function setupSimulator() {
         if (shippingCost > 0) {
             extrasBreakdown.push({ label: 'Frete e Deslocamento', cost: shippingCost });
         }
+        const totalFrontArea = state.dimensions.walls.reduce((acc, wall) => acc + (wall.width * wall.height), 0);
         const installationDays = Math.ceil(totalFrontArea / 4); // Estimate 1 day for every 4m² of kitchen
         const installationCost = installationDays * dailyRateCost;
         if (installationCost > 0) extrasBreakdown.push({ label: `Instalação (${installationDays} diária(s))`, cost: installationCost });
@@ -1188,6 +1353,11 @@ function setupSimulator() {
         const discountExtra = discountExtraInput ? (parseFloat(discountExtraInput.value) || 0) : 0;
         finalTotal += discountExtra;
 
+        // Preço do concorrente
+        const competitorPriceInput = document.getElementById('competitor-price');
+        const competitorPrice = competitorPriceInput ? (parseFloat(competitorPriceInput.value) || 0) : 0;
+
+
         const sheetSize = state.furnitureType === 'Cozinha' ? SIMULATOR_CONFIG.KITCHEN.MDF_SHEET_SIZE : SIMULATOR_CONFIG.WARDROBE.MDF_SHEET_SIZE;
 
         state.quote = {
@@ -1200,7 +1370,8 @@ function setupSimulator() {
             baseBreakdown: baseBreakdown,
             extrasPrice: extrasPrice,
             extrasBreakdown: extrasBreakdown,
-            discountExtra: discountExtra
+            discountExtra: discountExtra,
+            competitorPrice: competitorPrice
         };
     }
 
@@ -1222,10 +1393,15 @@ function setupSimulator() {
             handleType: null,
             projectOption: null,
             projectFile: null,
+            photos: [],
             customColor: '',
             extras: [],
-            customer: { name: '', email: '', phone: '' },
-            quote: { area: 0, sheets: 0, total: 0, basePrice: 0, costPrice: 0, profitAmount: 0, baseBreakdown: [], extrasPrice: 0, extrasBreakdown: [] }
+            customer: {
+                name: '', email: '', phone: '', cpf: '',
+                cep: '', street: '', number: '', complement: '',
+                neighborhood: '', city: '', state: ''
+            },
+            quote: { area: 0, sheets: 0, total: 0, basePrice: 0, costPrice: 0, profitAmount: 0, baseBreakdown: [], extrasPrice: 0, extrasBreakdown: [], competitorPrice: 0 }
         });
     }
 
@@ -1257,6 +1433,16 @@ function setupSimulator() {
         document.getElementById('leadName').value = '';
         document.getElementById('leadEmail').value = '';
         document.getElementById('leadPhone').value = '';
+        document.getElementById('leadCpf').value = '';
+        document.getElementById('leadCep').value = '';
+        document.getElementById('leadStreet').value = '';
+        document.getElementById('leadNumber').value = '';
+        document.getElementById('leadComplement').value = '';
+        document.getElementById('leadNeighborhood').value = '';
+        document.getElementById('leadCity').value = '';
+        document.getElementById('leadState').value = '';
+        document.getElementById('photo-previews').innerHTML = ''; // Limpa as miniaturas de fotos
+        document.getElementById('competitor-price').value = 0;
     }
 
     async function handleViewQuote(isRecalculation = false) {
@@ -1273,7 +1459,19 @@ function setupSimulator() {
         });
 
         // 1. Validate inputs
-        Object.assign(state.customer, { name: leadNameInput.value, email: leadEmailInput.value, phone: leadPhoneInput.value });
+        Object.assign(state.customer, {
+            name: leadNameInput.value,
+            email: leadEmailInput.value,
+            phone: leadPhoneInput.value,
+            cpf: document.getElementById('leadCpf').value,
+            cep: document.getElementById('leadCep').value,
+            street: document.getElementById('leadStreet').value,
+            number: document.getElementById('leadNumber').value,
+            complement: document.getElementById('leadComplement').value,
+            neighborhood: document.getElementById('leadNeighborhood').value,
+            city: document.getElementById('leadCity').value,
+            state: document.getElementById('leadState').value,
+        });
 
         if (!isRecalculation && !state.customer.name) {
             showNotification('Por favor, preencha o nome do cliente.', 'error');
@@ -1294,6 +1492,14 @@ function setupSimulator() {
             showNotification('Por favor, insira um WhatsApp válido com DDD (11 dígitos).', 'error');
             leadPhoneInput.classList.add('invalid');
             leadPhoneInput.focus();
+            return;
+        }
+
+        // CPF validation (optional field)
+        if (state.customer.cpf && !validateCpf(state.customer.cpf)) {
+            showNotification('O CPF informado é inválido.', 'error');
+            document.getElementById('leadCpf').classList.add('invalid');
+            document.getElementById('leadCpf').focus();
             return;
         }
 
@@ -1333,6 +1539,115 @@ function setupSimulator() {
             // Restore button
             viewQuoteBtn.disabled = false;
             viewQuoteBtn.innerHTML = originalBtnText;
+        }
+    }
+
+    function handlePhotoUpload(event) {
+        const files = event.target.files;
+        if (!files.length) return;
+
+        for (let i = 0; i < files.length; i++) {
+            const file = files[i];
+            const reader = new FileReader();
+
+            reader.onload = (e) => {
+                const photoData = {
+                    id: Date.now() + i,
+                    src: e.target.result,
+                    file: file
+                };
+                state.photos.push(photoData);
+                renderPhotoPreviews();
+            };
+
+            reader.readAsDataURL(file);
+        }
+        // Limpa o input para permitir selecionar o mesmo arquivo novamente
+        event.target.value = '';
+    }
+
+    function renderPhotoPreviews() {
+        const container = document.getElementById('photo-previews');
+        container.innerHTML = '';
+        state.photos.forEach(photo => {
+            const previewDiv = document.createElement('div');
+            previewDiv.className = 'relative w-24 h-24';
+            previewDiv.innerHTML = `
+                <img src="${photo.src}" class="w-full h-full object-cover rounded-lg shadow-md">
+                <button class="remove-photo-btn absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center" data-photo-id="${photo.id}">
+                    <i class="fas fa-times text-xs"></i>
+                </button>
+            `;
+            container.appendChild(previewDiv);
+        });
+        updateContainerHeight();
+    }
+
+    function handleRemovePhoto(event) {
+        if (!event.target.closest('.remove-photo-btn')) return;
+        const photoId = parseInt(event.target.closest('.remove-photo-btn').dataset.photoId);
+        state.photos = state.photos.filter(p => p.id !== photoId);
+        renderPhotoPreviews();
+    }
+
+    function validateCpf(cpf) {
+        cpf = cpf.replace(/[^\d]+/g, '');
+        if (cpf === '' || cpf.length !== 11 || /^(\d)\1+$/.test(cpf)) return false;
+        let add = 0;
+        for (let i = 0; i < 9; i++) add += parseInt(cpf.charAt(i)) * (10 - i);
+        let rev = 11 - (add % 11);
+        if (rev === 10 || rev === 11) rev = 0;
+        if (rev !== parseInt(cpf.charAt(9))) return false;
+        add = 0;
+        for (let i = 0; i < 10; i++) add += parseInt(cpf.charAt(i)) * (11 - i);
+        rev = 11 - (add % 11);
+        if (rev === 10 || rev === 11) rev = 0;
+        if (rev !== parseInt(cpf.charAt(10))) return false;
+        return true;
+    }
+
+    async function handleCepLookup() {
+        const cepInput = document.getElementById('leadCep');
+        const cep = cepInput.value.replace(/\D/g, '');
+        const lookupBtn = document.getElementById('cep-lookup-btn');
+        const originalBtnHTML = lookupBtn.innerHTML;
+
+        if (cep.length !== 8) {
+            showNotification('Por favor, insira um CEP válido com 8 dígitos.', 'error');
+            return;
+        }
+
+        lookupBtn.disabled = true;
+        lookupBtn.innerHTML = '<div class="spinner-small"></div>';
+
+        try {
+            const response = await fetch(`https://viacep.com.br/ws/${cep}/json/`);
+            if (!response.ok) throw new Error('CEP não encontrado.');
+            
+            const data = await response.json();
+            if (data.erro) {
+                showNotification('CEP não encontrado.', 'error');
+            } else {
+                document.getElementById('leadStreet').value = data.logradouro;
+                document.getElementById('leadNeighborhood').value = data.bairro;
+                document.getElementById('leadCity').value = data.localidade;
+                document.getElementById('leadState').value = data.uf;
+                document.getElementById('leadNumber').focus(); // Move focus to the number field
+                showNotification('Endereço preenchido!', 'success');
+            }
+        } catch (error) {
+            console.error("CEP lookup error:", error);
+            showNotification('Erro ao buscar o CEP. Tente novamente.', 'error');
+        } finally {
+            lookupBtn.disabled = false;
+            lookupBtn.innerHTML = originalBtnHTML;
+            // Trigger input event to update floating labels
+            ['leadStreet', 'leadNeighborhood', 'leadCity', 'leadState'].forEach(id => {
+                const el = document.getElementById(id);
+                if (el.value) {
+                    el.dispatchEvent(new Event('input'));
+                }
+            });
         }
     }
 
@@ -1433,6 +1748,18 @@ function setupSimulator() {
         document.getElementById('leadName').value = state.customer.name;
         document.getElementById('leadEmail').value = state.customer.email;
         document.getElementById('leadPhone').value = state.customer.phone;
+        document.getElementById('leadCpf').value = state.customer.cpf || '';
+        document.getElementById('leadCep').value = state.customer.cep || '';
+        document.getElementById('leadStreet').value = state.customer.street || '';
+        document.getElementById('leadNumber').value = state.customer.number || '';
+        document.getElementById('leadComplement').value = state.customer.complement || '';
+        document.getElementById('leadNeighborhood').value = state.customer.neighborhood || '';
+        document.getElementById('leadCity').value = state.customer.city || '';
+        document.getElementById('leadState').value = state.customer.state || '';
+
+        // Restore photos
+        renderPhotoPreviews();
+        document.getElementById('competitor-price').value = state.quote.competitorPrice || 0;
     }
 
     function renderResult() {
@@ -1544,7 +1871,57 @@ function setupSimulator() {
         breakdownHTML += `<div class="flex justify-between text-sm"><span>MDF Premium</span><span class="font-semibold">${formatCurrency(Number(mdfPremium))} / chapa</span></div>`;
         breakdownHTML += '</div>';
 
+        // Análise da concorrência
+        const competitorCard = document.getElementById('competitor-analysis-card');
+        const competitorResult = document.getElementById('competitor-analysis-result');
+        if (state.quote.competitorPrice > 0) {
+            competitorCard.classList.remove('hidden');
+            const difference = state.quote.total - state.quote.competitorPrice;
+            const percentageDiff = (difference / state.quote.competitorPrice) * 100;
+
+            if (percentageDiff > 0) {
+                competitorResult.textContent = `+${percentageDiff.toFixed(1)}%`;
+                competitorResult.className = 'font-montserrat font-bold text-3xl text-red-600 my-2'; // Mais caro
+            } else {
+                competitorResult.textContent = `${percentageDiff.toFixed(1)}%`;
+                competitorResult.className = 'font-montserrat font-bold text-3xl text-green-600 my-2'; // Mais barato
+            }
+        } else {
+            competitorCard.classList.add('hidden');
+        }
+
         breakdownContainer.innerHTML = breakdownHTML;
+
+        const cuttingPlanContainer = document.getElementById('cutting-plan');
+        cuttingPlanContainer.innerHTML = '';
+        if (state.quote.cuttingPlan) {
+            document.getElementById('cutting-plan-container').classList.remove('hidden');
+            state.quote.cuttingPlan.forEach((sheet, index) => {
+                const sheetDiv = document.createElement('div');
+                sheetDiv.className = 'sheet';
+                sheetDiv.innerHTML = `<h5>Chapa ${index + 1}</h5>`;
+                const canvas = document.createElement('canvas');
+                canvas.width = 275;
+                canvas.height = 185;
+                const ctx = canvas.getContext('2d');
+                ctx.strokeStyle = '#ccc';
+                ctx.strokeRect(0, 0, 275, 185);
+
+                sheet.forEach(part => {
+                    if (part.fit) {
+                        ctx.strokeStyle = 'red';
+                        ctx.strokeRect(part.fit.x / 10, part.fit.y / 10, part.w / 10, part.h / 10);
+                        ctx.font = '10px Arial';
+                        ctx.fillText(part.description, (part.fit.x / 10) + 5, (part.fit.y / 10) + 15);
+                    }
+                });
+
+                sheetDiv.appendChild(canvas);
+                cuttingPlanContainer.appendChild(sheetDiv);
+            });
+        } else {
+            document.getElementById('cutting-plan-container').classList.add('hidden');
+        }
     }
 
     function renderSavedQuotes(searchTerm = '') {
@@ -1555,7 +1932,7 @@ function setupSimulator() {
         );
 
         if (filteredQuotes.length === 0) {
-            listContainer.innerHTML = `<p class="text-center text-gray-400 text-sm py-4">Nenhum orçamento salvo.</p>`;
+            listContainer.innerHTML = '<p class="text-center text-gray-400 text-sm py-4">Nenhum orçamento salvo.</p>';
             return;
         }
 
@@ -1627,8 +2004,18 @@ function setupSimulator() {
         return `*Orçamento de Móveis Planejados*\n---------------------------------\n*Cliente:* ${state.customer.name}\n*Móvel:* ${state.furnitureType}${formatDetails}${kitchenDetails}\n${details}${projectDetails}\n*Material:* ${state.material} ${state.customColor ? `(Cor: ${state.customColor})` : ''}\n*Puxador:* Perfil ${handleName}${hardwareDetails}\n*Extras:* ${state.extras.join(', ') || 'Nenhum'}\n---------------------------------\n*Total Estimado: ${formatCurrency(state.quote.total)}*${breakdownText}\n\n_Este é um orçamento informativo. O valor final será definido após visita técnica._`;
     }
 
-    async function generatePDF(type = 'internal') {
-        const pdfBtn = document.getElementById(type === 'internal' ? 'pdf-btn-internal' : 'pdf-btn-client');
+    async function generatePDF(type = 'client') {
+        let pdfBtn;
+        if (type === 'internal') {
+            pdfBtn = document.getElementById('pdf-btn-internal');
+        } else if (type === 'client') {
+            pdfBtn = document.getElementById('pdf-btn-client');
+        } else if (type === 'contract') {
+            pdfBtn = document.getElementById('pdf-btn-contract');
+        }
+
+        if (!pdfBtn) return;
+
         const originalBtnHTML = pdfBtn.innerHTML;
         pdfBtn.disabled = true;
         pdfBtn.innerHTML = '<div class="spinner mr-2"></div>Gerando...';
@@ -1636,22 +2023,37 @@ function setupSimulator() {
         try {
             const { jsPDF } = window.jspdf;
             const pdfTemplate = document.getElementById('pdf-template');
+            const pdfElement = document.querySelector('#pdf-template .pdf-container');
     
             // --- Populate Template ---
-            const quoteId = Date.now().toString().slice(-6);
+            const quoteId = state.quoteId || Date.now().toString().slice(-6);
             document.getElementById('pdf-quote-id').textContent = quoteId;
             document.getElementById('pdf-date').textContent = new Date().toLocaleDateString('pt-BR');
             
             document.getElementById('pdf-name').textContent = state.customer.name;
             document.getElementById('pdf-email').textContent = state.customer.email || 'Não informado';
             document.getElementById('pdf-phone').textContent = state.customer.phone;
+
+            // Populate Address and CPF
+            const addressBlock = document.getElementById('pdf-address-block');
+            if (state.customer.street || state.customer.cpf) {
+                addressBlock.classList.remove('hidden');
+                document.getElementById('pdf-cpf').textContent = state.customer.cpf ? `CPF: ${state.customer.cpf}` : '';
+                const addressLine1 = `${state.customer.street || ''}${state.customer.number ? ', ' + state.customer.number : ''}`;
+                const addressLine2 = `${state.customer.neighborhood || ''}${state.customer.city ? ' - ' + state.customer.city : ''}${state.customer.state ? '/' + state.customer.state : ''}`;
+                document.getElementById('pdf-address-line1').textContent = addressLine1.trim() === ',' ? '' : addressLine1;
+                document.getElementById('pdf-address-line2').textContent = addressLine2.trim() === '-/' ? '' : addressLine2;
+            } else {
+                addressBlock.classList.add('hidden');
+            }
+
     
             // Populate Specs Table
             const specsContainer = document.getElementById('pdf-specs-table');
             specsContainer.innerHTML = ''; // Clear previous
             const createSpecRow = (label, value) => {
                 if (!value) return '';
-                return `<div class="py-2 border-b border-gray-200"><strong class="text-gray-500">${label}:</strong><p class="font-semibold">${value}</p></div>`;
+                return `<div class="pdf-spec-item"><span class="spec-label">${label}:</span> <span class="font-bold">${value}</span></div>`;
             };
             
             let specsHTML = '';
@@ -1665,7 +2067,7 @@ function setupSimulator() {
             }
             specsHTML += createSpecRow('Dimensões', dimsText);
             specsHTML += createSpecRow('Material', state.material);
-            if (state.customColor) {
+            if (state.customColor && (state.material === 'Premium' || state.material === 'Mesclada')) {
                 specsHTML += createSpecRow('Cor Personalizada', state.customColor);
             }
             const hasDoors = state.furnitureType === 'Cozinha' || (state.wardrobeFormat === 'reto' || (state.wardrobeFormat === 'closet' && state.closetHasDoors));
@@ -1675,62 +2077,142 @@ function setupSimulator() {
             }
             specsHTML += createSpecRow('Ferragens', state.hardwareType === 'padrao' ? 'Padrão' : 'Soft-close');
             specsHTML += createSpecRow('Projeto 3D', state.projectOption === 'create' ? 'Sim' : (state.projectOption === 'upload' ? 'Fornecido pelo cliente' : 'Não'));
-            
+            if (state.extras.length > 0) {
+                specsHTML += createSpecRow('Adicionais', state.extras.join(', '));
+            }
             specsContainer.innerHTML = specsHTML;
     
             // Populate Pricing
             const formatCurrency = (value) => `R$ ${value.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`;
             const extrasContainer = document.getElementById('pdf-extras-breakdown');
-            extrasContainer.innerHTML = '';
-            let pdfBreakdownHTML = '';
 
             // Conditional rendering based on PDF type
             if (type === 'internal') {
                 document.getElementById('pdf-doc-title').textContent = 'ORDEM DE SERVIÇO';
                 document.getElementById('pdf-pricing-title').textContent = 'Detalhamento de Custos e Lucro';
                 document.getElementById('pdf-cost-section').classList.remove('hidden');
+                document.getElementById('pdf-contract-clauses').classList.add('hidden');
+                document.getElementById('pdf-signature-section').classList.add('hidden');
                 document.getElementById('pdf-total-label').textContent = 'PREÇO FINAL (CLIENTE)';
 
                 document.getElementById('pdf-base-price').textContent = formatCurrency(state.quote.costPrice);
                 document.getElementById('pdf-total').textContent = formatCurrency(state.quote.total);
+                let pdfBreakdownHTML = '';
 
                 // Full breakdown for internal PDF
                 if (state.quote.baseBreakdown?.length) {
-                    pdfBreakdownHTML += '<p class="font-semibold text-charcoal">Custos Base:</p><div class="pl-4 border-l-2 border-gold/50 space-y-1 mt-1">';
+                    pdfBreakdownHTML += '<h3>Custos Base:</h3>';
                     state.quote.baseBreakdown.forEach(item => {
-                        pdfBreakdownHTML += `<div class="flex justify-between items-center text-sm"><span class="text-gray-600">${item.label}</span><span class="font-semibold">${formatCurrency(item.cost)}</span></div>`;
+                        pdfBreakdownHTML += `<div class="pdf-price-row text-sm"><span>${item.label}</span><span class="font-bold">${formatCurrency(item.cost)}</span></div>`;
                     });
-                    pdfBreakdownHTML += '</div>';
                 }
                 if (state.quote.extrasBreakdown?.length) {
-                    pdfBreakdownHTML += '<p class="font-semibold text-charcoal mt-2">Custos de Acabamentos e Despesas:</p><div class="pl-4 border-l-2 border-gold/50 space-y-1 mt-1">';
+                    pdfBreakdownHTML += '<h3 style="margin-top: 8mm;">Custos de Acabamentos e Despesas:</h3>';
                     state.quote.extrasBreakdown.forEach(item => {
-                        pdfBreakdownHTML += `<div class="flex justify-between items-center text-sm"><span class="text-gray-600">${item.label}</span><span class="font-semibold">+ ${formatCurrency(item.cost)}</span></div>`;
+                        pdfBreakdownHTML += `<div class="pdf-price-row text-sm"><span>${item.label}</span><span class="font-bold">+ ${formatCurrency(item.cost)}</span></div>`;
                     });
-                    pdfBreakdownHTML += '</div>';
                 }
                 extrasContainer.innerHTML = pdfBreakdownHTML;
 
-            } else { // Client PDF
+            } else if (type === 'client') {
                 document.getElementById('pdf-doc-title').textContent = 'ORÇAMENTO';
                 document.getElementById('pdf-pricing-title').textContent = 'Valor do Investimento';
                 document.getElementById('pdf-cost-section').classList.add('hidden');
+                document.getElementById('pdf-contract-clauses').classList.add('hidden');
+                document.getElementById('pdf-signature-section').classList.add('hidden');
                 document.getElementById('pdf-total-label').textContent = 'VALOR TOTAL';
                 document.getElementById('pdf-total').textContent = formatCurrency(state.quote.total);
-                extrasContainer.innerHTML = '<p class="text-sm text-gray-600">Serviços como visita técnica, entrega, montagem e garantia de 5 anos estão inclusos.</p>';
+                extrasContainer.innerHTML = '<p class="text-sm">Serviços como visita técnica, entrega, montagem e garantia de 5 anos estão inclusos.</p>';
+            } else { // Contract PDF
+                document.getElementById('pdf-doc-title').textContent = 'CONTRATO DE PRESTAÇÃO DE SERVIÇOS';
+                document.getElementById('pdf-pricing-title').textContent = 'Valor do Investimento';
+                document.getElementById('pdf-cost-section').classList.add('hidden');
+                document.getElementById('pdf-contract-clauses').classList.remove('hidden');
+                document.getElementById('pdf-signature-section').classList.remove('hidden');
+                document.getElementById('pdf-total-label').textContent = 'VALOR TOTAL';
+                document.getElementById('pdf-total').textContent = formatCurrency(state.quote.total);
+                document.getElementById('pdf-contract-total').textContent = formatCurrency(state.quote.total);
+                document.getElementById('pdf-signature-client-name').textContent = state.customer.name;
+                extrasContainer.innerHTML = '<p class="text-sm">As especificações detalhadas do projeto estão descritas acima.</p>';
             }
 
+            // --- Add Photos to PDF ---
+            const photosSection = document.getElementById('pdf-photos-section');
+            const photosContainer = document.getElementById('pdf-photos-container');
+            photosContainer.innerHTML = '';
+            if (state.photos && state.photos.length > 0) {
+                photosSection.classList.remove('hidden');
+                state.photos.forEach(photo => {
+                    const imgElement = document.createElement('img');
+                    imgElement.src = photo.src;
+                    imgElement.className = 'w-full object-contain border rounded-lg';
+                    photosContainer.appendChild(imgElement);
+                });
+            } else {
+                photosSection.classList.add('hidden');
+            }
             // --- End Populate ---
     
             pdfTemplate.classList.remove('hidden');
-            const canvas = await html2canvas(pdfTemplate.firstElementChild, { scale: 2, useCORS: true });
+    
+            // Use html2canvas directly for better control
+            const canvas = await html2canvas(pdfElement, {
+                scale: 3, // Higher scale for better quality
+                useCORS: true,
+                logging: false
+            });
+    
             const imgData = canvas.toDataURL('image/png');
-            const pdf = new jsPDF('p', 'mm', 'a4');
-            const pdfWidth = pdf.internal.pageSize.getWidth();
-            const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
-            pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
-            pdf.save(`orcamento_${type}_${state.customer.name.replace(/\s/g, '_')}_${quoteId}.pdf`);
+            const pdf = new jsPDF({
+                orientation: 'portrait',
+                unit: 'mm',
+                format: 'a4'
+            });
+    
+            const pageW = pdf.internal.pageSize.getWidth();
+            const pageH = pdf.internal.pageSize.getHeight();
+            const margin = 10; // Margem de 10mm
+    
+            // Área útil da página, descontando as margens laterais
+            const contentWidth = pageW - (margin * 2);
+            const contentHeight = pageH - (margin * 2);
+    
+            const canvasWidth = canvas.width;
+            const canvasHeight = canvas.height;
+    
+            // Calcula a altura total que a imagem ocupará no PDF, mantendo a proporção
+            const ratio = canvasWidth / contentWidth;
+            const totalImgHeight = canvasHeight / ratio;
+    
+            let heightLeft = totalImgHeight;
+            let position = 0;
+    
+            // Adiciona a primeira página
+            pdf.addImage(imgData, 'PNG', margin, margin, contentWidth, totalImgHeight);
+            heightLeft -= contentHeight;
+    
+            // Adiciona novas páginas se o conteúdo transbordar
+            while (heightLeft > 0) {
+                position -= contentHeight;
+                pdf.addPage();
+                pdf.addImage(imgData, 'PNG', margin, position + margin, contentWidth, totalImgHeight);
+                heightLeft -= contentHeight;
+            }
+    
+            // **CORREÇÃO FINAL: Adiciona margens superior/inferior em TODAS as páginas**
+            const pageCount = pdf.internal.getNumberOfPages();
+            for(let i = 1; i <= pageCount; i++) {
+                pdf.setPage(i);
+                pdf.setFillColor(255, 255, 255); // Cor branca
+                pdf.rect(0, 0, pageW, margin, 'F'); // Retângulo no topo (cabeçalho)
+                pdf.rect(0, pageH - margin, pageW, margin, 'F'); // Retângulo na base (rodapé)
+            }
+    
+            const fileName = `orcamento_${type}_${state.customer.name.replace(/\s/g, '_')}_${quoteId}.pdf`;
+            pdf.save(fileName);
+    
             pdfTemplate.classList.add('hidden');
+
         } catch (error) {
             console.error("PDF Generation Error:", error);
             showNotification("Erro ao gerar o PDF. Tente novamente.", "error");

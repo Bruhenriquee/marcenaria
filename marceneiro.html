@@ -9,6 +9,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js" defer></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js" defer></script>
+    <link rel="stylesheet" href="pdf-styles.css"> <!-- Estilos apenas para o PDF -->
     <link rel="stylesheet" href="styles.css">
     <script>
         tailwind.config = {
@@ -128,6 +129,13 @@
                                         </label>
                                         <input type="number" id="discount-extra" value="0" class="panel-input">
                                 </div>
+                                <div class="relative">
+                                    <label for="competitor-price" class="panel-label">Orçamento Concorrente (R$)
+                                        <span class="ml-1" title="Insira o valor do concorrente para análise"><i class="fas fa-info-circle text-gold"></i></span>
+                                    </label>
+                                    <input type="number" id="competitor-price" value="0" class="panel-input">
+                                </div>
+
             </div>
         </div>
 
@@ -542,10 +550,55 @@
                                     <div class="relative"><input type="text" id="leadName" placeholder=" " required class="form-input peer"><label for="leadName" class="form-label">Nome do Cliente *</label></div>
                                     <div class="relative"><input type="email" id="leadEmail" placeholder=" " class="form-input peer"><label for="leadEmail" class="form-label">E-mail do Cliente</label></div>
                                     <div class="relative"><input type="tel" id="leadPhone" placeholder=" " required class="form-input peer" oninput="maskPhone(event)"><label for="leadPhone" class="form-label">WhatsApp do Cliente *</label></div>
-                                    <div class="flex flex-col sm:flex-row-reverse sm:items-center sm:justify-between gap-4 pt-4">
-                                        <button id="view-quote-btn" class="w-full sm:w-auto bg-gradient-to-r from-gold to-yellow-600 text-white font-bold py-3 px-8 rounded-lg shadow-md hover:shadow-xl transform hover:-translate-y-1 transition-all duration-300">Ver Orçamento</button>
-                                        <button class="prev-btn w-full sm:w-auto bg-transparent border-2 border-gray-300 text-gray-500 font-bold py-3 px-6 rounded-lg hover:bg-gray-100 hover:border-gray-400 transition-all duration-300"><i class="fas fa-arrow-left mr-2"></i>Anterior</button>
+                                    <div class="relative"><input type="text" id="leadCpf" placeholder=" " class="form-input peer" oninput="maskCpf(event)"><label for="leadCpf" class="form-label">CPF do Cliente</label></div>
+                                </div>
+
+                                <!-- Address Section -->
+                                <div class="mt-8 border-t pt-6 max-w-md mx-auto space-y-6">
+                                    <h4 class="font-semibold text-lg text-charcoal text-center">Endereço (Opcional)</h4>
+                                    <div class="grid grid-cols-3 gap-4">
+                                        <div class="relative col-span-2">
+                                            <input type="text" id="leadCep" placeholder=" " class="form-input peer" oninput="maskCep(event)">
+                                            <label for="leadCep" class="form-label">CEP</label>
+                                        </div>
+                                        <button id="cep-lookup-btn" class="col-span-1 bg-gray-200 text-charcoal font-semibold rounded-lg hover:bg-gray-300 transition-colors flex items-center justify-center gap-2">
+                                            <i class="fas fa-search"></i> Buscar
+                                        </button>
                                     </div>
+                                    <div class="relative"><input type="text" id="leadStreet" placeholder=" " class="form-input peer"><label for="leadStreet" class="form-label">Rua / Logradouro</label></div>
+                                    <div class="grid grid-cols-3 gap-4">
+                                        <div class="relative col-span-1"><input type="text" id="leadNumber" placeholder=" " class="form-input peer"><label for="leadNumber" class="form-label">Número</label></div>
+                                        <div class="relative col-span-2"><input type="text" id="leadComplement" placeholder=" " class="form-input peer"><label for="leadComplement" class="form-label">Complemento</label></div>
+                                    </div>
+                                    <div class="relative"><input type="text" id="leadNeighborhood" placeholder=" " class="form-input peer"><label for="leadNeighborhood" class="form-label">Bairro</label></div>
+                                    <div class="grid grid-cols-3 gap-4">
+                                        <div class="relative col-span-2"><input type="text" id="leadCity" placeholder=" " class="form-input peer"><label for="leadCity" class="form-label">Cidade</label></div>
+                                        <div class="relative col-span-1"><input type="text" id="leadState" placeholder=" " class="form-input peer"><label for="leadState" class="form-label">UF</label></div>
+                                    </div>
+                                </div>
+                                <!-- Seção de Fotos do Local -->
+                                <div class="mt-8 border-t pt-6 max-w-md mx-auto">
+                                    <h4 class="font-semibold text-lg mb-4 text-charcoal text-center">Fotos do Local (Opcional)</h4>
+                                    <div class="flex items-center justify-center gap-4">
+                                        <!-- Botão para anexar no PC -->
+                                        <label for="attach-photo-input" class="hidden sm:flex items-center justify-center w-24 h-24 border-2 border-dashed border-gray-300 rounded-lg cursor-pointer hover:bg-gray-50 hover:border-gold">
+                                            <div class="text-center text-gray-500"><i class="fas fa-paperclip text-2xl"></i><span class="text-xs block mt-1">Anexar</span></div>
+                                        </label>
+                                        <input type="file" id="attach-photo-input" class="hidden" accept="image/*" multiple>
+                                        <!-- Botão para câmera no Celular -->
+                                        <label for="capture-photo-input" class="flex sm:hidden items-center justify-center w-24 h-24 border-2 border-dashed border-gray-300 rounded-lg cursor-pointer hover:bg-gray-50 hover:border-gold">
+                                            <div class="text-center text-gray-500"><i class="fas fa-camera text-2xl"></i><span class="text-xs block mt-1">Tirar Foto</span></div>
+                                        </label>
+                                        <input type="file" id="capture-photo-input" class="hidden" accept="image/*" capture multiple>
+                                    </div>
+                                    <div id="photo-previews" class="mt-4 flex flex-wrap justify-center gap-4">
+                                        <!-- Miniaturas das fotos aparecerão aqui -->
+                                    </div>
+                                </div>
+                                <!-- Botões de Navegação -->
+                                <div class="flex flex-col sm:flex-row-reverse sm:items-center sm:justify-between gap-4 pt-8 max-w-md mx-auto">
+                                    <button id="view-quote-btn" class="w-full sm:w-auto bg-gradient-to-r from-gold to-yellow-600 text-white font-bold py-3 px-8 rounded-lg shadow-md hover:shadow-xl transform hover:-translate-y-1 transition-all duration-300">Ver Orçamento</button>
+                                    <button class="prev-btn w-full sm:w-auto bg-transparent border-2 border-gray-300 text-gray-500 font-bold py-3 px-6 rounded-lg hover:bg-gray-100 hover:border-gray-400 transition-all duration-300"><i class="fas fa-arrow-left mr-2"></i>Anterior</button>
                                 </div>
                             </div>
                             <!-- Result Display -->
@@ -568,8 +621,15 @@
                                     </div>
                                 </div>
 
+                                <div id="cutting-plan-container" class="mt-8">
+                                    <h4 class="font-montserrat font-bold text-xl text-charcoal mb-6 border-b pb-4">Plano de Corte</h4>
+                                    <div id="cutting-plan" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                        <!-- Cutting plan will be dynamically inserted here by JS -->
+                                    </div>
+                                </div>
+
                                 <!-- PRO: Custo / Lucro / Preço Final -->
-                                <div class="grid md:grid-cols-3 gap-6 mb-8 text-center">
+                                <div class="grid md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8 text-center">
                                     <div class="bg-red-50 border border-red-200 p-6 rounded-2xl">
                                         <h4 class="text-lg text-red-800 font-semibold">Custo Total</h4>
                                         <p id="result-cost-price" class="font-montserrat font-bold text-3xl text-red-600 my-2">R$ 0,00</p>
@@ -582,17 +642,22 @@
                                         <h4 class="text-lg text-green-800 font-semibold">Preço Final (Cliente)</h4>
                                         <p id="result-total" class="font-montserrat font-bold text-3xl text-green-600 my-2">R$ 0,00</p>
                                     </div>
+                                    <div id="competitor-analysis-card" class="bg-blue-50 border border-blue-200 p-6 rounded-2xl hidden">
+                                        <h4 class="text-lg text-blue-800 font-semibold">Análise Concorrência</h4>
+                                        <p id="competitor-analysis-result" class="font-montserrat font-bold text-3xl text-blue-600 my-2">0%</p>
+                                    </div>
                                 </div>
 
                                 <!-- Ações -->
                                 <div class="mt-10 text-center">
                                     <h4 class="font-montserrat font-bold text-2xl text-charcoal mb-3">Próximos Passos</h4>
                                     <p class="text-gray-600 mb-6 max-w-2xl mx-auto">Salve este orçamento, envie para o cliente ou gere um PDF para seus registros.</p>
-                                    <div class="flex flex-col sm:flex-row items-center justify-center gap-4 mt-10 flex-wrap max-w-2xl mx-auto">
+                                    <div class="flex flex-col sm:flex-row items-center justify-center gap-4 mt-10 flex-wrap max-w-3xl mx-auto">
                                         <button id="save-quote-btn" class="action-btn-pro bg-blue-600 hover:bg-blue-700"><i class="fas fa-save fa-fw mr-2"></i>Salvar Orçamento</button>
                                         <button id="whatsapp-btn" class="action-btn-pro bg-green-500 hover:bg-green-600"><i class="fab fa-whatsapp fa-fw mr-2"></i>Enviar p/ Cliente</button>
                                         <button id="pdf-btn-internal" class="action-btn-pro bg-red-500 hover:bg-red-600"><i class="fas fa-file-pdf fa-fw mr-2"></i>PDF Interno</button>
                                         <button id="pdf-btn-client" class="action-btn-pro bg-purple-500 hover:bg-purple-600"><i class="fas fa-file-alt fa-fw mr-2"></i>PDF Cliente</button>
+                                        <button id="pdf-btn-contract" class="action-btn-pro bg-gray-700 hover:bg-gray-800"><i class="fas fa-file-signature fa-fw mr-2"></i>Gerar Contrato</button>
                                     </div>
                                     <div class="flex items-center justify-center gap-6 mt-8">
                                         <button class="prev-btn bg-transparent text-gray-500 font-semibold py-2 px-4 hover:text-charcoal transition-colors"><i class="fas fa-edit mr-2"></i>Editar</button>
@@ -625,31 +690,36 @@
     </div>
 
     <!-- Hidden Template for PDF Generation -->
-    <div id="pdf-template" class="hidden font-roboto">
-        <div class="p-10 bg-white text-charcoal w-[210mm]">
-            <!-- Header -->
-            <header class="flex justify-between items-start pb-6 border-b-2 border-gold">
-                <div class="text-left">
-                    <h1 class="font-montserrat font-bold text-3xl text-charcoal tracking-tight">Roni Marceneiro</h1>
-                    <p class="text-sm text-gold tracking-widest uppercase">Móveis Planejados</p>
+    <div id="pdf-template" class="hidden">
+        <div class="pdf-container">
+            <!-- Header --> 
+            <header class="pdf-header pdf-section">
+                <div class="pdf-header-left">
+                    <h1>Roni Marceneiro</h1>
+                    <p class="subtitle">Móveis Planejados</p>
                 </div>
-                <div class="text-right">
-                    <h2 id="pdf-doc-title" class="font-montserrat font-bold text-2xl text-gray-400">ORÇAMENTO</h2>
+                <div class="pdf-header-right">
+                    <h2 id="pdf-doc-title" class="doc-title">ORÇAMENTO</h2>
                     <p class="text-sm"><strong>Nº:</strong> <span id="pdf-quote-id"></span></p>
                     <p class="text-sm"><strong>Data:</strong> <span id="pdf-date"></span></p>
                 </div>
             </header>
     
             <!-- Client Info -->
-            <section class="grid grid-cols-2 gap-8 my-8">
+            <section class="pdf-client-info">
                 <div>
-                    <h3 class="font-semibold text-gray-500 mb-2 text-sm">PREPARADO PARA:</h3>
+                    <h3 class="info-label">PREPARADO PARA:</h3>
                     <p id="pdf-name" class="font-bold"></p>
                     <p id="pdf-email" class="text-sm"></p>
                     <p id="pdf-phone" class="text-sm"></p>
+                    <div id="pdf-address-block" class="hidden mt-2">
+                        <p id="pdf-cpf" class="text-sm"></p>
+                        <p id="pdf-address-line1" class="text-sm" style="margin-top: 5px;"></p>
+                        <p id="pdf-address-line2" class="text-sm" style="margin-top: 2px;"></p>
+                    </div>
                 </div>
-                <div class="text-right">
-                    <h3 class="font-semibold text-gray-500 mb-2 text-sm">PREPARADO POR:</h3>
+                <div class="right">
+                    <h3 class="info-label">PREPARADO POR:</h3>
                     <p class="font-bold">Roni Marceneiro</p>
                     <p class="text-sm">contato@ronimarceneiro.com</p>
                     <p class="text-sm">(11) 99999-9999</p>
@@ -657,39 +727,68 @@
             </section>
     
             <!-- Project Details -->
-            <section>
-                <h2 class="font-montserrat font-bold text-xl bg-gray-100 p-3 rounded-t-lg">Detalhes do Projeto</h2>
-                <div id="pdf-specs-table" class="border-l border-r border-b rounded-b-lg p-4 grid grid-cols-2 gap-x-6 gap-y-4">
+            <section class="pdf-content-section pdf-section">
+                <h2 class="section-title">Detalhes do Projeto</h2>
+                <div id="pdf-specs-table" class="section-body pdf-specs-table">
                     <!-- Specs will be dynamically inserted here -->
                 </div>
             </section>
     
             <!-- Pricing -->
-            <section class="mt-8">
-                <h2 id="pdf-pricing-title" class="font-montserrat font-bold text-xl bg-gray-100 p-3 rounded-t-lg">Detalhamento do Valor</h2>
-                <div class="border-l border-r border-b rounded-b-lg p-4 space-y-3">
+            <section class="pdf-content-section pdf-section">
+                <h2 id="pdf-pricing-title" class="section-title">Detalhamento do Valor</h2>
+                <div class="section-body pdf-pricing-details">
                     <div id="pdf-extras-breakdown">
                         <!-- Breakdown will be inserted here -->
                     </div>
-                    <div id="pdf-cost-section" class="flex justify-between items-center text-lg border-t-2 border-gray-300 pt-3 mt-3 hidden">
+                    <div id="pdf-cost-section" class="pdf-price-row cost hidden">
                         <span>CUSTO TOTAL</span>
                         <span id="pdf-base-price" class="font-semibold"></span>
                     </div>
-                    <div class="flex justify-between items-center text-xl font-bold border-t-2 border-gold pt-3 mt-3">
+                    <div class="pdf-price-row total">
                         <span id="pdf-total-label">VALOR TOTAL</span>
                         <span id="pdf-total"></span>
                     </div>
                 </div>
             </section>
     
+            <!-- Photos Section -->
+            <section id="pdf-photos-section" class="pdf-content-section hidden pdf-section">
+                <h2 class="section-title">Fotos do Local</h2>
+                <div id="pdf-photos-container" class="section-body">
+                    <!-- Photos will be inserted here -->
+                </div>
+            </section>
+
+            <!-- Contract Clauses Section -->
+            <section id="pdf-contract-clauses" class="pdf-content-section hidden pdf-section">
+                <h2 class="section-title">Cláusulas Contratuais</h2>
+                <div class="section-body text-sm" style="text-align: justify;">
+                    <p><strong>Cláusula 1ª - Objeto:</strong> O presente contrato tem como objeto a fabricação, entrega e montagem de móveis planejados, conforme especificações detalhadas neste documento, a serem instalados no endereço do CONTRATANTE.</p>
+                    <p><strong>Cláusula 2ª - Valor e Pagamento:</strong> O valor total dos serviços é de <strong id="pdf-contract-total">R$ 0,00</strong>. O pagamento será realizado conforme condições a serem acordadas entre as partes. A produção será iniciada após a confirmação do pagamento inicial.</p>
+                    <p><strong>Cláusula 3ª - Prazos:</strong> O prazo para fabricação e entrega é de 30 a 45 dias úteis, a contar da data de assinatura deste contrato e da aprovação final do projeto. O prazo de montagem será agendado posteriormente.</p>
+                    <p><strong>Cláusula 4ª - Garantia:</strong> Os móveis possuem garantia de 5 (cinco) anos contra defeitos de fabricação. A garantia não cobre danos por mau uso, acidentes ou desgaste natural.</p>
+                    <p><strong>Cláusula 5ª - Foro:</strong> Fica eleito o foro da comarca de São Paulo/SP para dirimir quaisquer controvérsias oriundas do presente contrato.</p>
+                </div>
+            </section>
+
+            <!-- Signature Section -->
+            <section id="pdf-signature-section" class="hidden pdf-section" style="margin-top: 25mm;">
+                <div style="display: flex; justify-content: space-between; text-align: center; font-size: 9pt;">
+                    <div style="width: 45%;"><div style="border-top: 1px solid #2F2F2F; padding-top: 2mm;">CONTRATANTE<p id="pdf-signature-client-name" class="font-bold"></p></div></div>
+                    <div style="width: 45%;"><div style="border-top: 1px solid #2F2F2F; padding-top: 2mm;">CONTRATADO<p class="font-bold">Roni Marceneiro</p></div></div>
+                </div>
+            </section>
+
             <!-- Footer -->
-            <footer class="mt-10 pt-6 border-t text-center text-xs text-gray-500">
-                <p class="font-bold mb-2">Obrigado pelo seu interesse!</p>
+            <footer style="margin-top: 15mm; padding-top: 5mm; border-top: 1px solid #cccccc; text-align: center; font-size: 8pt; color: #888888;">
+                <p class="font-bold" style="margin-bottom: 2mm; color: #555555;">Obrigado pelo seu interesse!</p>
                 <p>Este é um orçamento informativo e o valor final será confirmado após visita técnica. Validade: 15 dias.</p>
             </footer>
         </div>
     </div>
     
+    <script src="./bin-packing.js"></script>
     <script src="./script-pro.js"></script>
 
 </body>

@@ -1,0 +1,129 @@
+/* ====================================================== */
+/*      ESTILOS EXCLUSIVOS PARA GERAÇÃO DE PDF          */
+/*      Otimizado para html2canvas e jsPDF.             */
+/* ====================================================== */
+
+/* --- Configurações Globais do Template --- */
+.pdf-container {
+    /* A4 width at 96 DPI is ~794px. This gives html2canvas a solid base. */
+    width: 794px; 
+    padding: 0 40pt; /* Apenas margens laterais. Topo/base são controlados pelo JS. */
+    box-sizing: border-box;
+    background-color: #ffffff;
+    color: #2F2F2F; /* charcoal */
+    font-family: 'Roboto', sans-serif;
+    font-size: 10pt; /* Tamanho de fonte base (pontos é melhor para impressão) */
+    line-height: 1.4;
+}
+
+/* --- Quebra de Página --- */
+.pdf-section {
+    page-break-inside: avoid !important;
+}
+
+/* --- Tipografia --- */
+.pdf-container h1, .pdf-container h2, .pdf-container h3, .pdf-container p, .pdf-container span, .pdf-container div {
+    margin: 0;
+    padding: 0;
+    font-weight: normal;
+}
+
+.pdf-container h1 { font-size: 22pt; font-weight: 700; font-family: 'Montserrat', sans-serif; letter-spacing: -1px; }
+.pdf-container h2 { font-size: 16pt; font-weight: 700; font-family: 'Montserrat', sans-serif; }
+.pdf-container h3 { font-size: 11pt; font-weight: 700; }
+.pdf-container p { font-size: 10pt; }
+.pdf-container .text-sm { font-size: 9pt; }
+.pdf-container .font-bold { font-weight: 700; }
+
+/* --- Header --- */
+.pdf-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start; 
+    padding-bottom: 28pt; /* ~10mm */
+    border-bottom: 2px solid #D4AF37; /* gold */
+}
+.pdf-header-left .subtitle {
+    font-size: 9pt;
+    color: #D4AF37; /* gold */
+    text-transform: uppercase;
+    letter-spacing: 2px;
+}
+.pdf-header-right { text-align: right; }
+.pdf-header-right .doc-title { color: #888888; }
+
+/* --- Informações do Cliente --- */
+.pdf-client-info {
+    display: flex;
+    justify-content: space-between;
+    margin: 28pt 0; /* ~10mm */
+}
+.pdf-client-info .right { text-align: right; }
+.pdf-client-info .info-label {
+    font-size: 9pt;
+    color: #888888;
+    margin-bottom: 3pt;
+}
+
+/* --- Seções de Conteúdo (Detalhes, Preços, etc.) --- */
+.pdf-content-section {
+    margin-top: 28pt; /* ~10mm */
+}
+.pdf-content-section .section-title {
+    background-color: #f3f4f6; /* gray-100 */
+    padding: 4mm;
+    border-top-left-radius: 8px;
+    border-top-right-radius: 8px;
+}
+.pdf-content-section .section-body {
+    border: 1px solid #f3f4f6; /* gray-100 */
+    border-top: none;
+    padding: 14pt; /* ~5mm */
+    border-bottom-left-radius: 8px;
+    border-bottom-right-radius: 8px;
+}
+
+/* --- Tabela de Especificações --- */
+.pdf-specs-table {
+    display: flex;
+    flex-wrap: wrap;
+}
+.pdf-spec-item {
+    width: 50%;
+    box-sizing: border-box;
+    padding: 6pt 12pt;
+}
+.pdf-spec-item .spec-label { 
+    color: #6b7280; 
+    display: inline-block;
+    min-width: 110px; /* Alinha os valores */
+}
+
+/* --- Detalhamento de Preços --- */
+.pdf-pricing-details {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+.pdf-price-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 3pt 0;
+}
+.pdf-price-row.total {
+    font-size: 14pt;
+    font-weight: 700;
+    border-top: 2px solid #D4AF37; /* gold */
+    margin-top: 14pt; /* ~5mm */
+    padding-top: 14pt; /* ~5mm */
+}
+.pdf-price-row.cost {
+    font-size: 12pt;
+    border-top: 1px solid #cccccc;
+    margin-top: 14pt; /* ~5mm */
+    padding-top: 14pt; /* ~5mm */
+}
+
+/* --- Outros --- */
+.hidden { display: none !important; }
