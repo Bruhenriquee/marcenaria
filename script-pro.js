@@ -316,6 +316,7 @@ function setupSimulator() {
         wardrobeFormat: null,
         material: null,
         kitchenHasSinkCabinet: null,
+        numDrawers: 4, // Default number of drawers
         sinkStoneWidth: 1.8,
         hasHotTower: null,
         hotTowerHeight: 2.2,
@@ -360,7 +361,6 @@ function setupSimulator() {
     setupProPanel();
         setupEventListeners();
         setupQuoteManagement();
-        setupPdfViewer();
         // Recalculate height on window resize to handle responsive changes. Debounce is defined inline.
         window.addEventListener('resize', debounce(updateContainerHeight, 200));
         updateUI(false); // Pass false to prevent scrolling on initial load
@@ -513,6 +513,13 @@ function setupSimulator() {
             });
         });
 
+        // Step 4: Number of Drawers (Wardrobe)
+        document.getElementById('numDrawers').addEventListener('input', (e) => {
+            updateStateAndSave({
+                numDrawers: parseInt(e.target.value) || 0
+            });
+        });
+
         // Step 4: Hardware Type
         document.querySelectorAll('input[name="hardwareType"]').forEach(radio => {
             radio.addEventListener('change', (e) => {
@@ -657,51 +664,6 @@ function setupSimulator() {
         }
     }
 
-    // PDF Viewer Modal Logic
-    function setupPdfViewer() {
-        const pdfModal = document.getElementById('pdf-viewer-modal');
-        const closeBtn = document.getElementById('pdf-viewer-close');
-        const pdfIframe = document.getElementById('pdf-viewer-iframe');
-        const pdfTitle = document.getElementById('pdf-viewer-title');
-
-        if (!pdfModal || !closeBtn || !pdfIframe || !pdfTitle) return;
-
-        const openPdfViewer = (url, title) => {
-            if (!url) {
-                console.error('PDF URL is missing.');
-                alert('Desculpe, o catálogo não está disponível no momento.');
-                return;
-            }
-            pdfIframe.src = url;
-            pdfTitle.textContent = title || 'Catálogo';
-            pdfModal.classList.remove('hidden');
-            document.body.style.overflow = 'hidden';
-        };
-
-        const closePdfViewer = () => {
-            pdfModal.classList.add('hidden');
-            pdfIframe.src = ''; // Stop loading PDF to save resources
-            document.body.style.overflow = 'auto';
-        };
-
-        // Use event delegation on the document body
-        document.body.addEventListener('click', (e) => {
-            const trigger = e.target.closest('[data-pdf-src]');
-            if (trigger) {
-                const url = trigger.dataset.pdfSrc;
-                const title = trigger.dataset.pdfTitle;
-                openPdfViewer(url, title);
-            }
-        });
-
-        closeBtn.addEventListener('click', closePdfViewer);
-        pdfModal.addEventListener('click', (e) => {
-            if (e.target === pdfModal) {
-                closePdfViewer();
-            }
-        });
-    }
-
     function setupProPanel() {
         const toggleBtn = document.getElementById('toggle-controls-btn');
         const mainContent = document.getElementById('main-content');
@@ -713,6 +675,7 @@ function setupSimulator() {
             panel.classList.remove('-translate-x-full');
             panel.classList.add('translate-x-0');
             // Para desktop, aplica margem; para mobile, não mexe na margem
+            toggleBtn.classList.add('hidden'); // Esconde o botão de abrir
             if (window.innerWidth >= 768) {
                 mainContent.style.marginLeft = '320px';
             } else {
@@ -727,6 +690,7 @@ function setupSimulator() {
                 panel.classList.remove('translate-x-0');
                 panel.classList.add('-translate-x-full');
                 mainContent.style.marginLeft = '0';
+                toggleBtn.classList.remove('hidden'); // Mostra o botão de abrir
             });
         }
 
@@ -737,8 +701,10 @@ function setupSimulator() {
                 document.getElementById('mdf-branco-cost').value = 240;
                 document.getElementById('mdf-premium-cost').value = 400;
                 document.getElementById('edge-tape-cost').value = 2.5;
-                document.getElementById('hinge-cost').value = 20;
+                document.getElementById('hinge-standard-cost').value = 5;
+                document.getElementById('hinge-softclose-cost').value = 20;
                 document.getElementById('slide-cost').value = 25;
+                document.getElementById('fabrication-cost-m2').value = 450;
                 document.getElementById('shipping-cost').value = 150;
                 document.getElementById('daily-rate-cost').value = 200;
                 document.getElementById('profit-margin').value = 80;
@@ -825,6 +791,7 @@ function setupSimulator() {
         document.getElementById('wardrobe-dims').classList.toggle('hidden', !isWardrobe);
         document.getElementById('kitchen-dims').classList.toggle('hidden', isWardrobe);
         document.getElementById('wardrobe-options').classList.toggle('hidden', !isWardrobe);
+        document.getElementById('drawer-section').classList.toggle('hidden', !isWardrobe);
         document.getElementById('kitchen-options').classList.toggle('hidden', isWardrobe);
 
         // Explicitly manage handle section visibility when furniture type changes
@@ -838,6 +805,7 @@ function setupSimulator() {
         
         if (isWardrobe) {
             updateWardrobeRecommendation();
+            updateDrawerRecommendation();
         } else {
             const recommendationDiv = document.getElementById('wardrobe-recommendation');
             if (recommendationDiv) recommendationDiv.classList.add('hidden');
@@ -850,6 +818,7 @@ function setupSimulator() {
         document.getElementById('closet-door-step').classList.toggle('hidden', !isCloset);
         document.getElementById('add-wardrobe-wall-btn').classList.toggle('hidden', !isCloset);
 
+        const hasDoors = !(isCloset && !state.closetHasDoors);
         // Hide handle selection if it's an open closet
         const handleTypeSection = document.getElementById('handle-type-section');
         handleTypeSection.classList.toggle('hidden', isCloset && !state.closetHasDoors);
@@ -857,6 +826,10 @@ function setupSimulator() {
         // Hide door type selection if it's an open closet
         const doorTypeSection = document.getElementById('door-type-section');
         const isClosetOpen = isCloset && !state.closetHasDoors;
+
+        // Hide drawer section if it's an open closet (drawers usually need a structure that implies doors)
+        document.getElementById('drawer-section').classList.toggle('hidden', !hasDoors);
+
         doorTypeSection.classList.toggle('hidden', isClosetOpen);
 
         // Hide mirror door option if it's an open closet
@@ -970,6 +943,7 @@ function setupSimulator() {
             const height = parseFloat(document.getElementById('wardrobe-height').value) || 0;
             state.dimensions.walls = widths.map(w => ({ width: w, height: height }));
             state.dimensions.height = height;
+            updateDrawerRecommendation();
             updateWardrobeRecommendation();
         } else {
             const widths = Array.from(document.querySelectorAll('input[name="kitchen-wall-width"]')).map(input => parseFloat(input.value) || 0);
@@ -977,6 +951,7 @@ function setupSimulator() {
             state.dimensions.walls = widths.map((w, i) => ({ width: w, height: heights[i] || 0 }));
             state.sinkStoneWidth = parseFloat(document.getElementById('sinkStoneWidth').value) || 0;
         }
+        updateKitchenDrawerRecommendation();
         // Save state after dimension update
     }
 
@@ -1107,16 +1082,56 @@ function setupSimulator() {
         updateContainerHeight();
     }
 
+    function updateKitchenDrawerRecommendation() {
+        if (state.furnitureType !== 'Cozinha') return;
+
+        const recommendationDiv = document.getElementById('kitchen-drawer-recommendation');
+        const recommendationText = document.getElementById('kitchen-drawer-recommendation-text');
+        const totalWidth = state.dimensions.walls.reduce((acc, wall) => acc + wall.width, 0);
+
+        if (!recommendationDiv || !recommendationText || totalWidth <= 0) {
+            if (recommendationDiv) recommendationDiv.classList.add('hidden');
+            return;
+        }
+
+        // Logic: Recommend 2-3 drawers per meter of width for kitchens.
+        const minDrawers = Math.max(2, Math.floor(totalWidth * 2));
+        const maxDrawers = Math.ceil(totalWidth * 3);
+
+        recommendationText.textContent = `Para esta largura, recomendamos entre ${minDrawers} e ${maxDrawers} gavetas.`;
+        recommendationDiv.classList.remove('hidden');
+    }
+
+    function updateDrawerRecommendation() {
+        const recommendationDiv = document.getElementById('drawer-recommendation');
+        const recommendationText = document.getElementById('drawer-recommendation-text');
+        const width = state.dimensions.walls.reduce((acc, wall) => acc + wall.width, 0);
+
+        if (!recommendationDiv || !recommendationText || width <= 0) {
+            if (recommendationDiv) recommendationDiv.classList.add('hidden');
+            return;
+        }
+
+        // Logic: Recommend 3-4 drawers per meter of width.
+        const minDrawers = Math.max(2, Math.floor(width * 2));
+        const maxDrawers = Math.ceil(width * 3);
+
+        recommendationText.textContent = `Para esta largura, recomendamos entre ${minDrawers} e ${maxDrawers} gavetas.`;
+        recommendationDiv.classList.remove('hidden');
+    }
+
     function calculateWardrobeQuote() {
         // Sobrescreve a configuração com os valores do painel Pro
         const mdfBrancoCost = parseFloat(document.getElementById('mdf-branco-cost').value);
         const mdfPremiumCost = parseFloat(document.getElementById('mdf-premium-cost').value);
 
-        // Get new costs from panel
-        const hingeCostPerUnit = parseFloat(document.getElementById('hinge-cost').value) || 0;
+        // Get specific hinge costs from panel
+        const hingeStandardCost = parseFloat(document.getElementById('hinge-standard-cost').value) || 0;
+        const hingeSoftcloseCost = parseFloat(document.getElementById('hinge-softclose-cost').value) || 0;
         const slideCostPerDrawer = parseFloat(document.getElementById('slide-cost').value) || 0;
         const edgeTapeCostPerMeter = parseFloat(document.getElementById('edge-tape-cost').value) || 0;
         const shippingCost = parseFloat(document.getElementById('shipping-cost').value) || 0;
+        const fabricationCostPerM2 = parseFloat(document.getElementById('fabrication-cost-m2').value) || 0;
         const dailyRateCost = parseFloat(document.getElementById('daily-rate-cost').value) || 0;
 
         if (!isNaN(mdfBrancoCost)) {
@@ -1127,8 +1142,6 @@ function setupSimulator() {
             SIMULATOR_CONFIG.WARDROBE.MDF_SHEET_PRICING['Premium'] = mdfPremiumCost;
             SIMULATOR_CONFIG.KITCHEN.MDF_SHEET_PRICING['Premium'] = mdfPremiumCost;
         }
-        SIMULATOR_CONFIG.WARDROBE.HARDWARE.HINGE_COST_PER_UNIT[state.hardwareType] = hingeCostPerUnit;
-        SIMULATOR_CONFIG.WARDROBE.HARDWARE.SLIDE_COST_PER_DRAWER = slideCostPerDrawer;
 
         const config = SIMULATOR_CONFIG.WARDROBE;
 
@@ -1146,19 +1159,30 @@ function setupSimulator() {
         const baseBreakdown = [];
         const extrasBreakdown = [];
 
-        // 1. MDF Cost
+        // 1. MDF Cost (com lógica para Mesclado)
         const parts = getWardrobeParts(width * 1000, height * 1000, state.dimensions.depth * 10);
         const sheets = optimizeCutting(parts, 2750, 1850);
         const numSheets = sheets.length;
-        const mdfCost = numSheets * config.MDF_SHEET_PRICING[state.material];
-        const materialLabel = state.material === 'Branco' ? 'Chapas de MDF Branco' : 'Chapas de MDF Premium';
-        if (mdfCost > 0) baseBreakdown.push({ label: materialLabel, quantity: numSheets, cost: mdfCost });
+        let mdfCost = 0;
+
+        if (state.material === 'Mesclada') {
+            // Lógica para Mesclado: 1/3 das chapas são Premium (portas), 2/3 são Branco (caixaria).
+            const numPremiumSheets = Math.ceil(numSheets / 3);
+            const numWhiteSheets = numSheets - numPremiumSheets;
+            if (numWhiteSheets > 0) baseBreakdown.push({ label: 'Chapas de MDF Branco (Interno)', quantity: numWhiteSheets, cost: numWhiteSheets * mdfBrancoCost });
+            if (numPremiumSheets > 0) baseBreakdown.push({ label: 'Chapas de MDF Premium (Frentes)', quantity: numPremiumSheets, cost: numPremiumSheets * mdfPremiumCost });
+        } else {
+            mdfCost = numSheets * (state.material === 'Branco' ? mdfBrancoCost : mdfPremiumCost);
+            const materialLabel = state.material === 'Branco' ? 'Chapas de MDF Branco' : 'Chapas de MDF Premium';
+            if (mdfCost > 0) baseBreakdown.push({ label: materialLabel, quantity: numSheets, cost: mdfCost });
+        }
+
         state.quote.cuttingPlan = sheets;
         const totalMaterialArea = parts.reduce((acc, part) => acc + (part.w * part.h), 0) / 1000000;
 
 
         // 2. Hardware Cost (Hinges, Slides, Handles)
-        const numDrawers = Math.floor(width * 2); // Estimate: 2 drawers per meter of width
+        const numDrawers = state.numDrawers;
         const slideCost = numDrawers * slideCostPerDrawer;
         if (slideCost > 0) baseBreakdown.push({ label: 'Pares de Corrediças de Gaveta', quantity: numDrawers, cost: slideCost });
 
@@ -1169,7 +1193,8 @@ function setupSimulator() {
             } else { // 'abrir'
                 numDoors = Math.max(2, Math.round(width / 0.45));
                 const totalHinges = numDoors * hingesPerDoor;
-                const hingeCost = totalHinges * hingeCostPerUnit;
+                // Use the correct hinge cost based on hardware type selection
+                const hingeCost = totalHinges * (state.hardwareType === 'softclose' ? hingeSoftcloseCost : hingeStandardCost);
                 const hingeLabel = state.hardwareType === 'softclose' ? 'Dobradiças Soft-close' : 'Dobradiças Padrão';
                 if (hingeCost > 0) baseBreakdown.push({ label: hingeLabel, quantity: totalHinges, cost: hingeCost });
             }
@@ -1183,7 +1208,7 @@ function setupSimulator() {
         }
 
         // 3. Production Cost
-        const productionCost = frontArea * config.PRODUCTION_COST_PER_M2;
+        const productionCost = frontArea * fabricationCostPerM2;
         if (productionCost > 0) baseBreakdown.push({ label: 'Custos de Fabricação e Montagem', quantity: null, cost: productionCost });
 
         // 3.5 Edge Tape Cost
@@ -1221,8 +1246,9 @@ function setupSimulator() {
         const mdfBrancoCost = parseFloat(document.getElementById('mdf-branco-cost').value);
         const mdfPremiumCost = parseFloat(document.getElementById('mdf-premium-cost').value);
 
-        // Get new costs from panel
-        const hingeCostPerUnit = parseFloat(document.getElementById('hinge-cost').value) || 0;
+        // Get specific hinge costs from panel
+        const hingeStandardCost = parseFloat(document.getElementById('hinge-standard-cost').value) || 0;
+        const hingeSoftcloseCost = parseFloat(document.getElementById('hinge-softclose-cost').value) || 0;
         const slideCostPerDrawer = parseFloat(document.getElementById('slide-cost').value) || 0;
         const edgeTapeCostPerMeter = parseFloat(document.getElementById('edge-tape-cost').value) || 0;
         const shippingCost = parseFloat(document.getElementById('shipping-cost').value) || 0;
@@ -1234,8 +1260,6 @@ function setupSimulator() {
         if (!isNaN(mdfPremiumCost)) {
             SIMULATOR_CONFIG.KITCHEN.MDF_SHEET_PRICING['Premium'] = mdfPremiumCost;
         }
-        SIMULATOR_CONFIG.KITCHEN.HARDWARE.HINGE_COST_PER_UNIT[state.hardwareType] = hingeCostPerUnit;
-        SIMULATOR_CONFIG.KITCHEN.HARDWARE.SLIDE_COST_PER_DRAWER = slideCostPerDrawer;
 
         const config = SIMULATOR_CONFIG.KITCHEN;
         const baseBreakdown = [];
@@ -1271,14 +1295,15 @@ function setupSimulator() {
         const UNIT_WIDTH = config.HARDWARE.UNIT_WIDTH;
         const lowerUnits = Math.max(0, lowerCabinetWidth) / UNIT_WIDTH;
         const upperUnits = upperCabinetWidth / UNIT_WIDTH;
-        const totalUnits = Math.ceil(lowerUnits + upperUnits) + (state.hasHotTower ? 2 : 0);
-        const numDoors = Math.round(totalUnits * 0.75);
-        const numDrawers = totalUnits - numDoors;
+        const totalUnits = Math.ceil(lowerUnits + upperUnits) + (state.hasHotTower ? 2 : 0); // Total "módulos"
+        const numDrawers = state.numDrawers; // Usa o valor exato informado
+        const numDoors = Math.max(0, Math.round(totalUnits - numDrawers)); // O restante vira porta
 
         // Lógica de dobradiças aprimorada para cozinha (padrão de 2 por porta)
         const hingesPerDoor = 2;
         const totalHinges = numDoors * hingesPerDoor;
-        const hingeCost = totalHinges * hingeCostPerUnit;
+        // Use the correct hinge cost based on hardware type selection
+        const hingeCost = totalHinges * (state.hardwareType === 'softclose' ? hingeSoftcloseCost : hingeStandardCost);
         const hingeLabel = state.hardwareType === 'softclose' ? 'Dobradiças Soft-close' : 'Dobradiças Padrão';
         if (hingeCost > 0) baseBreakdown.push({ label: hingeLabel, quantity: totalHinges, cost: hingeCost });
 
@@ -1385,6 +1410,7 @@ function setupSimulator() {
             wardrobeFormat: null,
             closetHasDoors: null,
             kitchenHasSinkCabinet: null,
+            numDrawers: 4,
             sinkStoneWidth: 1.8,
             hasHotTower: null,
             stoveType: null,
@@ -1419,6 +1445,9 @@ function setupSimulator() {
         document.getElementById('add-wardrobe-wall-btn').classList.remove('hidden');
         document.getElementById('sinkStoneWidth').value = 1.8;
         document.getElementById('cooktop-location-step').classList.add('hidden');
+        document.getElementById('kitchenNumDrawers').value = 4;
+        document.getElementById('kitchenNumDrawers').value = 4;
+        document.getElementById('numDrawers').value = 4;
         document.getElementById('kitchen-wall-width1').value = 2.2;
         document.getElementById('kitchen-wall-height1').value = 2.7;
 
@@ -1705,6 +1734,7 @@ function setupSimulator() {
             if (state.wardrobeFormat === 'closet') {
                 document.querySelector(`input[name="closetDoors"][value="${state.closetHasDoors ? 'sim' : 'nao'}"]`)?.click();
             }
+            document.getElementById('numDrawers').value = state.numDrawers;
             // Restore walls
             const wardrobeWallsContainer = document.getElementById('wardrobe-walls-container');
             Array.from(wardrobeWallsContainer.children).slice(1).forEach(wall => wall.remove());
@@ -1720,6 +1750,7 @@ function setupSimulator() {
             if (state.stoveType === 'cooktop') {
                 document.querySelector(`input[name="cooktopLocation"][value="${state.cooktopLocation}"]`)?.click();
             }
+            document.getElementById('kitchenNumDrawers').value = state.numDrawers;
             document.getElementById('sinkStoneWidth').value = state.sinkStoneWidth;
             // Restore walls
             const kitchenWallsContainer = document.getElementById('kitchen-walls-container');

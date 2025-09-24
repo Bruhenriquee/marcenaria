@@ -203,51 +203,11 @@ a:focus {
     page-break-inside: avoid !important;
 }
 
-/* PDF Container Styling */
-.pdf-container {
-    width: 210mm; /* A4 width */
-    font-family: 'Roboto', sans-serif;
-    font-size: 12px; /* Base font size for PDF, using px for consistency with html2canvas */
-}
-
-/* PDF Layout Helpers */
-#pdf-specs-table > div {
-    width: 50%;
-    padding: 0.5rem; /* Corresponde ao -m-2 no container */
-}
-
-#pdf-photos-container > div {
-    width: 50%;
-    padding: 0.5rem;
-}
-
-/* Fix for jsPDF/html2canvas text rendering issues where letters collapse */
-/* Garante que todos os elementos de texto dentro do template PDF tenham um tamanho de fonte razoável */
-#pdf-template *,
-#pdf-template p, #pdf-template span, #pdf-template div,
-#pdf-template strong, #pdf-template em, #pdf-template small {
-    font-size: inherit !important; /* Herda do .pdf-container */
-    line-height: 1.2 !important; /* Ajusta a altura da linha para melhor legibilidade */
-    letter-spacing: 0.1px !important;
-}
-
-/* Sobrescritas específicas para títulos para garantir que não fiquem muito grandes */
-#pdf-template h1, #pdf-template h2, #pdf-template h3, #pdf-template h4 {
-    letter-spacing: 0.1px !important;
-}
-
 /* Ensure images within the PDF container don't break the layout */
 #pdf-photos-container img {
     max-width: 100%;
     height: auto;
     page-break-inside: avoid !important;
-}
-
-/* Define explicitamente os tamanhos dos títulos para evitar que os padrões do Tailwind sejam muito grandes */
-#pdf-template h1 { font-size: 24px !important; }
-#pdf-template h2 { font-size: 20px !important; }
-#pdf-template h3 { font-size: 16px !important; }
-#pdf-template h4 { font-size: 14px !important; }
 }
 
 /* Custom selection color */

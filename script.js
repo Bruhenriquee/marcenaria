@@ -647,20 +647,6 @@ function setupLazyLoading() {
     }
 }
 
-// Phone mask function
-function maskPhone(event) {
-    const input = event.target;
-    let value = input.value.replace(/\D/g, '');
-    value = value.substring(0, 11);
-
-    if (value.length > 6) {
-        value = `(${value.substring(0, 2)}) ${value.substring(2, 7)}-${value.substring(7)}`;
-    } else if (value.length > 2) {
-        value = `(${value.substring(0, 2)}) ${value.substring(2)}`;
-    }
-    input.value = value;
-}
-
 // Error handling
 window.addEventListener('error', (e) => {
     console.error('JavaScript Error:', e.error);
@@ -734,105 +720,21 @@ document.addEventListener('submit', (e) => {
 
 // Export functions for global access
 window.scrollToSection = scrollToSection;
-window.maskPhone = maskPhone;
 
-// =================================================================
-// SIMULATOR LOGIC
-// =================================================================
+// Phone mask function
+function maskPhone(event) {
+    const input = event.target;
+    let value = input.value.replace(/\D/g, '');
+    value = value.substring(0, 11);
 
-// --- CONFIGURATION OBJECT ---
-// Valores PADRÃO de custo. Na versão PRO, esses valores são sobrescritos pelos inputs do painel.
-const SIMULATOR_CONFIG = {
-    // =========================================================================
-    // CUSTOS COMUNS (Aplicável a Guarda-Roupa e Cozinha)
-    // Na versão PRO, a margem de lucro é adicionada sobre estes custos.
-    // =========================================================================
-    COMMON_COSTS: {
-        // Custo fixo cobrado se o cliente optar pela criação de um projeto 3D.
-        'PROJECT_3D': 350,
-        // Custo por METRO LINEAR de fita de LED instalada.
-        // O cálculo multiplica este valor pela largura total do móvel.
-            // =========================================================================
-        'Iluminação LED': 350,
-    },
-    // =========================================================================
-    // CONFIGURAÇÕES DE CÁLCULO PARA GUARDA-ROUPA
-    // =========================================================================
-    WARDROBE: {
-        // O preço do guarda-roupa é calculado com base na ÁREA FRONTAL (largura x altura).
-        // O preço por m² é usado como base para o custo de produção.
-        PRODUCTION_COST_PER_M2: 450, // Custo de fabricação, montagem, etc. por m² de área frontal.
-        // Preço por CHAPA de MDF.
-        MDF_SHEET_PRICING: {
-            'Branco': 240,
-            'Premium': 400,
-        },
-        // Fator de multiplicação para estimar a área total de material (carcaça, prateleiras) a partir da área frontal.
-        // Ex: 2.5 significa que a área total de MDF é 2.5x a área frontal.
-        MATERIAL_AREA_MULTIPLIER: 2.5,
-        // Área total de uma chapa de MDF (padrão 2.75m * 1.85m = 5.0875 m²). Usado para estimar a quantidade de chapas.
-        MDF_SHEET_SIZE: 5.09,
-        // Custos de ferragens e puxadores para guarda-roupa.
-        HARDWARE: {
-            HANDLE_BAR_COST: {
-                    'aluminio': 0, // Custo da barra de alumínio (padrão, já incluso no preço/m²).
-                'premium': 100.00   // Custo ADICIONAL por BARRA de 3m para puxadores premium (inox, preto, dourado).
-            },
-            // Comprimento padrão de uma barra de puxador em metros. Usado para calcular quantas barras são necessárias.
-            HANDLE_BAR_LENGTH: 3.0,
-            // Custo por UNIDADE de dobradiça. O sistema calcula a quantidade com base na altura da porta.
-            HINGE_COST_PER_UNIT: { 'padrao': 5.00, 'softclose': 20.00 },
-            // Custo do PAR de corrediças por GAVETA.
-            SLIDE_COST_PER_DRAWER: 20.00,
-        },
-        // Custos de itens extras específicos para guarda-roupa.
-        EXTRAS_COST: {
-            // Custo FIXO por CADA porta que tiver espelho.
-            'Porta com Espelho': 700,
-            // Custo FIXO por CADA gaveteiro que tiver chave.
-            'Gaveteiro com Chave': 200,
-            // Custo ADICIONAL por UNIDADE (porta ou gaveta) para adicionar amortecedores (soft-close).
-            'HARDWARE_SOFT_CLOSE_PER_UNIT': 80,
-        }
-    },
-    // =========================================================================
-    // CONFIGURAÇÕES DE CÁLCULO PARA COZINHA
-    // =========================================================================
-    KITCHEN: {
-        // O preço da cozinha é calculado com base no CUSTO DAS CHAPAS de MDF.
-        // Defina aqui o preço por CHAPA para cada tipo de material.
-        MDF_SHEET_PRICING: {
-            'Branco': 240, // Preço de uma chapa de MDF branco.
-            'Premium': 400,  // Preço de uma chapa de MDF colorido/texturizado.
-        },
-        // Área total de uma chapa de MDF (padrão 2.75m * 1.85m = 5.0875 m²). Usado para calcular a quantidade de chapas.
-        MDF_SHEET_SIZE: 5.09,
-        // Custos detalhados de ferragens e puxadores.
-        HARDWARE: {
-            // Custo por UNIDADE de dobradiça. Para cozinhas, o padrão é 2 por porta.
-            HINGE_COST_PER_UNIT: { 'padrao': 5.00, 'softclose': 20.00 },
-            // Custo do PAR de corrediças por GAVETA.
-            SLIDE_COST_PER_DRAWER: 20.00,
-            // Custo por BARRA de 3 metros de puxador perfil.
-            HANDLE_BAR_COST: { 'aluminio': 75.00, 'premium': 100.00 },
-            // Custo ADICIONAL por porta/gaveta ao usar puxador premium (se houver algum custo de mão de obra extra).
-            HANDLE_PREMIUM_EXTRA_PER_UNIT: 6.00,
-            // Comprimento padrão de uma barra de puxador em metros.
-            HANDLE_BAR_LENGTH: 3.0,
-            // Largura média de uma porta/gaveta em metros. Usado para estimar a quantidade de ferragens.
-            UNIT_WIDTH: 0.4,
-        },
-        // Custos de itens extras específicos para cozinha.
-        EXTRAS_COST: {
-            'Porta-temperos': 350, // Custo FIXO para um porta-temperos embutido.
-            'Lixeira Embutida': 400, // Custo FIXO para uma lixeira embutida.
-            // Custo por METRO LINEAR de armário de pia (balcão inferior).
-            'SINK_CABINET_PER_METER': 450,
-            // Custo por METRO LINEAR de altura da torre quente (para forno/micro-ondas).
-            'HOT_TOWER_PER_METER': 600,
-        }
-    },
-};
+    if (value.length > 6) {
+        value = `(${value.substring(0, 2)}) ${value.substring(2, 7)}-${value.substring(7)}`;
+    } else if (value.length > 2) {
+        value = `(${value.substring(0, 2)}) ${value.substring(2)}`;
+    }
+    input.value = value;
+}
+window.maskPhone = maskPhone; // Make it globally available for oninput attribute
 
 function setupSimulator() {
     // --- STATE ---
@@ -872,6 +774,100 @@ function setupSimulator() {
     const progressBarLines = document.querySelectorAll('.progress-line');
 
     // --- INITIALIZATION ---
+    // --- CONFIGURATION OBJECT ---
+    // Valores PADRÃO de custo. Na versão PRO, esses valores são sobrescritos pelos inputs do painel.
+    const SIMULATOR_CONFIG = {
+        // =========================================================================
+        // CUSTOS COMUNS (Aplicável a Guarda-Roupa e Cozinha)
+        // Na versão PRO, a margem de lucro é adicionada sobre estes custos.
+        // =========================================================================
+        COMMON_COSTS: {
+            // Custo fixo cobrado se o cliente optar pela criação de um projeto 3D.
+            'PROJECT_3D': 350,
+            // Custo por METRO LINEAR de fita de LED instalada.
+            // O cálculo multiplica este valor pela largura total do móvel.
+                // =========================================================================
+            'Iluminação LED': 350,
+        },
+        // =========================================================================
+        // CONFIGURAÇÕES DE CÁLCULO PARA GUARDA-ROUPA
+        // =========================================================================
+        WARDROBE: {
+            // O preço do guarda-roupa é calculado com base na ÁREA FRONTAL (largura x altura).
+            // O preço por m² é usado como base para o custo de produção.
+            PRODUCTION_COST_PER_M2: 450, // Custo de fabricação, montagem, etc. por m² de área frontal.
+            // Preço por CHAPA de MDF.
+            MDF_SHEET_PRICING: {
+                'Branco': 240,
+                'Premium': 400,
+            },
+            // Fator de multiplicação para estimar a área total de material (carcaça, prateleiras) a partir da área frontal.
+            // Ex: 2.5 significa que a área total de MDF é 2.5x a área frontal.
+            MATERIAL_AREA_MULTIPLIER: 2.5,
+            // Área total de uma chapa de MDF (padrão 2.75m * 1.85m = 5.0875 m²). Usado para estimar a quantidade de chapas.
+            MDF_SHEET_SIZE: 5.09,
+            // Custos de ferragens e puxadores para guarda-roupa.
+            HARDWARE: {
+                HANDLE_BAR_COST: {
+                        'aluminio': 0, // Custo da barra de alumínio (padrão, já incluso no preço/m²).
+                    'premium': 100.00   // Custo ADICIONAL por BARRA de 3m para puxadores premium (inox, preto, dourado).
+                },
+                // Comprimento padrão de uma barra de puxador em metros. Usado para calcular quantas barras são necessárias.
+                HANDLE_BAR_LENGTH: 3.0,
+                // Custo por UNIDADE de dobradiça. O sistema calcula a quantidade com base na altura da porta.
+                HINGE_COST_PER_UNIT: { 'padrao': 5.00, 'softclose': 20.00 },
+                // Custo do PAR de corrediças por GAVETA.
+                SLIDE_COST_PER_DRAWER: 20.00,
+            },
+            // Custos de itens extras específicos para guarda-roupa.
+            EXTRAS_COST: {
+                // Custo FIXO por CADA porta que tiver espelho.
+                'Porta com Espelho': 700,
+                // Custo FIXO por CADA gaveteiro que tiver chave.
+                'Gaveteiro com Chave': 200,
+                // Custo ADICIONAL por UNIDADE (porta ou gaveta) para adicionar amortecedores (soft-close).
+                'HARDWARE_SOFT_CLOSE_PER_UNIT': 80,
+            }
+        },
+        // =========================================================================
+        // CONFIGURAÇÕES DE CÁLCULO PARA COZINHA
+        // =========================================================================
+        KITCHEN: {
+            // O preço da cozinha é calculado com base no CUSTO DAS CHAPAS de MDF.
+            // Defina aqui o preço por CHAPA para cada tipo de material.
+            MDF_SHEET_PRICING: {
+                'Branco': 240, // Preço de uma chapa de MDF branco.
+                'Premium': 400,  // Preço de uma chapa de MDF colorido/texturizado.
+            },
+            // Área total de uma chapa de MDF (padrão 2.75m * 1.85m = 5.0875 m²). Usado para calcular a quantidade de chapas.
+            MDF_SHEET_SIZE: 5.09,
+            // Custos detalhados de ferragens e puxadores.
+            HARDWARE: {
+                // Custo por UNIDADE de dobradiça. Para cozinhas, o padrão é 2 por porta.
+                HINGE_COST_PER_UNIT: { 'padrao': 5.00, 'softclose': 20.00 },
+                // Custo do PAR de corrediças por GAVETA.
+                SLIDE_COST_PER_DRAWER: 20.00,
+                // Custo por BARRA de 3 metros de puxador perfil.
+                HANDLE_BAR_COST: { 'aluminio': 75.00, 'premium': 100.00 },
+                // Custo ADICIONAL por porta/gaveta ao usar puxador premium (se houver algum custo de mão de obra extra).
+                HANDLE_PREMIUM_EXTRA_PER_UNIT: 6.00,
+                // Comprimento padrão de uma barra de puxador em metros.
+                HANDLE_BAR_LENGTH: 3.0,
+                // Largura média de uma porta/gaveta em metros. Usado para estimar a quantidade de ferragens.
+                UNIT_WIDTH: 0.4,
+            },
+            // Custos de itens extras específicos para cozinha.
+            EXTRAS_COST: {
+                'Porta-temperos': 350, // Custo FIXO para um porta-temperos embutido.
+                'Lixeira Embutida': 400, // Custo FIXO para uma lixeira embutida.
+                // Custo por METRO LINEAR de armário de pia (balcão inferior).
+                'SINK_CABINET_PER_METER': 450,
+                // Custo por METRO LINEAR de altura da torre quente (para forno/micro-ondas).
+                'HOT_TOWER_PER_METER': 600,
+            }
+        },
+    };
+
     function init() {
         setupEventListeners();
         // Recalculate height on window resize to handle responsive changes. Debounce is defined inline.

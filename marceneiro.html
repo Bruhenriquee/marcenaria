@@ -92,8 +92,12 @@
             <div class="space-y-4">
                 <h3 class="panel-subtitle">Ferragens</h3>
                 <div>
-                    <label for="hinge-cost" class="panel-label">Custo Dobradiça (unid.)</label>
-                    <input type="number"id="hinge-cost" value="20" class="panel-input">
+                    <label for="hinge-standard-cost" class="panel-label">Custo Dobradiça Padrão (unid.)</label>
+                    <input type="number" id="hinge-standard-cost" value="5" step="0.5" class="panel-input">
+                </div>
+                <div>
+                    <label for="hinge-softclose-cost" class="panel-label">Custo Dobradiça Soft-close (unid.)</label>
+                    <input type="number" id="hinge-softclose-cost" value="20" step="0.5" class="panel-input">
                 </div>
                 <div>
                     <label for="slide-cost" class="panel-label">Custo Corrediça (par)</label>
@@ -105,6 +109,12 @@
                                 <h3 class="panel-subtitle">Despesas e Lucro
                                     <button id="reset-panel-btn" title="Restaurar valores padrão" class="ml-2 text-gold text-base hover:text-yellow-400"><i class="fas fa-undo"></i></button>
                                 </h3>
+                                <div class="relative">
+                                    <label for="fabrication-cost-m2" class="panel-label">Custo de Fabricação (por m²)
+                                        <span class="ml-1" title="Custo de mão de obra, energia, etc., por metro quadrado de área frontal do guarda-roupa."><i class="fas fa-info-circle text-gold"></i></span>
+                                    </label>
+                                    <input type="number" id="fabrication-cost-m2" value="450" class="panel-input">
+                                </div>
                                 <div class="relative">
                                         <label for="shipping-cost" class="panel-label">Custo Frete / Deslocamento
                                             <span class="ml-1" title="Valor estimado para transporte e entrega"><i class="fas fa-info-circle text-gold"></i></span>
@@ -458,6 +468,17 @@
                                             </label>
                                         </div>
                                     </div>
+                                    <!-- Drawer Section -->
+                                    <div id="drawer-section" class="smooth-toggle">
+                                        <h4 class="font-semibold text-lg mb-4 text-charcoal">Gavetas</h4>
+                                        <div class="bg-white rounded-2xl p-6 shadow-sm">
+                                            <label for="numDrawers" class="block mb-2 font-semibold">Quantas gavetas o projeto terá?</label>
+                                            <input type="number" id="numDrawers" name="numDrawers" min="0" value="4" class="form-input">
+                                            <div id="drawer-recommendation" class="mt-4 p-4 bg-blue-50 text-blue-800 rounded-lg text-center hidden">
+                                                <i class="fas fa-info-circle mr-2"></i><span id="drawer-recommendation-text"></span>
+                                            </div>
+                                        </div>
+                                    </div>
                                     <div>
                                         <h4 class="font-semibold text-lg mb-4 text-charcoal">Adicionais para Guarda-Roupa</h4>
                                         <div class="space-y-4">
@@ -469,6 +490,17 @@
     
                                 <!-- Kitchen Specific Options -->
                                 <div id="kitchen-options" class="hidden space-y-8 smooth-toggle">
+                                    <!-- Drawer Section for Kitchen -->
+                                    <div id="kitchen-drawer-section" class="smooth-toggle">
+                                        <h4 class="font-semibold text-lg mb-4 text-charcoal">Gavetas</h4>
+                                        <div class="bg-white rounded-2xl p-6 shadow-sm">
+                                            <label for="kitchenNumDrawers" class="block mb-2 font-semibold">Quantas gavetas o projeto terá?</label>
+                                            <input type="number" id="kitchenNumDrawers" name="kitchenNumDrawers" min="0" value="4" class="form-input">
+                                            <div id="kitchen-drawer-recommendation" class="mt-4 p-4 bg-blue-50 text-blue-800 rounded-lg text-center hidden">
+                                                <i class="fas fa-info-circle mr-2"></i><span id="kitchen-drawer-recommendation-text"></span>
+                                            </div>
+                                        </div>
+                                    </div>
                                     <div class="space-y-4">
                                         <h4 class="font-semibold text-lg mb-4 text-charcoal">Adicionais para Cozinha</h4>
                                         <label class="extra-option-card"><input type="checkbox" name="extras" value="Porta-temperos"><div class="flex-grow"><h4>Porta-temperos Embutido</h4><p class="text-sm text-gray-500">Praticidade ao cozinhar.</p></div></label>
@@ -672,22 +704,6 @@
             </div>
     </section>
     </main>
-
-    <!-- Modals (copiados do index.html) -->
-    <!-- PDF Viewer Modal -->
-    <div id="pdf-viewer-modal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-[100] flex items-center justify-center p-4 hidden" role="dialog" aria-modal="true" aria-hidden="true">
-        <div class="bg-white rounded-lg w-full max-w-4xl h-[90vh] md:h-[95vh] flex flex-col shadow-2xl">
-            <div class="flex justify-between items-center p-4 border-b">
-                <h3 id="pdf-viewer-title" class="font-montserrat font-bold text-xl text-charcoal">Catálogo</h3>
-                <button id="pdf-viewer-close" class="text-charcoal text-2xl hover:text-gold transition-colors">
-                    <i class="fas fa-times"></i>
-                </button>
-            </div>
-            <div class="flex-1 p-2 bg-gray-200">
-                <iframe id="pdf-viewer-iframe" src="" class="w-full h-full border-0 rounded-b-lg"></iframe>
-            </div>
-        </div>
-    </div>
 
     <!-- Hidden Template for PDF Generation -->
     <div id="pdf-template" class="hidden">
