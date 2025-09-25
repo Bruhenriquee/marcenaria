@@ -199,7 +199,8 @@ function getWardrobeParts(totalWidth, height, depth, numDrawers, hasDoors, numDo
         }
 
         // Add shelves for each module
-        const numShelves = Math.floor(height / 500); // Shelves per module
+        // Ajustado para um número mais realista de prateleiras (1 prateleira a cada ~80cm)
+        const numShelves = Math.floor(height / 800); // Shelves per module
         for (let s = 0; s < numShelves; s++) {
             mdf15Parts.push({ w: currentModuleWidth - (2 * thickness), h: depth - 20, description: `Shelf ${i+1}-${s+1}` });
         }
@@ -293,43 +294,50 @@ function optimizeCutting(parts, sheetWidth, sheetHeight) {
         return [];
     }
 
+    // Pré-processa as peças, rotacionando as que são muito altas para caber
+    const processedParts = parts.map(part => {
+        const newPart = { ...part };
+        // Se a peça é mais alta que a chapa, mas sua altura cabe na largura da chapa
+        if (newPart.h > sheetHeight && newPart.h <= sheetWidth && newPart.w <= sheetHeight) {
+            // Rotaciona a peça
+            [newPart.w, newPart.h] = [newPart.h, newPart.w];
+            newPart.rotated = true; // Marca como rotacionada
+        }
+        return newPart;
+    });
+
     // Ordena as peças da maior para a menor para otimizar o encaixe.
-    parts.sort((a, b) => Math.max(b.w, b.h) - Math.max(a.w, a.h));
+    processedParts.sort((a, b) => Math.max(b.w, b.h) - Math.max(a.w, a.h));
 
     const sheets = [];
-    let remainingParts = [...parts];
+    let remainingParts = processedParts.map(p => ({ ...p }));
 
     while (remainingParts.length > 0) {
-        const sheet = [];
         const packer = new Packer(sheetWidth, sheetHeight);
-        const stillUnpacked = [];
+        const packedParts = [];
+        const unpackedParts = [];
 
-        // Tenta encaixar as peças restantes na nova chapa
         packer.fit(remainingParts);
 
         remainingParts.forEach(part => {
             if (part.fit) {
-                sheet.push(part);
+                packedParts.push(part);
             } else {
-                stillUnpacked.push(part);
+                delete part.fit;
+                unpackedParts.push(part);
             }
         });
 
-        if (sheet.length > 0) {
-            sheets.push(sheet);
-        }
-
-        // Se nenhuma peça foi empacotada nesta rodada, interrompe o loop para evitar travamento.
-        if (stillUnpacked.length > 0 && sheet.length === 0) {
-            console.warn("Não foi possível encaixar as peças restantes:", stillUnpacked);
+        if (packedParts.length === 0 && unpackedParts.length > 0) {
+            console.warn("Não foi possível encaixar as peças restantes (mesmo após rotação):", unpackedParts);
             break;
         }
 
-        // Prepara para a próxima iteração do loop com as peças que sobraram.
-        remainingParts = stillUnpacked.map(part => {
-            delete part.fit; // Limpa a propriedade 'fit' para a próxima tentativa de encaixe.
-            return part;
-        });
+        if (packedParts.length > 0) {
+            sheets.push(packedParts);
+        }
+
+        remainingParts = unpackedParts;
     }
 
     return sheets;
@@ -580,6 +588,7 @@ function setupSimulator() {
         document.getElementById('pdf-btn-internal').addEventListener('click', () => generatePDF('internal'));
         document.getElementById('pdf-btn-client').addEventListener('click', () => generatePDF('client'));
         document.getElementById('pdf-btn-contract').addEventListener('click', () => generatePDF('contract'));
+        document.getElementById('pdf-btn-cutting').addEventListener('click', generateCuttingPlanPDF);
         document.getElementById('whatsapp-btn').addEventListener('click', generateWhatsAppLink);
 
         // Step 6: Breakdown toggle
@@ -1071,6 +1080,28 @@ function setupSimulator() {
         return true;
     }
 
+    function getPanelCosts() {
+        return {
+            mdfBranco: parseFloat(document.getElementById('mdf-branco-cost').value) || 240,
+            mdfPremium: parseFloat(document.getElementById('mdf-premium-cost').value) || 400,
+            mdfFundo: parseFloat(document.getElementById('mdf-fundo-cost').value) || 140,
+            edgeTapePerMeter: parseFloat(document.getElementById('edge-tape-cost').value) || 2.5,
+            hingeStandard: parseFloat(document.getElementById('hinge-standard-cost').value) || 5,
+            hingeSoftclose: parseFloat(document.getElementById('hinge-softclose-cost').value) || 20,
+            slide: parseFloat(document.getElementById('slide-cost').value) || 25,
+            multiplier: parseFloat(document.getElementById('cost-multiplier').value) || 2,
+            discountExtra: parseFloat(document.getElementById('discount-extra').value) || 0,
+            competitorPrice: parseFloat(document.getElementById('competitor-price').value) || 0
+        };
+    }
+
+    function flashRecalculateButton() {
+        const btn = document.getElementById('recalculate-btn');
+        btn.classList.add('bg-green-500', 'animate-pulse');
+        setTimeout(() => {
+            btn.classList.remove('bg-green-500', 'animate-pulse');
+        }, 1500);
+    }
     async function recalculateAndRender() {
         try {
             calculateQuote();
@@ -1092,6 +1123,7 @@ function setupSimulator() {
         document.getElementById('main-content').style.marginLeft = '0';
         await new Promise(resolve => setTimeout(resolve, 300)); // Aguarda a animação do painel
         await recalculateAndRender();
+        flashRecalculateButton();
         recalculateBtn.disabled = false;
         recalculateBtn.innerHTML = originalBtnHTML;
     }
@@ -1162,25 +1194,8 @@ function setupSimulator() {
     }
 
     function calculateWardrobeQuote() {
-        // Sobrescreve a configuração com os valores do painel Pro
-        const mdfBrancoCost = parseFloat(document.getElementById('mdf-branco-cost').value) || 0;
-        const mdfPremiumCost = parseFloat(document.getElementById('mdf-premium-cost').value) || 0;
-        const mdfFundoCost = parseFloat(document.getElementById('mdf-fundo-cost').value) || 0;
-
-        // Get specific hinge costs from panel
-        const hingeStandardCost = parseFloat(document.getElementById('hinge-standard-cost').value) || 0;
-        const hingeSoftcloseCost = parseFloat(document.getElementById('hinge-softclose-cost').value) || 0;
-        const slideCostPerDrawer = parseFloat(document.getElementById('slide-cost').value) || 0;
-        const edgeTapeCostPerMeter = parseFloat(document.getElementById('edge-tape-cost').value) || 0;
-
-        if (!isNaN(mdfBrancoCost)) {
-            SIMULATOR_CONFIG.WARDROBE.MDF_SHEET_PRICING['Branco'] = mdfBrancoCost;
-            SIMULATOR_CONFIG.KITCHEN.MDF_SHEET_PRICING['Branco'] = mdfBrancoCost;
-        }
-        if (!isNaN(mdfPremiumCost)) {
-            SIMULATOR_CONFIG.WARDROBE.MDF_SHEET_PRICING['Premium'] = mdfPremiumCost;
-            SIMULATOR_CONFIG.KITCHEN.MDF_SHEET_PRICING['Premium'] = mdfPremiumCost;
-        }
+        // Obtém todos os custos do painel de uma vez
+        const panelCosts = getPanelCosts();
 
         const config = SIMULATOR_CONFIG.WARDROBE;
 
@@ -1222,15 +1237,15 @@ function setupSimulator() {
             const numPremiumSheets = premiumSheets.length;
             const numWhiteSheets = whiteSheets.length;
 
-            if (numWhiteSheets > 0) baseBreakdown.push({ label: 'Chapas de MDF Branco (Interno)', quantity: numWhiteSheets, cost: numWhiteSheets * mdfBrancoCost });
-            if (numPremiumSheets > 0) baseBreakdown.push({ label: 'Chapas de MDF Premium (Frentes)', quantity: numPremiumSheets, cost: numPremiumSheets * mdfPremiumCost });
+            if (numWhiteSheets > 0) baseBreakdown.push({ label: 'Chapas de MDF Branco (Interno)', quantity: numWhiteSheets, cost: numWhiteSheets * panelCosts.mdfBranco });
+            if (numPremiumSheets > 0) baseBreakdown.push({ label: 'Chapas de MDF Premium (Frentes)', quantity: numPremiumSheets, cost: numPremiumSheets * panelCosts.mdfPremium });
             
             sheets = [...premiumSheets, ...whiteSheets]; // Combina para o plano de corte visual
         } else {
             // Lógica para material único (Branco ou Premium)
             sheets = optimizeCutting(allParts, 2750, 1850);
             const numSheets = sheets.length;
-            const mdfCost = numSheets * (state.material === 'Branco' ? mdfBrancoCost : mdfPremiumCost);
+            const mdfCost = numSheets * (state.material === 'Branco' ? panelCosts.mdfBranco : panelCosts.mdfPremium);
             const materialLabel = state.material === 'Branco' ? 'Chapas de MDF Branco' : 'Chapas de MDF Premium';
             if (mdfCost > 0) baseBreakdown.push({ label: materialLabel, quantity: numSheets, cost: mdfCost });
         }
@@ -1247,18 +1262,18 @@ function setupSimulator() {
         const backPanelSheetSize = 2.75 * 1.85; // Standard 3mm sheet size
         const numBackPanelSheets = Math.ceil(totalBackPanelArea / backPanelSheetSize);
         if (numBackPanelSheets > 0) {
-            baseBreakdown.push({ label: 'Chapas de Fundo (3mm)', quantity: numBackPanelSheets, cost: numBackPanelSheets * mdfFundoCost });
+            baseBreakdown.push({ label: 'Chapas de Fundo (3mm)', quantity: numBackPanelSheets, cost: numBackPanelSheets * panelCosts.mdfFundo });
         }
 
         // 2. Hardware Cost (Hinges, Slides, Handles)
         const numDrawers = state.numDrawers;
-        const slideCost = numDrawers * slideCostPerDrawer;
+        const slideCost = numDrawers * panelCosts.slide;
         if (slideCost > 0) baseBreakdown.push({ label: 'Pares de Corrediças de Gaveta', quantity: numDrawers, cost: slideCost });
 
         if (hasDoors) {
             if (state.doorType === 'abrir') {
                 const totalHinges = numDoors * hingesPerDoor;
-                const hingeCost = totalHinges * (state.hardwareType === 'softclose' ? hingeSoftcloseCost : hingeStandardCost);
+                const hingeCost = totalHinges * (state.hardwareType === 'softclose' ? panelCosts.hingeSoftclose : panelCosts.hingeStandard);
                 const hingeLabel = state.hardwareType === 'softclose' ? 'Dobradiças Soft-close' : 'Dobradiças Padrão';
                 if (hingeCost > 0) baseBreakdown.push({ label: hingeLabel, quantity: totalHinges, cost: hingeCost });
             }
@@ -1274,7 +1289,7 @@ function setupSimulator() {
 
         // 3.5 Edge Tape Cost
         const estimatedPerimeter = totalMaterialArea * 1.5; // Rough estimation
-        const edgeTapeCost = estimatedPerimeter * edgeTapeCostPerMeter;
+        const edgeTapeCost = estimatedPerimeter * panelCosts.edgeTapePerMeter;
         if (edgeTapeCost > 0) {
             baseBreakdown.push({ label: 'Fita de Borda', quantity: Math.round(estimatedPerimeter), cost: edgeTapeCost });
         }
@@ -1291,27 +1306,12 @@ function setupSimulator() {
             if (finalCost > 0) extrasBreakdown.push({ label: extra, cost: finalCost });
         });
 
-        return { baseBreakdown, extrasBreakdown, totalMaterialArea };
+        return { baseBreakdown, extrasBreakdown, totalMaterialArea, cuttingPlan: sheets };
     }
 
     function calculateKitchenQuote() {
-        // Sobrescreve a configuração com os valores do painel Pro
-        const mdfBrancoCost = parseFloat(document.getElementById('mdf-branco-cost').value) || 0;
-        const mdfPremiumCost = parseFloat(document.getElementById('mdf-premium-cost').value) || 0;
-        const mdfFundoCost = parseFloat(document.getElementById('mdf-fundo-cost').value) || 0;
-
-        // Get specific hinge costs from panel
-        const hingeStandardCost = parseFloat(document.getElementById('hinge-standard-cost').value) || 0;
-        const hingeSoftcloseCost = parseFloat(document.getElementById('hinge-softclose-cost').value) || 0;
-        const slideCostPerDrawer = parseFloat(document.getElementById('slide-cost').value) || 0;
-        const edgeTapeCostPerMeter = parseFloat(document.getElementById('edge-tape-cost').value) || 0;
-
-        if (!isNaN(mdfBrancoCost)) {
-            SIMULATOR_CONFIG.KITCHEN.MDF_SHEET_PRICING['Branco'] = mdfBrancoCost;
-        }
-        if (!isNaN(mdfPremiumCost)) {
-            SIMULATOR_CONFIG.KITCHEN.MDF_SHEET_PRICING['Premium'] = mdfPremiumCost;
-        }
+        // Obtém todos os custos do painel de uma vez
+        const panelCosts = getPanelCosts();
 
         const config = SIMULATOR_CONFIG.KITCHEN;
         const baseBreakdown = [];
@@ -1322,7 +1322,7 @@ function setupSimulator() {
 
         const sheets = optimizeCutting(parts, 2750, 1850);
         const numSheets = sheets.length;
-        const mdfCost = numSheets * (state.material === 'Branco' ? mdfBrancoCost : mdfPremiumCost);
+        const mdfCost = numSheets * (state.material === 'Branco' ? panelCosts.mdfBranco : panelCosts.mdfPremium);
         if (mdfCost > 0) baseBreakdown.push({ label: `Chapas de MDF ${state.material}`, quantity: numSheets, cost: mdfCost });
         state.quote.cuttingPlan = sheets;
         const totalMaterialArea = parts.reduce((acc, part) => acc + (part.w * part.h), 0) / 1000000;
@@ -1348,7 +1348,7 @@ function setupSimulator() {
         }
         const numBackPanelSheets = Math.ceil(Math.max(0, totalBackPanelArea) / backPanelSheetSize);
         if (numBackPanelSheets > 0) {
-            baseBreakdown.push({ label: 'Chapas de Fundo (3mm)', quantity: numBackPanelSheets, cost: numBackPanelSheets * mdfFundoCost });
+            baseBreakdown.push({ label: 'Chapas de Fundo (3mm)', quantity: numBackPanelSheets, cost: numBackPanelSheets * panelCosts.mdfFundo });
         }
 
         // --- Extras Calculation ---
@@ -1369,11 +1369,11 @@ function setupSimulator() {
         // Lógica de dobradiças aprimorada para cozinha (padrão de 2 por porta)
         const hingesPerDoor = 2;
         const totalHinges = numDoors * hingesPerDoor;
-        const hingeCost = totalHinges * (state.hardwareType === 'softclose' ? hingeSoftcloseCost : hingeStandardCost);
+        const hingeCost = totalHinges * (state.hardwareType === 'softclose' ? panelCosts.hingeSoftclose : panelCosts.hingeStandard);
         const hingeLabel = state.hardwareType === 'softclose' ? 'Dobradiças Soft-close' : 'Dobradiças Padrão';
         if (hingeCost > 0) baseBreakdown.push({ label: hingeLabel, quantity: totalHinges, cost: hingeCost });
 
-        const slideCost = numDrawers * slideCostPerDrawer;
+        const slideCost = numDrawers * panelCosts.slide;
         if (slideCost > 0) baseBreakdown.push({ label: 'Pares de Corrediças de Gaveta', quantity: numDrawers, cost: slideCost });
 
         // Kitchen handles are for both doors and drawers
@@ -1392,7 +1392,7 @@ function setupSimulator() {
 
         // Edge Tape Cost
         const estimatedPerimeter = totalMaterialArea * 1.5; // Rough estimation
-        const edgeTapeCost = estimatedPerimeter * edgeTapeCostPerMeter;
+        const edgeTapeCost = estimatedPerimeter * panelCosts.edgeTapePerMeter;
         if (edgeTapeCost > 0) {
             baseBreakdown.push({ label: 'Fita de Borda', quantity: Math.round(estimatedPerimeter), cost: edgeTapeCost });
         }
@@ -1411,40 +1411,34 @@ function setupSimulator() {
         return { baseBreakdown, extrasBreakdown, totalMaterialArea };
     }
 
-    function calculateQuote() {
+    function calculateQuote() { // Esta função agora retorna os detalhes do orçamento
         let quoteDetails;
         if (state.furnitureType === 'Guarda-Roupa') {
             quoteDetails = calculateWardrobeQuote();
         } else { // Cozinha
             quoteDetails = calculateKitchenQuote();
         }
-
-        const { baseBreakdown, extrasBreakdown, totalMaterialArea } = quoteDetails;
+ 
+        const { baseBreakdown, extrasBreakdown, totalMaterialArea, cuttingPlan } = quoteDetails;
         const materialAndHardwareCost = baseBreakdown.reduce((acc, item) => acc + item.cost, 0);
         const extrasPrice = extrasBreakdown.reduce((acc, item) => acc + item.cost, 0);
-
-        // Nova lógica de cálculo com multiplicador
-        const multiplierInput = document.getElementById('cost-multiplier');
-        const multiplier = multiplierInput ? (parseFloat(multiplierInput.value) || 1) : 2;
-
-        const multipliedCost = materialAndHardwareCost * multiplier;
+ 
+        // Nova lógica de cálculo com valores do painel
+        const panelCosts = getPanelCosts();
+ 
+        const multipliedCost = materialAndHardwareCost * panelCosts.multiplier;
         const profitAmount = multipliedCost - materialAndHardwareCost;
         const costPrice = materialAndHardwareCost + extrasPrice; // Custo real para o marceneiro
         let finalTotal = costPrice + profitAmount;
-
+ 
         // Desconto ou acréscimo
-        const discountExtraInput = document.getElementById('discount-extra');
-        const discountExtra = discountExtraInput ? (parseFloat(discountExtraInput.value) || 0) : 0;
-        finalTotal += discountExtra;
-
-        // Preço do concorrente
-        const competitorPriceInput = document.getElementById('competitor-price');
-        const competitorPrice = competitorPriceInput ? (parseFloat(competitorPriceInput.value) || 0) : 0;
-
-
+        finalTotal += panelCosts.discountExtra;
+ 
+ 
         const sheetSize = state.furnitureType === 'Cozinha' ? SIMULATOR_CONFIG.KITCHEN.MDF_SHEET_SIZE : SIMULATOR_CONFIG.WARDROBE.MDF_SHEET_SIZE;
-
-        state.quote = {
+ 
+        // Retorna o objeto completo para ser atribuído ao estado
+        return {
             area: totalMaterialArea,
             sheets: Math.ceil(totalMaterialArea / sheetSize),
             total: finalTotal,
@@ -1454,8 +1448,9 @@ function setupSimulator() {
             baseBreakdown: baseBreakdown,
             extrasPrice: extrasPrice,
             extrasBreakdown: extrasBreakdown,
-            discountExtra: discountExtra,
-            competitorPrice: competitorPrice
+            discountExtra: panelCosts.discountExtra,
+            competitorPrice: panelCosts.competitorPrice,
+            cuttingPlan: cuttingPlan // Inclui o plano de corte no retorno
         };
     }
 
@@ -1612,7 +1607,8 @@ function setupSimulator() {
                 updateStateAndSave({ hardwareType: 'padrao' });
             }
 
-            calculateQuote();
+            // AQUI ESTÁ A CORREÇÃO: O resultado de calculateQuote() agora é atribuído ao estado.
+            state.quote = calculateQuote();
             renderResult();
             document.getElementById('lead-capture-form').classList.add('hidden');
             document.getElementById('result-container').classList.remove('hidden');
@@ -1739,33 +1735,40 @@ function setupSimulator() {
         }
     }
 
-    function handleLoadQuote(quoteId) {
+    async function handleLoadQuote(quoteId) { // A função já é async, o que é ótimo.
         const quotes = getSavedQuotes();
         const quoteToLoad = quotes.find(q => q.quoteId === parseInt(quoteId));
 
         if (quoteToLoad) {
             // Deep copy to avoid modifying the saved object directly
             const loadedState = JSON.parse(JSON.stringify(quoteToLoad));
-            
+    
             // Restore state
             Object.assign(state, loadedState);
-
+    
             // Update UI from state
             updateFormFromState();
-
+            
             // Go to the last step and show results
             currentStep = totalSteps;
             updateUI(false);
-            renderResult();
+            // Não é mais necessário chamar renderResult() aqui, pois recalculateAndRender() já faz isso.
+            // renderResult(); 
             document.getElementById('lead-capture-form').classList.add('hidden');
             document.getElementById('result-container').classList.remove('hidden');
             updateContainerHeight();
 
             showNotification(`Orçamento de "${state.customer.name}" carregado.`, "success");
+
+            // Recalcula tudo, incluindo o plano de corte, e renderiza novamente
+            // A CHAVE DA CORREÇÃO: Aguardar a conclusão do recálculo.
+            await recalculateAndRender(); 
             
             // Close the side panel
             document.getElementById('marceneiro-controls').classList.add('-translate-x-full');
             document.getElementById('main-content').style.marginLeft = '0';
+            // Re-habilita o botão de abrir o painel
+            document.getElementById('toggle-controls-btn').classList.remove('hidden');
         } else {
             showNotification("Orçamento não encontrado.", "error");
         }
@@ -1987,36 +1990,8 @@ function setupSimulator() {
 
         breakdownContainer.innerHTML = breakdownHTML;
 
-        const cuttingPlanContainer = document.getElementById('cutting-plan');
-        cuttingPlanContainer.innerHTML = '';
-        if (state.quote.cuttingPlan) {
-            document.getElementById('cutting-plan-container').classList.remove('hidden');
-            state.quote.cuttingPlan.forEach((sheet, index) => {
-                const sheetDiv = document.createElement('div');
-                sheetDiv.className = 'sheet';
-                sheetDiv.innerHTML = `<h5>Chapa ${index + 1}</h5>`;
-                const canvas = document.createElement('canvas');
-                canvas.width = 275;
-                canvas.height = 185;
-                const ctx = canvas.getContext('2d');
-                ctx.strokeStyle = '#ccc';
-                ctx.strokeRect(0, 0, 275, 185);
-
-                sheet.forEach(part => {
-                    if (part.fit) {
-                        ctx.strokeStyle = 'red';
-                        ctx.strokeRect(part.fit.x / 10, part.fit.y / 10, part.w / 10, part.h / 10);
-                        ctx.font = '10px Arial';
-                        ctx.fillText(part.description, (part.fit.x / 10) + 5, (part.fit.y / 10) + 15);
-                    }
-                });
-
-                sheetDiv.appendChild(canvas);
-                cuttingPlanContainer.appendChild(sheetDiv);
-            });
-        } else {
-            document.getElementById('cutting-plan-container').classList.add('hidden');
-        }
+        // A seção do plano de corte foi removida da tela para manter a interface limpa.
+        // A funcionalidade foi mantida apenas para a geração do PDF.
     }
 
     function renderSavedQuotes(searchTerm = '') {
@@ -2247,64 +2222,6 @@ function setupSimulator() {
         return { pdfBtn, originalBtnHTML, quoteId };
     }
 
-    async function generatePDF(type = 'client') {
-        const { pdfBtn, originalBtnHTML, quoteId } = populatePdfTemplate(type);
-        if (!pdfBtn) return;
-
-        try {
-            const { jsPDF } = window.jspdf;
-            const pdfTemplate = document.getElementById('pdf-template');
-            pdfTemplate.classList.remove('hidden');
-            const pdf = new jsPDF({
-                orientation: 'portrait',
-                unit: 'mm',
-                format: 'a4'
-            });
-    
-            const pageW = pdf.internal.pageSize.getWidth();
-            const pageH = pdf.internal.pageSize.getHeight();
-            const margin = 10; // Margem de 10mm
-            const contentWidth = pageW - (margin * 2);
-            const pageContentHeight = pageH - (margin * 2);
-            let cursorY = margin;
-
-            const sections = pdfTemplate.querySelectorAll('.pdf-container > .pdf-section');
-
-            for (const section of sections) {
-                if (section.classList.contains('hidden')) continue;
-
-                const canvas = await html2canvas(section, {
-                    scale: 3,
-                    useCORS: true,
-                    logging: false,
-                    backgroundColor: null // Use transparent background
-                });
-
-                const imgData = canvas.toDataURL('image/png');
-                const imgHeight = (canvas.height * contentWidth) / canvas.width;
-
-                if (cursorY > margin && cursorY + imgHeight > pageContentHeight + margin) {
-                    pdf.addPage();
-                    cursorY = margin;
-                }
-
-                pdf.addImage(imgData, 'PNG', margin, cursorY, contentWidth, imgHeight);
-                cursorY += imgHeight + 5; // Add 5mm spacing between sections
-            }
-
-            const fileName = `orcamento_${type}_${(state.customer.name || 'cliente').replace(/\s/g, '_')}_${quoteId}.pdf`;
-            pdf.save(fileName);
-    
-            pdfTemplate.classList.add('hidden');
-        } catch (error) {
-            console.error("PDF Generation Error:", error);
-            showNotification("Erro ao gerar o PDF. Tente novamente.", "error");
-        } finally {
-            pdfBtn.disabled = false;
-            pdfBtn.innerHTML = originalBtnHTML;
-        }
-    }
-
     function populatePdfTemplate(type) {
         let pdfBtn;
         if (type === 'internal') {
@@ -2447,6 +2364,225 @@ function setupSimulator() {
         }
 
         return { pdfBtn, originalBtnHTML, quoteId };
+    }
+
+    async function generatePDF(type = 'client') {
+        const { pdfBtn, originalBtnHTML, quoteId } = populatePdfTemplate(type);
+        if (!pdfBtn) return;
+
+        try {
+            const { jsPDF } = window.jspdf;
+            const pdfTemplate = document.getElementById('pdf-template');
+            pdfTemplate.classList.remove('hidden');
+            const pdf = new jsPDF({
+                orientation: 'portrait',
+                unit: 'mm',
+                format: 'a4'
+            });
+    
+            const pageW = pdf.internal.pageSize.getWidth();
+            const pageH = pdf.internal.pageSize.getHeight();
+            const margin = 10; // Margem de 10mm
+            const contentWidth = pageW - (margin * 2);
+            const pageContentHeight = pageH - (margin * 2);
+            let cursorY = margin;
+
+            const sections = pdfTemplate.querySelectorAll('.pdf-container > .pdf-section');
+
+            for (const section of sections) {
+                if (section.classList.contains('hidden')) continue;
+
+                const canvas = await html2canvas(section, { scale: 3, useCORS: true, logging: false, backgroundColor: null });
+                const imgData = canvas.toDataURL('image/png');
+                const imgHeight = (canvas.height * contentWidth) / canvas.width;
+
+                if (cursorY > margin && cursorY + imgHeight > pageContentHeight + margin) {
+                    pdf.addPage();
+                    cursorY = margin;
+                }
+
+                pdf.addImage(imgData, 'PNG', margin, cursorY, contentWidth, imgHeight);
+                cursorY += imgHeight + 5; // Add 5mm spacing between sections
+            }
+
+            const fileName = `orcamento_${type}_${(state.customer.name || 'cliente').replace(/\s/g, '_')}_${quoteId}.pdf`;
+            pdf.save(fileName);
+    
+            pdfTemplate.classList.add('hidden');
+        } catch (error) {
+            console.error("PDF Generation Error:", error);
+            showNotification("Erro ao gerar o PDF. Tente novamente.", "error");
+        } finally {
+            pdfBtn.disabled = false;
+            pdfBtn.innerHTML = originalBtnHTML;
+        }
+    }
+
+    async function generateCuttingPlanPDF() {
+        const pdfBtn = document.getElementById('pdf-btn-cutting');
+        if (!state.quote.cuttingPlan || state.quote.cuttingPlan.length === 0) {
+            showNotification("Nenhum plano de corte para gerar.", "error");
+            return;
+        }
+
+        const originalBtnHTML = pdfBtn.innerHTML;
+        pdfBtn.disabled = true;
+        pdfBtn.innerHTML = '<div class="spinner mr-2"></div>Gerando PDF...';
+
+        try {
+            const { jsPDF } = window.jspdf;
+            const pdf = new jsPDF({
+                orientation: 'landscape', // Melhor para visualizar as chapas
+                unit: 'mm',
+                format: 'a4'
+            });
+
+            const quoteId = state.quoteId || Date.now().toString().slice(-6);
+            const clientName = state.customer.name || 'Cliente';
+
+            const sheetW_mm = 2750;
+            const sheetH_mm = 1850;
+
+            for (let i = 0; i < state.quote.cuttingPlan.length; i++) {
+                const sheet = state.quote.cuttingPlan[i];
+                if (i > 0) {
+                    pdf.addPage();
+                }
+
+                // --- Agrupar e contar peças idênticas para a lista ---
+                const partsList = sheet.reduce((acc, part) => {
+                    const key = `${part.description}_${part.w}x${part.h}`;
+                    if (!acc[key]) {
+                        acc[key] = { ...part, count: 0 };
+                    }
+                    acc[key].count++;
+                    return acc;
+                }, {});
+
+                // Adiciona um cabeçalho em cada página
+                pdf.setFontSize(14);
+                pdf.setFont('helvetica', 'bold');
+                pdf.text(`Plano de Corte - Chapa ${i + 1} de ${state.quote.cuttingPlan.length}`, 10, 15);
+                pdf.setFontSize(10);
+                pdf.setFont('helvetica', 'normal');
+                pdf.text(`Projeto: ${clientName} | Orçamento: ${quoteId} | Chapa: ${sheetW_mm} x ${sheetH_mm} mm`, 10, 22);
+
+                // Cria um canvas temporário para desenhar a chapa
+                const canvas = document.createElement('canvas');
+                canvas.width = sheetW_mm; // Alta resolução
+                canvas.height = sheetH_mm;
+                const ctx = canvas.getContext('2d');
+                
+                // Desenha a chapa e as peças
+                ctx.fillStyle = 'white';
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+                ctx.strokeStyle = '#ccc';
+                ctx.lineWidth = 2;
+                ctx.strokeRect(0, 0, canvas.width, canvas.height);
+
+                let totalAreaUsed = 0;
+
+                sheet.forEach(part => {
+                    if (part.fit) {
+                        totalAreaUsed += part.w * part.h;
+                        ctx.fillStyle = 'rgba(212, 175, 55, 0.2)';
+                        ctx.strokeStyle = '#8B4513';
+                        ctx.lineWidth = 3;
+                        ctx.fillRect(part.fit.x, part.fit.y, part.w, part.h);
+                        ctx.strokeRect(part.fit.x, part.fit.y, part.w, part.h);
+                        ctx.fillStyle = '#2F2F2F';
+                        ctx.font = 'bold 40px Arial';
+                        ctx.textAlign = 'center';
+                        ctx.textBaseline = 'middle';
+
+                        const text = `${part.description} ${part.rotated ? ' (R)' : ''}`;
+                        const text2 = `${part.w}x${part.h}`;
+                        
+                        // Centraliza o texto na peça
+                        const centerX = part.fit.x + part.w / 2;
+                        const centerY = part.fit.y + part.h / 2;
+
+                        ctx.fillText(text, centerX, centerY - 25);
+                        ctx.fillText(text2, centerX, centerY + 25);
+                    }
+                });
+
+                const imgData = canvas.toDataURL('image/png');
+                // Adiciona a imagem da chapa ao PDF (A4 paisagem é 297x210 mm), deixando espaço para a lista
+                const imageWidth = 190; // Largura da imagem no PDF
+                const imageHeight = (canvas.height * imageWidth) / canvas.width;
+                pdf.addImage(imgData, 'PNG', 10, 30, imageWidth, imageHeight);
+
+                // --- Adiciona a lista de peças ao lado ---
+                let listY = 35;
+                const listX = 210;
+                pdf.setFontSize(10);
+                pdf.setFont('helvetica', 'bold');
+                pdf.text('Lista de Peças da Chapa:', listX, 30);
+                pdf.setFont('courier', 'normal');
+                pdf.setFontSize(9);
+                Object.values(partsList).forEach(p => {
+                    const translatedDescription = translatePartDescription(p.description);
+                    const text = `${String(p.count).padStart(2, ' ')}x - ${translatedDescription.padEnd(18, ' ')} ${String(p.w).padStart(4, ' ')} x ${String(p.h).padStart(4, ' ')} mm ${p.rotated ? '(R)' : ''}`;
+                    pdf.text(text, listX, listY);
+                    listY += 4;
+                });
+
+                // --- Adiciona resumo de aproveitamento ---
+                const utilization = (totalAreaUsed / (sheetW_mm * sheetH_mm)) * 100;
+                pdf.setFont('helvetica', 'bold');
+                pdf.setFontSize(10);
+                pdf.text(`Aproveitamento: ${utilization.toFixed(2)}%`, listX, listY + 5);
+            }
+
+            pdf.save(`plano_corte_${clientName.replace(/\s/g, '_')}.pdf`);
+
+        } catch (error) {
+            console.error("Cutting Plan PDF Generation Error:", error);
+            showNotification("Erro ao gerar o PDF do plano de corte.", "error");
+        } finally {
+            pdfBtn.disabled = false;
+            pdfBtn.innerHTML = originalBtnHTML;
+        }
+    }
+
+    function translatePartDescription(description) {
+        const translations = {
+            'Left Side': 'Lateral Esq.',
+            'Right Side': 'Lateral Dir.',
+            'Top': 'Tampo',
+            'Bottom': 'Base',
+            'Divider': 'Divisória',
+            'Shelf': 'Prateleira',
+            'Door': 'Porta',
+            'Drawer Front': 'Frente Gaveta',
+            'Drawer Side': 'Lateral Gaveta',
+            'Drawer Back': 'Fundo Gaveta',
+            'Drawer Bottom': 'Fundo Gaveta(3mm)',
+            'Upper Cabinet Top': 'Tampo Superior',
+            'Upper Cabinet Bottom': 'Base Superior',
+            'Upper Cabinet Side': 'Lateral Superior',
+            'Upper Cabinet Door': 'Porta Superior',
+            'Lower Cabinet Top': 'Tampo Inferior',
+            'Lower Cabinet Bottom': 'Base Inferior',
+            'Lower Cabinet Side': 'Lateral Inferior',
+            'Lower Cabinet Door': 'Porta Inferior',
+        };
+
+        // Tenta encontrar uma tradução exata
+        if (translations[description]) {
+            return translations[description];
+        }
+
+        // Tenta encontrar uma tradução parcial (para casos como "Top 1", "Shelf 1-2")
+        for (const key in translations) {
+            if (description.startsWith(key)) {
+                return description.replace(key, translations[key]);
+            }
+        }
+
+        // Se não encontrar, retorna a descrição original
+        return description;
     }
 
     function generateWhatsAppLink() {

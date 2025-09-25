@@ -688,3 +688,10 @@ input[type="radio"]:not(.sr-only):checked::after {
     border-color: #D4AF37; /* gold */
     background-color: #f9fafb; /* gray-50 */
 }
+
+/* Estilo para o container do plano de corte */
+.sheet-container canvas {
+    width: 100%;
+    height: auto;
+    aspect-ratio: 275 / 185; /* Mantém a proporção da chapa */
+}
