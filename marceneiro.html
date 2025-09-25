@@ -114,8 +114,8 @@
                                     <button id="reset-panel-btn" title="Restaurar valores padrão" class="ml-2 text-gold text-base hover:text-yellow-400"><i class="fas fa-undo"></i></button>
                                 </h3>
                                 <div class="relative">
-                                    <label for="cost-multiplier" class="panel-label">Multiplicador (Mão de Obra + Lucro)
-                                        <span class="ml-1" title="Multiplica o custo total de material e ferragens. Ex: 2 para cobrar o dobro."><i class="fas fa-info-circle text-gold"></i></span>
+                                    <label for="cost-multiplier" class="panel-label">Multiplicador
+                                        <span class="ml-1" title="Multiplica o custo de material e ferragens para definir o preço final. Ex: 2 para cobrar o dobro do custo."><i class="fas fa-info-circle text-gold"></i></span>
                                     </label>
                                     <input type="number" id="cost-multiplier" value="2" step="0.1" class="panel-input">
                                 </div>
@@ -673,13 +673,13 @@
                                 <div class="mt-10 text-center">
                                     <h4 class="font-montserrat font-bold text-2xl text-charcoal mb-3">Próximos Passos</h4>
                                     <p class="text-gray-600 mb-6 max-w-2xl mx-auto">Salve este orçamento, envie para o cliente ou gere um PDF para seus registros.</p>
-                                    <div class="flex flex-col sm:flex-row items-center justify-center gap-4 mt-10 flex-wrap max-w-3xl mx-auto">
-                                        <button id="save-quote-btn" class="action-btn-pro bg-blue-600 hover:bg-blue-700"><i class="fas fa-save fa-fw mr-2"></i>Salvar Orçamento</button>
-                                        <button id="whatsapp-btn" class="action-btn-pro bg-green-500 hover:bg-green-600"><i class="fab fa-whatsapp fa-fw mr-2"></i>Enviar p/ Cliente</button>
-                                        <button id="pdf-btn-internal" class="action-btn-pro bg-red-500 hover:bg-red-600"><i class="fas fa-file-pdf fa-fw mr-2"></i>PDF Interno</button>
-                                        <button id="pdf-btn-client" class="action-btn-pro bg-purple-500 hover:bg-purple-600"><i class="fas fa-file-alt fa-fw mr-2"></i>PDF Cliente</button>
-                                        <button id="pdf-btn-cutting" class="action-btn-pro bg-orange-500 hover:bg-orange-600"><i class="fas fa-saw fa-fw mr-2"></i>PDF Plano de Corte</button>
-                                        <button id="pdf-btn-contract" class="action-btn-pro bg-gray-700 hover:bg-gray-800"><i class="fas fa-file-signature fa-fw mr-2"></i>Gerar Contrato</button>
+                                    <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4 mt-8 max-w-4xl mx-auto">
+                                        <button id="save-quote-btn" class="flex flex-col items-center justify-center gap-2 p-4 rounded-xl text-charcoal bg-white font-semibold text-sm sm:text-xs text-center transition-all duration-300 border border-gray-200 shadow-lg hover:shadow-xl hover:-translate-y-1 hover:border-gold active:translate-y-0 active:shadow-inner active:bg-gray-100 disabled:bg-gray-200 disabled:text-gray-400 disabled:cursor-not-allowed disabled:shadow-none disabled:transform-none disabled:border-transparent group"><i class="fas fa-save text-blue-500 text-3xl transition-transform duration-300 group-hover:scale-110 group-hover:-rotate-3"></i><span>Salvar Orçamento</span></button>
+                                        <button id="whatsapp-btn" class="flex flex-col items-center justify-center gap-2 p-4 rounded-xl text-charcoal bg-white font-semibold text-sm sm:text-xs text-center transition-all duration-300 border border-gray-200 shadow-lg hover:shadow-xl hover:-translate-y-1 hover:border-gold active:translate-y-0 active:shadow-inner active:bg-gray-100 disabled:bg-gray-200 disabled:text-gray-400 disabled:cursor-not-allowed disabled:shadow-none disabled:transform-none disabled:border-transparent group"><i class="fab fa-whatsapp text-green-500 text-3xl transition-transform duration-300 group-hover:scale-110 group-hover:-rotate-3"></i><span>WhatsApp</span></button>
+                                        <button id="pdf-btn-internal" class="flex flex-col items-center justify-center gap-2 p-4 rounded-xl text-charcoal bg-white font-semibold text-sm sm:text-xs text-center transition-all duration-300 border border-gray-200 shadow-lg hover:shadow-xl hover:-translate-y-1 hover:border-gold active:translate-y-0 active:shadow-inner active:bg-gray-100 disabled:bg-gray-200 disabled:text-gray-400 disabled:cursor-not-allowed disabled:shadow-none disabled:transform-none disabled:border-transparent group"><i class="fas fa-file-pdf text-red-500 text-3xl transition-transform duration-300 group-hover:scale-110 group-hover:-rotate-3"></i><span>PDF Interno</span></button>
+                                        <button id="pdf-btn-client" class="flex flex-col items-center justify-center gap-2 p-4 rounded-xl text-charcoal bg-white font-semibold text-sm sm:text-xs text-center transition-all duration-300 border border-gray-200 shadow-lg hover:shadow-xl hover:-translate-y-1 hover:border-gold active:translate-y-0 active:shadow-inner active:bg-gray-100 disabled:bg-gray-200 disabled:text-gray-400 disabled:cursor-not-allowed disabled:shadow-none disabled:transform-none disabled:border-transparent group"><i class="fas fa-file-alt text-purple-500 text-3xl transition-transform duration-300 group-hover:scale-110 group-hover:-rotate-3"></i><span>PDF Cliente</span></button>
+                                        <button id="pdf-btn-cutting" class="flex flex-col items-center justify-center gap-2 p-4 rounded-xl text-charcoal bg-white font-semibold text-sm sm:text-xs text-center transition-all duration-300 border border-gray-200 shadow-lg hover:shadow-xl hover:-translate-y-1 hover:border-gold active:translate-y-0 active:shadow-inner active:bg-gray-100 disabled:bg-gray-200 disabled:text-gray-400 disabled:cursor-not-allowed disabled:shadow-none disabled:transform-none disabled:border-transparent group"><i class="fas fa-ruler-combined text-orange-500 text-3xl transition-transform duration-300 group-hover:scale-110 group-hover:-rotate-3"></i><span>Plano de Corte</span></button>
+                                        <button id="pdf-btn-contract" class="flex flex-col items-center justify-center gap-2 p-4 rounded-xl text-charcoal bg-white font-semibold text-sm sm:text-xs text-center transition-all duration-300 border border-gray-200 shadow-lg hover:shadow-xl hover:-translate-y-1 hover:border-gold active:translate-y-0 active:shadow-inner active:bg-gray-100 disabled:bg-gray-200 disabled:text-gray-400 disabled:cursor-not-allowed disabled:shadow-none disabled:transform-none disabled:border-transparent group"><i class="fas fa-file-signature text-gray-600 text-3xl transition-transform duration-300 group-hover:scale-110 group-hover:-rotate-3"></i><span>Gerar Contrato</span></button>
                                     </div>
                                     <div class="flex items-center justify-center gap-6 mt-8">
                                         <button class="prev-btn bg-transparent text-gray-500 font-semibold py-2 px-4 hover:text-charcoal transition-colors"><i class="fas fa-edit mr-2"></i>Editar</button>
@@ -786,8 +786,8 @@
                 </div>
             </section>
 
-            <!-- Footer -->
-            <footer style="margin-top: 15mm; padding-top: 5mm; border-top: 1px solid #cccccc; text-align: center; font-size: 8pt; color: #888888;">
+            <!-- Footer (movido para dentro do container para renderização correta) -->
+            <footer class="pdf-footer" style="margin-top: 15mm; padding-top: 5mm; border-top: 1px solid #cccccc; text-align: center; font-size: 8pt; color: #888888;">
                 <p class="font-bold" style="margin-bottom: 2mm; color: #555555;">Obrigado pelo seu interesse!</p>
                 <p>Este é um orçamento informativo e o valor final será confirmado após visita técnica. Validade: 15 dias.</p>
             </footer>

@@ -713,30 +713,36 @@ function setupSimulator() {
         const toggleBtn = document.getElementById('toggle-controls-btn');
         const mainContent = document.getElementById('main-content');
         const closeBtn = document.getElementById('close-controls-btn');
+        const overlay = document.getElementById('controls-overlay');
+
+        const openPanel = () => {
+            proControlsPanel.classList.remove('-translate-x-full');
+            toggleBtn.classList.add('hidden');
+            if (window.innerWidth >= 768) { // Desktop
+                mainContent.style.marginLeft = proControlsPanel.offsetWidth + 'px';
+            } else { // Mobile
+                overlay.classList.remove('hidden');
+                document.body.style.overflow = 'hidden';
+            }
+        };
+
+        const closePanel = () => {
+            proControlsPanel.classList.add('-translate-x-full');
+            mainContent.style.marginLeft = '0';
+            toggleBtn.classList.remove('hidden');
+            overlay.classList.add('hidden');
+            document.body.style.overflow = 'auto';
+        };
 
         toggleBtn.addEventListener('click', () => {
-            let panel = proControlsPanel || document.getElementById('marceneiro-controls');
-            if (!panel) return;
-            panel.classList.remove('-translate-x-full');
-            panel.classList.add('translate-x-0');
-            // Para desktop, aplica margem; para mobile, não mexe na margem
-            toggleBtn.classList.add('hidden'); // Esconde o botão de abrir
-            if (window.innerWidth >= 768) {
-                mainContent.style.marginLeft = '320px';
-            } else {
-                mainContent.style.marginLeft = '0';
-            }
+            openPanel();
         });
 
         if (closeBtn) {
-            closeBtn.addEventListener('click', () => {
-                let panel = proControlsPanel || document.getElementById('marceneiro-controls');
-                if (!panel) return;
-                panel.classList.remove('translate-x-0');
-                panel.classList.add('-translate-x-full');
-                mainContent.style.marginLeft = '0';
-                toggleBtn.classList.remove('hidden'); // Mostra o botão de abrir
-            });
+            closeBtn.addEventListener('click', closePanel);
+        }
+        if (overlay) {
+            overlay.addEventListener('click', closePanel);
         }
 
         // Botão de reset dos valores do painel
@@ -868,9 +874,6 @@ function setupSimulator() {
         // Hide door type selection if it's an open closet
         const doorTypeSection = document.getElementById('door-type-section');
         const isClosetOpen = isCloset && !state.closetHasDoors;
-
-        // Hide drawer section if it's an open closet (drawers usually need a structure that implies doors)
-        document.getElementById('drawer-section').classList.toggle('hidden', !hasDoors);
 
         doorTypeSection.classList.toggle('hidden', isClosetOpen);
 
@@ -1104,7 +1107,7 @@ function setupSimulator() {
     }
     async function recalculateAndRender() {
         try {
-            calculateQuote();
+            state.quote = calculateQuote();
             renderResult();
             showNotification('Orçamento recalculado!', 'success');
         } catch (error) {
@@ -1181,7 +1184,9 @@ function setupSimulator() {
         const width = state.dimensions.walls.reduce((acc, wall) => acc + wall.width, 0);
 
         if (!recommendationDiv || !recommendationText || width <= 0) {
-            if (recommendationDiv) recommendationDiv.classList.add('hidden');
+            if (recommendationDiv) {
+                recommendationDiv.classList.add('hidden');
+            }
             return;
         }
 
@@ -1189,8 +1194,10 @@ function setupSimulator() {
         const minDrawers = Math.max(2, Math.floor(width * 2));
         const maxDrawers = Math.ceil(width * 3);
 
-        recommendationText.textContent = `Para esta largura, recomendamos entre ${minDrawers} e ${maxDrawers} gavetas.`;
+        recommendationText.textContent = `Para esta largura, recomendamos entre ${minDrawers} e ${maxDrawers} gavetas. O valor padrão é ${minDrawers}.`;
         recommendationDiv.classList.remove('hidden');
+        document.getElementById('numDrawers').value = minDrawers;
+        state.numDrawers = minDrawers;
     }
 
     function calculateWardrobeQuote() {
@@ -1288,10 +1295,12 @@ function setupSimulator() {
         }
 
         // 3.5 Edge Tape Cost
-        const estimatedPerimeter = totalMaterialArea * 1.5; // Rough estimation
-        const edgeTapeCost = estimatedPerimeter * panelCosts.edgeTapePerMeter;
+        // Cálculo preciso: soma o perímetro de todas as peças e aplica um fator de uso.
+        const totalPerimeter = allParts.reduce((acc, part) => acc + 2 * (part.w + part.h), 0) / 1000; // em metros
+        const edgeTapeUsageFactor = 0.7; // Fator realista: assume que ~70% das bordas recebem fita.
+        const edgeTapeCost = totalPerimeter * edgeTapeUsageFactor * panelCosts.edgeTapePerMeter;
         if (edgeTapeCost > 0) {
-            baseBreakdown.push({ label: 'Fita de Borda', quantity: Math.round(estimatedPerimeter), cost: edgeTapeCost });
+            baseBreakdown.push({ label: 'Fita de Borda', quantity: Math.round(totalPerimeter * edgeTapeUsageFactor), cost: edgeTapeCost });
         }
 
         // 4. Optional Extras
@@ -1320,10 +1329,28 @@ function setupSimulator() {
         // Material area calculation
         const { mdf15Parts: parts, mdf3Parts: drawerBottomsKitchen, doorCount: numDoors } = getKitchenParts(state.dimensions.walls.map(wall => ({width: wall.width * 1000, height: wall.height * 1000})), state.numDrawers);
 
-        const sheets = optimizeCutting(parts, 2750, 1850);
-        const numSheets = sheets.length;
-        const mdfCost = numSheets * (state.material === 'Branco' ? panelCosts.mdfBranco : panelCosts.mdfPremium);
-        if (mdfCost > 0) baseBreakdown.push({ label: `Chapas de MDF ${state.material}`, quantity: numSheets, cost: mdfCost });
+        let sheets = [];
+        if (state.material === 'Mesclada') {
+            // Separa as frentes (Premium) da caixaria (Branco)
+            const frontParts = parts.filter(p => p.description.includes('Door') || p.description.includes('Drawer Front'));
+            const carcassParts = parts.filter(p => !p.description.includes('Door') && !p.description.includes('Drawer Front'));
+
+            const premiumSheets = optimizeCutting(frontParts, 2750, 1850);
+            const whiteSheets = optimizeCutting(carcassParts, 2750, 1850);
+
+            if (whiteSheets.length > 0) {
+                baseBreakdown.push({ label: 'Chapas de MDF Branco (Interno)', quantity: whiteSheets.length, cost: whiteSheets.length * panelCosts.mdfBranco });
+            }
+            if (premiumSheets.length > 0) {
+                baseBreakdown.push({ label: 'Chapas de MDF Premium (Frentes)', quantity: premiumSheets.length, cost: premiumSheets.length * panelCosts.mdfPremium });
+            }
+            sheets = [...premiumSheets, ...whiteSheets];
+        } else {
+            sheets = optimizeCutting(parts, 2750, 1850);
+            const mdfCost = sheets.length * (state.material === 'Branco' ? panelCosts.mdfBranco : panelCosts.mdfPremium);
+            if (mdfCost > 0) baseBreakdown.push({ label: `Chapas de MDF ${state.material}`, quantity: sheets.length, cost: mdfCost });
+        }
+
         state.quote.cuttingPlan = sheets;
         const totalMaterialArea = parts.reduce((acc, part) => acc + (part.w * part.h), 0) / 1000000;
 
@@ -1391,10 +1418,12 @@ function setupSimulator() {
         }
 
         // Edge Tape Cost
-        const estimatedPerimeter = totalMaterialArea * 1.5; // Rough estimation
-        const edgeTapeCost = estimatedPerimeter * panelCosts.edgeTapePerMeter;
+        // Cálculo preciso: soma o perímetro de todas as peças e aplica um fator de uso.
+        const totalPerimeter = parts.reduce((acc, part) => acc + 2 * (part.w + part.h), 0) / 1000; // em metros
+        const edgeTapeUsageFactor = 0.7; // Fator realista: assume que ~70% das bordas recebem fita.
+        const edgeTapeCost = totalPerimeter * edgeTapeUsageFactor * panelCosts.edgeTapePerMeter;
         if (edgeTapeCost > 0) {
-            baseBreakdown.push({ label: 'Fita de Borda', quantity: Math.round(estimatedPerimeter), cost: edgeTapeCost });
+            baseBreakdown.push({ label: 'Fita de Borda', quantity: Math.round(totalPerimeter * edgeTapeUsageFactor), cost: edgeTapeCost });
         }
 
         if (state.projectOption === 'create') {
@@ -1423,13 +1452,12 @@ function setupSimulator() {
         const materialAndHardwareCost = baseBreakdown.reduce((acc, item) => acc + item.cost, 0);
         const extrasPrice = extrasBreakdown.reduce((acc, item) => acc + item.cost, 0);
  
-        // Nova lógica de cálculo com valores do painel
         const panelCosts = getPanelCosts();
  
-        const multipliedCost = materialAndHardwareCost * panelCosts.multiplier;
-        const profitAmount = multipliedCost - materialAndHardwareCost;
-        const costPrice = materialAndHardwareCost + extrasPrice; // Custo real para o marceneiro
-        let finalTotal = costPrice + profitAmount;
+        const multipliedMaterialCost = materialAndHardwareCost * panelCosts.multiplier;
+        const profitAmount = multipliedMaterialCost - materialAndHardwareCost;
+        const costPrice = materialAndHardwareCost + extrasPrice; // Custo real (material + extras)
+        let finalTotal = multipliedMaterialCost + extrasPrice;
  
         // Desconto ou acréscimo
         finalTotal += panelCosts.discountExtra;
@@ -2387,22 +2415,33 @@ function setupSimulator() {
             const pageContentHeight = pageH - (margin * 2);
             let cursorY = margin;
 
-            const sections = pdfTemplate.querySelectorAll('.pdf-container > .pdf-section');
+            const container = pdfTemplate.querySelector('.pdf-container');
 
-            for (const section of sections) {
-                if (section.classList.contains('hidden')) continue;
-
-                const canvas = await html2canvas(section, { scale: 3, useCORS: true, logging: false, backgroundColor: null });
+            // Renderiza o container inteiro de uma vez para manter o layout e evitar linhas
+            const canvas = await html2canvas(container, {
+                scale: 3, // Aumenta a resolução para melhor qualidade
+                useCORS: true,
+                logging: false,
+                windowWidth: container.scrollWidth,
+                windowHeight: container.scrollHeight
+            });
                 const imgData = canvas.toDataURL('image/png');
                 const imgHeight = (canvas.height * contentWidth) / canvas.width;
 
-                if (cursorY > margin && cursorY + imgHeight > pageContentHeight + margin) {
-                    pdf.addPage();
-                    cursorY = margin;
-                }
+            // Lógica para "fatiar" a imagem grande em várias páginas
+            let heightLeft = imgHeight;
+            let position = 0;
 
-                pdf.addImage(imgData, 'PNG', margin, cursorY, contentWidth, imgHeight);
-                cursorY += imgHeight + 5; // Add 5mm spacing between sections
+            // Adiciona a primeira página
+            pdf.addImage(imgData, 'PNG', margin, position, contentWidth, imgHeight);
+            heightLeft -= pageContentHeight;
+
+            // Adiciona páginas subsequentes se necessário
+            while (heightLeft > 0) {
+                position -= pageContentHeight;
+                pdf.addPage();
+                pdf.addImage(imgData, 'PNG', margin, position, contentWidth, imgHeight);
+                heightLeft -= pageContentHeight;
             }
 
             const fileName = `orcamento_${type}_${(state.customer.name || 'cliente').replace(/\s/g, '_')}_${quoteId}.pdf`;

@@ -91,10 +91,11 @@
     gap: 8pt 16pt;
 }
 .pdf-spec-item {
-    padding: 4pt 0;
-    border-bottom: 1px solid #f3f4f6; /* gray-100 */
     display: flex;
     justify-content: space-between;
+    padding: 4pt 0;
+    /* A linha abaixo foi removida para corrigir as riscas no meio dos itens */
+    /* border-bottom: 1px solid #f3f4f6; */
 }
 .pdf-spec-item span:first-child {
     color: #6b7280;

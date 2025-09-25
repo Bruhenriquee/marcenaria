@@ -1462,10 +1462,6 @@ function setupSimulator() {
             }
         }
 
-        // 3. Production Cost
-        const productionCost = frontArea * config.PRODUCTION_COST_PER_M2;
-        if (productionCost > 0) baseBreakdown.push({ label: 'Custos de Fabricação e Montagem', quantity: null, cost: productionCost });
-
         // 4. Optional Extras
         if (state.projectOption === 'create') {
             const cost = SIMULATOR_CONFIG.COMMON_COSTS.PROJECT_3D;
@@ -1577,13 +1573,19 @@ function setupSimulator() {
         const { baseBreakdown, extrasBreakdown, totalMaterialArea } = quoteDetails;
         const basePrice = baseBreakdown.reduce((acc, item) => acc + item.cost, 0);
         const extrasPrice = extrasBreakdown.reduce((acc, item) => acc + item.cost, 0);
-        
+
+        // --- LÓGICA DE PRECIFICAÇÃO ALINHADA COM O SIMULADOR PRO ---
+        // Aplica um multiplicador sobre o custo de material/ferragens para incluir mão de obra e lucro.
+        // O valor é sutilmente maior que o padrão do Simulador Pro (2.0) para criar uma margem de negociação sem assustar o cliente.
+        const multiplier = 2.1; 
+        const finalTotal = (basePrice * multiplier) + extrasPrice;
+
         const sheetSize = state.furnitureType === 'Cozinha' ? SIMULATOR_CONFIG.KITCHEN.MDF_SHEET_SIZE : SIMULATOR_CONFIG.WARDROBE.MDF_SHEET_SIZE;
         
         state.quote = { 
             area: totalMaterialArea, 
             sheets: Math.ceil(totalMaterialArea / sheetSize), 
-            total: basePrice + extrasPrice,
+            total: finalTotal,
             basePrice: basePrice,
             baseBreakdown: baseBreakdown,
             extrasPrice: extrasPrice,
