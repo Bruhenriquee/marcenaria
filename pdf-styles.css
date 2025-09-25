@@ -6,7 +6,7 @@
 /* --- Configurações Globais do Template --- */
 .pdf-container {
     /* A4 width at 96 DPI is ~794px. This gives html2canvas a solid base. */
-    width: 794px; 
+    width: 794px;
     padding: 0 40pt; /* Apenas margens laterais. Topo/base são controlados pelo JS. */
     box-sizing: border-box;
     background-color: #ffffff;
@@ -19,6 +19,7 @@
 /* --- Quebra de Página --- */
 .pdf-section {
     page-break-inside: avoid !important;
+    width: 100%; /* Garante que a seção ocupe a largura total para o html2canvas */
 }
 
 /* --- Tipografia --- */
@@ -39,7 +40,7 @@
 .pdf-header {
     display: flex;
     justify-content: space-between;
-    align-items: flex-start; 
+    align-items: flex-start;
     padding-bottom: 28pt; /* ~10mm */
     border-bottom: 2px solid #D4AF37; /* gold */
 }
@@ -85,18 +86,18 @@
 
 /* --- Tabela de Especificações --- */
 .pdf-specs-table {
-    display: flex;
-    flex-wrap: wrap;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8pt 16pt;
 }
 .pdf-spec-item {
-    width: 50%;
-    box-sizing: border-box;
-    padding: 6pt 12pt;
+    padding: 4pt 0;
+    border-bottom: 1px solid #f3f4f6; /* gray-100 */
+    display: flex;
+    justify-content: space-between;
 }
-.pdf-spec-item .spec-label { 
-    color: #6b7280; 
-    display: inline-block;
-    min-width: 110px; /* Alinha os valores */
+.pdf-spec-item span:first-child {
+    color: #6b7280;
 }
 
 /* --- Detalhamento de Preços --- */

@@ -172,46 +172,72 @@ const SIMULATOR_CONFIG = {
     }
 };
 
-function getWardrobeParts(width, height, depth) {
-    const thickness = 18; // MDF thickness in mm
-    const parts = [];
+function getWardrobeParts(totalWidth, height, depth, numDrawers, hasDoors, numDoors) {
+    const thickness = 15; // MDF thickness in mm
+    const sheetWidthLimit = 2750; // Max width of an MDF sheet
+    const mdf15Parts = [];
+    const mdf3Parts = [];
 
-    // Carcass
-    parts.push({ w: width, h: depth, description: 'Top' });
-    parts.push({ w: width, h: depth, description: 'Bottom' });
-    parts.push({ w: height - (2 * thickness), h: depth, description: 'Left Side' });
-    parts.push({ w: height - (2 * thickness), h: depth, description: 'Right Side' });
-    parts.push({ w: width, h: height, description: 'Back' });
+    // Divide the wardrobe into modules if it's too wide
+    const numModules = Math.ceil(totalWidth / 900); // Create modules of max ~90cm
+    const moduleWidth = totalWidth / numModules;
 
-    // Shelves
-    const numShelves = Math.floor(height / 500);
-    for (let i = 0; i < numShelves; i++) {
-        parts.push({ w: width - (2 * thickness), h: depth, description: 'Shelf' });
+    // Add main carcass sides
+    mdf15Parts.push({ w: height, h: depth, description: 'Left Side' });
+    mdf15Parts.push({ w: height, h: depth, description: 'Right Side' });
+
+    for (let i = 0; i < numModules; i++) {
+        const currentModuleWidth = Math.min(moduleWidth, sheetWidthLimit);
+
+        // Add top, bottom, and back for each module
+        mdf15Parts.push({ w: currentModuleWidth, h: depth, description: `Top ${i+1}` });
+        mdf15Parts.push({ w: currentModuleWidth, h: depth, description: `Bottom ${i+1}` }); // Back panel is now calculated separately
+
+        // Add internal dividers between modules (but not for the last one)
+        if (i < numModules - 1) {
+            mdf15Parts.push({ w: height - (2 * thickness), h: depth, description: `Divider ${i+1}` });
+        }
+
+        // Add shelves for each module
+        const numShelves = Math.floor(height / 500); // Shelves per module
+        for (let s = 0; s < numShelves; s++) {
+            mdf15Parts.push({ w: currentModuleWidth - (2 * thickness), h: depth - 20, description: `Shelf ${i+1}-${s+1}` });
+        }
     }
 
     // Doors
-    const numDoors = Math.max(2, Math.round(width / 500));
-    const doorWidth = width / numDoors;
-    for (let i = 0; i < numDoors; i++) {
-        parts.push({ w: doorWidth, h: height, description: 'Door' });
+    if (hasDoors) {
+        const doorWidth = totalWidth / numDoors; // Use the exact number of doors passed as parameter
+        for (let i = 0; i < numDoors; i++) {
+            mdf15Parts.push({ w: doorWidth, h: height, description: 'Door' });
+        }
     }
 
-    // Drawers
-    const numDrawers = Math.floor(width / 500);
+    // Drawers (using the exact number from state)
+    // We assume drawers are in one of the modules, with a standard width
+    const drawerWidth = Math.min(500, moduleWidth - 40); // Use module width, max 50cm
+    const drawerDepth = depth - 50;
+    const drawerBoxWidth = drawerWidth - 40;
+    const drawerBoxDepth = drawerDepth - 50;
+
     for (let i = 0; i < numDrawers; i++) {
-        parts.push({ w: 500, h: 200, description: 'Drawer Front' });
-        parts.push({ w: 450, h: 180, description: 'Drawer Side' });
-        parts.push({ w: 450, h: 180, description: 'Drawer Side' });
-        parts.push({ w: 464, h: 180, description: 'Drawer Back' });
-        parts.push({ w: 464, h: 450, description: 'Drawer Bottom' });
+        mdf15Parts.push({ w: drawerWidth, h: 200, description: 'Drawer Front' });
+        mdf15Parts.push({ w: drawerBoxDepth, h: 180, description: 'Drawer Side' });
+        mdf15Parts.push({ w: drawerBoxDepth, h: 180, description: 'Drawer Side' });
+        mdf15Parts.push({ w: drawerBoxWidth, h: 180, description: 'Drawer Back' });
+        // Drawer bottom is 3mm
+        mdf3Parts.push({ w: drawerBoxWidth, h: drawerBoxDepth, description: 'Drawer Bottom' });
     }
 
-    return parts;
+    return { mdf15Parts, mdf3Parts };
 }
 
-function getKitchenParts(walls) {
-    const thickness = 18; // MDF thickness in mm
-    const parts = [];
+function getKitchenParts(walls, numDrawers) {
+    const thickness = 15; // MDF thickness in mm
+    const mdf15Parts = [];
+    const mdf3Parts = [];
+    let drawersToCreate = numDrawers;
+    let doorCount = 0;
 
     walls.forEach(wall => {
         const { width, height } = wall;
@@ -219,87 +245,91 @@ function getKitchenParts(walls) {
         // Upper cabinets
         const numUpperCabinets = Math.floor(width / 600);
         for (let i = 0; i < numUpperCabinets; i++) {
-            parts.push({ w: 600, h: 350, description: 'Upper Cabinet Top' });
-            parts.push({ w: 600, h: 350, description: 'Upper Cabinet Bottom' });
-            parts.push({ w: 700 - (2 * thickness), h: 350, description: 'Upper Cabinet Side' });
-            parts.push({ w: 700 - (2 * thickness), h: 350, description: 'Upper Cabinet Side' });
-            parts.push({ w: 600, h: 700, description: 'Upper Cabinet Back' });
-            parts.push({ w: 596, h: 696, description: 'Upper Cabinet Door' });
+            mdf15Parts.push({ w: 600, h: 350, description: 'Upper Cabinet Top' });
+            mdf15Parts.push({ w: 600, h: 350, description: 'Upper Cabinet Bottom' });
+            mdf15Parts.push({ w: 700 - (2 * thickness), h: 350, description: 'Upper Cabinet Side' });
+            mdf15Parts.push({ w: 700 - (2 * thickness), h: 350, description: 'Upper Cabinet Side' });
+            mdf15Parts.push({ w: 596, h: 696, description: 'Upper Cabinet Door' });
+            doorCount++;
         }
 
         // Lower cabinets
         const numLowerCabinets = Math.floor(width / 600);
-        for (let i = 0; i < numLowerCabinets; i++) {
-            parts.push({ w: 600, h: 600, description: 'Lower Cabinet Top' });
-            parts.push({ w: 600, h: 600, description: 'Lower Cabinet Bottom' });
-            parts.push({ w: 850 - (2 * thickness), h: 600, description: 'Lower Cabinet Side' });
-            parts.push({ w: 850 - (2 * thickness), h: 600, description: 'Lower Cabinet Side' });
-            parts.push({ w: 600, h: 850, description: 'Lower Cabinet Back' });
-            parts.push({ w: 596, h: 846, description: 'Lower Cabinet Door' });
+        for (let i = 0; i < numLowerCabinets; i++) { // Assume 60cm wide modules
+            const moduleWidth = 600;
+            const moduleDepth = 600;
+            const moduleHeight = 850;
+
+            mdf15Parts.push({ w: moduleWidth, h: moduleDepth, description: 'Lower Cabinet Top' });
+            mdf15Parts.push({ w: moduleWidth, h: moduleDepth, description: 'Lower Cabinet Bottom' });
+            mdf15Parts.push({ w: moduleHeight - (2 * thickness), h: moduleDepth, description: 'Lower Cabinet Side' });
+            mdf15Parts.push({ w: moduleHeight - (2 * thickness), h: moduleDepth, description: 'Lower Cabinet Side' });
+
+            // Decide if this module will have drawers or a door
+            if (drawersToCreate > 0) {
+                // This module will be a drawer module (e.g., 3 drawers)
+                const numDrawersInModule = Math.min(drawersToCreate, 3); // Max 3 drawers per module
+                for (let d = 0; d < numDrawersInModule; d++) {
+                    mdf15Parts.push({ w: moduleWidth - 4, h: (moduleHeight / numDrawersInModule) - 4, description: 'Drawer Front' });
+                    mdf15Parts.push({ w: moduleDepth - 50, h: (moduleHeight / numDrawersInModule) - 20, description: 'Drawer Side' });
+                    mdf15Parts.push({ w: moduleDepth - 50, h: (moduleHeight / numDrawersInModule) - 20, description: 'Drawer Side' });
+                    mdf15Parts.push({ w: moduleWidth - 40, h: (moduleHeight / numDrawersInModule) - 20, description: 'Drawer Back' });
+                    mdf3Parts.push({ w: moduleWidth - 40, h: moduleDepth - 50, description: 'Drawer Bottom' });
+                }
+                drawersToCreate -= numDrawersInModule;
+            } else {
+                // This is a standard door module
+                mdf15Parts.push({ w: moduleWidth - 4, h: moduleHeight - 4, description: 'Lower Cabinet Door' });
+                doorCount++;
+            }
         }
     });
 
-    return parts;
+    return { mdf15Parts, mdf3Parts, doorCount };
 }
 
 function optimizeCutting(parts, sheetWidth, sheetHeight) {
-    const packer = new Packer(sheetWidth, sheetHeight);
-    let unpacked = [];
+    if (!parts || parts.length === 0) {
+        return [];
+    }
 
     // Ordena as peças da maior para a menor para otimizar o encaixe.
     parts.sort((a, b) => Math.max(b.w, b.h) - Math.max(a.w, a.h));
 
-    // Tenta encaixar todas as peças na primeira chapa.
-    packer.fit(parts);
-
     const sheets = [];
-    let currentSheet = 0;
-    sheets[currentSheet] = [];
+    let remainingParts = [...parts];
 
-    // Separa as peças que couberam na primeira chapa daquelas que não couberam.
-    parts.forEach(part => {
-        if (part.fit) {
-            sheets[currentSheet].push(part);
-        } else {
-            // Garante que a propriedade 'fit' seja removida para a próxima tentativa.
-            delete part.fit;
-            unpacked.push(part);
-        }
-    });
-
-    // Processa as peças restantes em novas chapas.
-    let lastUnpackedCount = unpacked.length;
-    while (unpacked.length > 0) { // Loop para processar as peças que não couberam na primeira chapa.
-        currentSheet++;
-        sheets[currentSheet] = [];
-        const newPacker = new Packer(sheetWidth, sheetHeight);
-        
-        // Tenta encaixar as peças restantes em uma nova chapa. O método .fit() adiciona a propriedade 'fit' às peças que couberem.
-        newPacker.fit(unpacked);
-
+    while (remainingParts.length > 0) {
+        const sheet = [];
+        const packer = new Packer(sheetWidth, sheetHeight);
         const stillUnpacked = [];
-        unpacked.forEach(part => {
+
+        // Tenta encaixar as peças restantes na nova chapa
+        packer.fit(remainingParts);
+
+        remainingParts.forEach(part => {
             if (part.fit) {
-                // A peça coube. Adiciona à chapa atual e remove a propriedade 'fit' para não ser processada novamente.
-                sheets[currentSheet].push(part);
+                sheet.push(part);
             } else {
-                // A peça não coube. Adiciona à lista de "ainda não encaixadas" para a próxima iteração.
                 stillUnpacked.push(part);
             }
         });
 
+        if (sheet.length > 0) {
+            sheets.push(sheet);
+        }
+
         // Se nenhuma peça foi empacotada nesta rodada, interrompe o loop para evitar travamento.
-        if (stillUnpacked.length === lastUnpackedCount) {
+        if (stillUnpacked.length > 0 && sheet.length === 0) {
             console.warn("Não foi possível encaixar as peças restantes:", stillUnpacked);
             break;
         }
 
         // Prepara para a próxima iteração do loop com as peças que sobraram.
-        unpacked = stillUnpacked.map(part => {
+        remainingParts = stillUnpacked.map(part => {
             delete part.fit; // Limpa a propriedade 'fit' para a próxima tentativa de encaixe.
             return part;
         });
-        lastUnpackedCount = unpacked.length;
     }
 
     return sheets;
@@ -520,6 +550,12 @@ function setupSimulator() {
             });
         });
 
+        // Step 4: Number of Drawers (Kitchen)
+        document.getElementById('kitchenNumDrawers').addEventListener('input', (e) => {
+            updateStateAndSave({
+                numDrawers: parseInt(e.target.value) || 0
+            });
+        });
         // Step 4: Hardware Type
         document.querySelectorAll('input[name="hardwareType"]').forEach(radio => {
             radio.addEventListener('change', (e) => {
@@ -700,14 +736,12 @@ function setupSimulator() {
             resetPanelBtn.addEventListener('click', () => {
                 document.getElementById('mdf-branco-cost').value = 240;
                 document.getElementById('mdf-premium-cost').value = 400;
+                document.getElementById('mdf-fundo-cost').value = 140;
                 document.getElementById('edge-tape-cost').value = 2.5;
                 document.getElementById('hinge-standard-cost').value = 5;
                 document.getElementById('hinge-softclose-cost').value = 20;
                 document.getElementById('slide-cost').value = 25;
-                document.getElementById('fabrication-cost-m2').value = 450;
-                document.getElementById('shipping-cost').value = 150;
-                document.getElementById('daily-rate-cost').value = 200;
-                document.getElementById('profit-margin').value = 80;
+                document.getElementById('cost-multiplier').value = 2;
                 document.getElementById('discount-extra').value = 0;
                 showNotification('Valores padrão restaurados!', 'success');
             });
@@ -791,7 +825,6 @@ function setupSimulator() {
         document.getElementById('wardrobe-dims').classList.toggle('hidden', !isWardrobe);
         document.getElementById('kitchen-dims').classList.toggle('hidden', isWardrobe);
         document.getElementById('wardrobe-options').classList.toggle('hidden', !isWardrobe);
-        document.getElementById('drawer-section').classList.toggle('hidden', !isWardrobe);
         document.getElementById('kitchen-options').classList.toggle('hidden', isWardrobe);
 
         // Explicitly manage handle section visibility when furniture type changes
@@ -1038,21 +1071,29 @@ function setupSimulator() {
         return true;
     }
 
-        async function handleRecalculate() {
-        if (currentStep === totalSteps && !document.getElementById('result-container').classList.contains('hidden')) {
-        // Fecha o painel para o usuário ver a atualização
-        const panel = proControlsPanel || document.getElementById('marceneiro-controls');
-        if (panel) {
-            panel.classList.remove('translate-x-0');
-            panel.classList.add('-translate-x-full');
-            document.getElementById('main-content').style.marginLeft = '0';
+    async function recalculateAndRender() {
+        try {
+            calculateQuote();
+            renderResult();
+            showNotification('Orçamento recalculado!', 'success');
+        } catch (error) {
+            console.error("Error recalculating quote:", error);
+            showNotification('Ocorreu um erro ao recalcular o orçamento.', 'error');
         }
-        showNotification('Recalculando com novos custos...', 'info');
-        await new Promise(resolve => setTimeout(resolve, 50)); // Pequeno delay para a UI atualizar
-        await handleViewQuote(true); // Garante que o recálculo seja concluído
-    } else {
-        showNotification('Vá até a tela de resultados para recalcular.', 'error');
     }
+
+    async function handleRecalculate() {
+        const recalculateBtn = document.getElementById('recalculate-btn');
+        const originalBtnHTML = recalculateBtn.innerHTML;
+        recalculateBtn.disabled = true;
+        recalculateBtn.innerHTML = '<div class="spinner mr-2"></div>Recalculando...';
+
+        document.getElementById('marceneiro-controls').classList.add('-translate-x-full');
+        document.getElementById('main-content').style.marginLeft = '0';
+        await new Promise(resolve => setTimeout(resolve, 300)); // Aguarda a animação do painel
+        await recalculateAndRender();
+        recalculateBtn.disabled = false;
+        recalculateBtn.innerHTML = originalBtnHTML;
     }
 
 
@@ -1074,7 +1115,7 @@ function setupSimulator() {
         }
 
         // Simple logic: hinged doors ~50cm, sliding doors ~100cm. Minimum of 2 doors.
-        const hingedDoors = Math.max(2, Math.round(width / 0.45));
+        const hingedDoors = Math.max(2, Math.round(width / 0.50));
         const slidingDoors = Math.max(2, Math.round(width / 1.0));
 
         recommendationText.textContent = `Para esta largura, recomendamos aproximadamente ${hingedDoors} portas de abrir ou ${slidingDoors} portas de correr.`;
@@ -1122,17 +1163,15 @@ function setupSimulator() {
 
     function calculateWardrobeQuote() {
         // Sobrescreve a configuração com os valores do painel Pro
-        const mdfBrancoCost = parseFloat(document.getElementById('mdf-branco-cost').value);
-        const mdfPremiumCost = parseFloat(document.getElementById('mdf-premium-cost').value);
+        const mdfBrancoCost = parseFloat(document.getElementById('mdf-branco-cost').value) || 0;
+        const mdfPremiumCost = parseFloat(document.getElementById('mdf-premium-cost').value) || 0;
+        const mdfFundoCost = parseFloat(document.getElementById('mdf-fundo-cost').value) || 0;
 
         // Get specific hinge costs from panel
         const hingeStandardCost = parseFloat(document.getElementById('hinge-standard-cost').value) || 0;
         const hingeSoftcloseCost = parseFloat(document.getElementById('hinge-softclose-cost').value) || 0;
         const slideCostPerDrawer = parseFloat(document.getElementById('slide-cost').value) || 0;
         const edgeTapeCostPerMeter = parseFloat(document.getElementById('edge-tape-cost').value) || 0;
-        const shippingCost = parseFloat(document.getElementById('shipping-cost').value) || 0;
-        const fabricationCostPerM2 = parseFloat(document.getElementById('fabrication-cost-m2').value) || 0;
-        const dailyRateCost = parseFloat(document.getElementById('daily-rate-cost').value) || 0;
 
         if (!isNaN(mdfBrancoCost)) {
             SIMULATOR_CONFIG.WARDROBE.MDF_SHEET_PRICING['Branco'] = mdfBrancoCost;
@@ -1156,49 +1195,75 @@ function setupSimulator() {
         if (height > 2.0) hingesPerDoor = 4;
         if (height > 2.5) hingesPerDoor = 5;
 
+        let numDoors = 0;
+        if (hasDoors) {
+            if (state.doorType === 'correr') {
+                numDoors = Math.max(2, Math.round(width / 1.0));
+            } else { // 'abrir'
+                numDoors = Math.max(2, Math.round(width / 0.50));
+            }
+        }
+
         const baseBreakdown = [];
         const extrasBreakdown = [];
 
         // 1. MDF Cost (com lógica para Mesclado)
-        const parts = getWardrobeParts(width * 1000, height * 1000, state.dimensions.depth * 10);
-        const sheets = optimizeCutting(parts, 2750, 1850);
-        const numSheets = sheets.length;
-        let mdfCost = 0;
+        const { mdf15Parts: allParts, mdf3Parts: drawerBottoms } = getWardrobeParts(width * 1000, height * 1000, state.dimensions.depth * 10, state.numDrawers, hasDoors, numDoors);
+        let sheets = [];
 
         if (state.material === 'Mesclada') {
-            // Lógica para Mesclado: 1/3 das chapas são Premium (portas), 2/3 são Branco (caixaria).
-            const numPremiumSheets = Math.ceil(numSheets / 3);
-            const numWhiteSheets = numSheets - numPremiumSheets;
+            // Lógica precisa para Mesclado: calcula chapas de portas (Premium) e caixaria (Branco) separadamente.
+            const doorParts = allParts.filter(p => p.description.includes('Door'));
+            const carcassParts = allParts.filter(p => !p.description.includes('Door'));
+
+            const premiumSheets = optimizeCutting(doorParts, 2750, 1850);
+            const whiteSheets = optimizeCutting(carcassParts, 2750, 1850);
+            
+            const numPremiumSheets = premiumSheets.length;
+            const numWhiteSheets = whiteSheets.length;
+
             if (numWhiteSheets > 0) baseBreakdown.push({ label: 'Chapas de MDF Branco (Interno)', quantity: numWhiteSheets, cost: numWhiteSheets * mdfBrancoCost });
             if (numPremiumSheets > 0) baseBreakdown.push({ label: 'Chapas de MDF Premium (Frentes)', quantity: numPremiumSheets, cost: numPremiumSheets * mdfPremiumCost });
+            
+            sheets = [...premiumSheets, ...whiteSheets]; // Combina para o plano de corte visual
         } else {
-            mdfCost = numSheets * (state.material === 'Branco' ? mdfBrancoCost : mdfPremiumCost);
+            // Lógica para material único (Branco ou Premium)
+            sheets = optimizeCutting(allParts, 2750, 1850);
+            const numSheets = sheets.length;
+            const mdfCost = numSheets * (state.material === 'Branco' ? mdfBrancoCost : mdfPremiumCost);
             const materialLabel = state.material === 'Branco' ? 'Chapas de MDF Branco' : 'Chapas de MDF Premium';
             if (mdfCost > 0) baseBreakdown.push({ label: materialLabel, quantity: numSheets, cost: mdfCost });
         }
 
         state.quote.cuttingPlan = sheets;
-        const totalMaterialArea = parts.reduce((acc, part) => acc + (part.w * part.h), 0) / 1000000;
+        const totalMaterialArea = allParts.reduce((acc, part) => acc + (part.w * part.h), 0) / 1000000;
 
+        // 1.5. Back Panel (Fundo) Cost
+        let totalBackPanelArea = width * height; // Wardrobe back
+        // Add drawer bottoms area
+        const drawerBottomsArea = drawerBottoms.reduce((acc, part) => acc + (part.w * part.h), 0) / 1000000;
+        totalBackPanelArea += drawerBottomsArea;
+
+        const backPanelSheetSize = 2.75 * 1.85; // Standard 3mm sheet size
+        const numBackPanelSheets = Math.ceil(totalBackPanelArea / backPanelSheetSize);
+        if (numBackPanelSheets > 0) {
+            baseBreakdown.push({ label: 'Chapas de Fundo (3mm)', quantity: numBackPanelSheets, cost: numBackPanelSheets * mdfFundoCost });
+        }
 
         // 2. Hardware Cost (Hinges, Slides, Handles)
         const numDrawers = state.numDrawers;
         const slideCost = numDrawers * slideCostPerDrawer;
         if (slideCost > 0) baseBreakdown.push({ label: 'Pares de Corrediças de Gaveta', quantity: numDrawers, cost: slideCost });
 
-        let numDoors = 0;
         if (hasDoors) {
-            if (state.doorType === 'correr') {
-                numDoors = Math.max(2, Math.round(width / 1.0));
-            } else { // 'abrir'
-                numDoors = Math.max(2, Math.round(width / 0.45));
+            if (state.doorType === 'abrir') {
                 const totalHinges = numDoors * hingesPerDoor;
-                // Use the correct hinge cost based on hardware type selection
                 const hingeCost = totalHinges * (state.hardwareType === 'softclose' ? hingeSoftcloseCost : hingeStandardCost);
                 const hingeLabel = state.hardwareType === 'softclose' ? 'Dobradiças Soft-close' : 'Dobradiças Padrão';
                 if (hingeCost > 0) baseBreakdown.push({ label: hingeLabel, quantity: totalHinges, cost: hingeCost });
             }
 
+            // Wardrobe handles are only for doors, not internal drawers
             const totalHandleLength = (state.doorType === 'correr' && numDoors >= 2) ? (2 * numDoors - 2) * height : numDoors * height;
             if (totalHandleLength > 0) {
                 const numBarsNeeded = Math.ceil(totalHandleLength / config.HARDWARE.HANDLE_BAR_LENGTH);
@@ -1206,10 +1271,6 @@ function setupSimulator() {
                 if (handleCost > 0) baseBreakdown.push({ label: `Barras de Puxador Perfil ${state.handleType}`, quantity: numBarsNeeded, cost: handleCost });
             }
         }
-
-        // 3. Production Cost
-        const productionCost = frontArea * fabricationCostPerM2;
-        if (productionCost > 0) baseBreakdown.push({ label: 'Custos de Fabricação e Montagem', quantity: null, cost: productionCost });
 
         // 3.5 Edge Tape Cost
         const estimatedPerimeter = totalMaterialArea * 1.5; // Rough estimation
@@ -1230,29 +1291,20 @@ function setupSimulator() {
             if (finalCost > 0) extrasBreakdown.push({ label: extra, cost: finalCost });
         });
 
-        // 5. Expenses
-        if (shippingCost > 0) {
-            extrasBreakdown.push({ label: 'Frete e Deslocamento', cost: shippingCost });
-        }
-        const installationDays = Math.ceil(frontArea / 5); // Estimate 1 day for every 5m²
-        const installationCost = installationDays * dailyRateCost;
-        if (installationCost > 0) extrasBreakdown.push({ label: `Instalação (${installationDays} diária(s))`, cost: installationCost });
-
         return { baseBreakdown, extrasBreakdown, totalMaterialArea };
     }
 
     function calculateKitchenQuote() {
         // Sobrescreve a configuração com os valores do painel Pro
-        const mdfBrancoCost = parseFloat(document.getElementById('mdf-branco-cost').value);
-        const mdfPremiumCost = parseFloat(document.getElementById('mdf-premium-cost').value);
+        const mdfBrancoCost = parseFloat(document.getElementById('mdf-branco-cost').value) || 0;
+        const mdfPremiumCost = parseFloat(document.getElementById('mdf-premium-cost').value) || 0;
+        const mdfFundoCost = parseFloat(document.getElementById('mdf-fundo-cost').value) || 0;
 
         // Get specific hinge costs from panel
         const hingeStandardCost = parseFloat(document.getElementById('hinge-standard-cost').value) || 0;
         const hingeSoftcloseCost = parseFloat(document.getElementById('hinge-softclose-cost').value) || 0;
         const slideCostPerDrawer = parseFloat(document.getElementById('slide-cost').value) || 0;
         const edgeTapeCostPerMeter = parseFloat(document.getElementById('edge-tape-cost').value) || 0;
-        const shippingCost = parseFloat(document.getElementById('shipping-cost').value) || 0;
-        const dailyRateCost = parseFloat(document.getElementById('daily-rate-cost').value) || 0;
 
         if (!isNaN(mdfBrancoCost)) {
             SIMULATOR_CONFIG.KITCHEN.MDF_SHEET_PRICING['Branco'] = mdfBrancoCost;
@@ -1266,14 +1318,38 @@ function setupSimulator() {
         const extrasBreakdown = [];
 
         // Material area calculation
-        const parts = getKitchenParts(state.dimensions.walls.map(wall => ({width: wall.width * 1000, height: wall.height * 1000})));
+        const { mdf15Parts: parts, mdf3Parts: drawerBottomsKitchen, doorCount: numDoors } = getKitchenParts(state.dimensions.walls.map(wall => ({width: wall.width * 1000, height: wall.height * 1000})), state.numDrawers);
+
         const sheets = optimizeCutting(parts, 2750, 1850);
         const numSheets = sheets.length;
-        const mdfCost = numSheets * config.MDF_SHEET_PRICING[state.material];
+        const mdfCost = numSheets * (state.material === 'Branco' ? mdfBrancoCost : mdfPremiumCost);
         if (mdfCost > 0) baseBreakdown.push({ label: `Chapas de MDF ${state.material}`, quantity: numSheets, cost: mdfCost });
         state.quote.cuttingPlan = sheets;
         const totalMaterialArea = parts.reduce((acc, part) => acc + (part.w * part.h), 0) / 1000000;
 
+        // 1.5. Back Panel (Fundo) Cost for Kitchen
+        const backPanelSheetSize = 2.75 * 1.85; // Standard 3mm sheet size
+        let totalBackPanelArea = 0;
+
+        // Add drawer bottoms area for kitchen
+        const drawerBottomsArea = drawerBottomsKitchen.reduce((acc, part) => acc + (part.w * part.h), 0) / 1000000;
+        totalBackPanelArea += drawerBottomsArea;
+
+        // Calculate back panel area for all standard cabinets
+        state.dimensions.walls.forEach(wall => {
+            // Assuming upper cabinets are 0.7m high and lower are 0.85m high
+            totalBackPanelArea += wall.width * 0.7; // Upper cabinets back
+            totalBackPanelArea += wall.width * 0.85; // Lower cabinets back
+        });
+
+        // If there's a sink cabinet, it does NOT have a back panel, so we subtract its area.
+        if (state.kitchenHasSinkCabinet && state.sinkStoneWidth > 0) {
+            totalBackPanelArea -= state.sinkStoneWidth * 0.85; // Subtract lower cabinet back area for the sink
+        }
+        const numBackPanelSheets = Math.ceil(Math.max(0, totalBackPanelArea) / backPanelSheetSize);
+        if (numBackPanelSheets > 0) {
+            baseBreakdown.push({ label: 'Chapas de Fundo (3mm)', quantity: numBackPanelSheets, cost: numBackPanelSheets * mdfFundoCost });
+        }
 
         // --- Extras Calculation ---
         if (state.kitchenHasSinkCabinet && state.sinkStoneWidth > 0) {
@@ -1288,21 +1364,11 @@ function setupSimulator() {
             if (cost > 0) extrasBreakdown.push({ label: 'Torre Quente', cost });
         }
 
-        const totalWidth = state.dimensions.walls.reduce((acc, wall) => acc + wall.width, 0);
-        let lowerCabinetWidth = totalWidth;
-        if (state.stoveType === 'piso') { lowerCabinetWidth -= 0.75; }
-        const upperCabinetWidth = totalWidth;
-        const UNIT_WIDTH = config.HARDWARE.UNIT_WIDTH;
-        const lowerUnits = Math.max(0, lowerCabinetWidth) / UNIT_WIDTH;
-        const upperUnits = upperCabinetWidth / UNIT_WIDTH;
-        const totalUnits = Math.ceil(lowerUnits + upperUnits) + (state.hasHotTower ? 2 : 0); // Total "módulos"
         const numDrawers = state.numDrawers; // Usa o valor exato informado
-        const numDoors = Math.max(0, Math.round(totalUnits - numDrawers)); // O restante vira porta
 
         // Lógica de dobradiças aprimorada para cozinha (padrão de 2 por porta)
         const hingesPerDoor = 2;
         const totalHinges = numDoors * hingesPerDoor;
-        // Use the correct hinge cost based on hardware type selection
         const hingeCost = totalHinges * (state.hardwareType === 'softclose' ? hingeSoftcloseCost : hingeStandardCost);
         const hingeLabel = state.hardwareType === 'softclose' ? 'Dobradiças Soft-close' : 'Dobradiças Padrão';
         if (hingeCost > 0) baseBreakdown.push({ label: hingeLabel, quantity: totalHinges, cost: hingeCost });
@@ -1310,7 +1376,9 @@ function setupSimulator() {
         const slideCost = numDrawers * slideCostPerDrawer;
         if (slideCost > 0) baseBreakdown.push({ label: 'Pares de Corrediças de Gaveta', quantity: numDrawers, cost: slideCost });
 
-        const totalHandleUnits = numDoors + numDrawers;
+        // Kitchen handles are for both doors and drawers
+        const totalHandleUnits = numDoors + numDrawers; 
+        const UNIT_WIDTH = config.HARDWARE.UNIT_WIDTH;
         const totalHandleLength = totalHandleUnits * UNIT_WIDTH;
         const numBarsNeeded = Math.ceil(totalHandleLength / config.HARDWARE.HANDLE_BAR_LENGTH);
 
@@ -1340,15 +1408,6 @@ function setupSimulator() {
             if (finalCost > 0) extrasBreakdown.push({ label: extra, cost: finalCost });
         });
 
-        // Expenses
-        if (shippingCost > 0) {
-            extrasBreakdown.push({ label: 'Frete e Deslocamento', cost: shippingCost });
-        }
-        const totalFrontArea = state.dimensions.walls.reduce((acc, wall) => acc + (wall.width * wall.height), 0);
-        const installationDays = Math.ceil(totalFrontArea / 4); // Estimate 1 day for every 4m² of kitchen
-        const installationCost = installationDays * dailyRateCost;
-        if (installationCost > 0) extrasBreakdown.push({ label: `Instalação (${installationDays} diária(s))`, cost: installationCost });
-
         return { baseBreakdown, extrasBreakdown, totalMaterialArea };
     }
 
@@ -1361,17 +1420,17 @@ function setupSimulator() {
         }
 
         const { baseBreakdown, extrasBreakdown, totalMaterialArea } = quoteDetails;
-        const basePrice = baseBreakdown.reduce((acc, item) => acc + item.cost, 0);
+        const materialAndHardwareCost = baseBreakdown.reduce((acc, item) => acc + item.cost, 0);
         const extrasPrice = extrasBreakdown.reduce((acc, item) => acc + item.cost, 0);
 
-        const costPrice = basePrice + extrasPrice;
-        let finalTotal = costPrice;
-        let profitAmount = 0;
+        // Nova lógica de cálculo com multiplicador
+        const multiplierInput = document.getElementById('cost-multiplier');
+        const multiplier = multiplierInput ? (parseFloat(multiplierInput.value) || 1) : 2;
 
-        const profitMarginInput = document.getElementById('profit-margin');
-        const profitMargin = profitMarginInput ? (parseFloat(profitMarginInput.value) || 0) : 40;
-        profitAmount = costPrice * (profitMargin / 100);
-        finalTotal = costPrice + profitAmount;
+        const multipliedCost = materialAndHardwareCost * multiplier;
+        const profitAmount = multipliedCost - materialAndHardwareCost;
+        const costPrice = materialAndHardwareCost + extrasPrice; // Custo real para o marceneiro
+        let finalTotal = costPrice + profitAmount;
 
         // Desconto ou acréscimo
         const discountExtraInput = document.getElementById('discount-extra');
@@ -1391,7 +1450,7 @@ function setupSimulator() {
             total: finalTotal,
             costPrice: costPrice,
             profitAmount: profitAmount,
-            basePrice: basePrice,
+            basePrice: materialAndHardwareCost,
             baseBreakdown: baseBreakdown,
             extrasPrice: extrasPrice,
             extrasBreakdown: extrasBreakdown,
@@ -1547,7 +1606,7 @@ function setupSimulator() {
         // Use a small timeout to allow the UI to update before heavy calculation
         await new Promise(resolve => setTimeout(resolve, 100));
 
-        try {
+        try { // This try-catch is for the initial calculation
             // FIX: Default hardwareType if not selected to prevent calculation errors.
             if (!state.hardwareType) {
                 updateStateAndSave({ hardwareType: 'padrao' });
@@ -1621,7 +1680,7 @@ function setupSimulator() {
 
     function validateCpf(cpf) {
         cpf = cpf.replace(/[^\d]+/g, '');
-        if (cpf === '' || cpf.length !== 11 || /^(\d)\1+$/.test(cpf)) return false;
+        if (cpf === '' || cpf.length !== 11 || /^(\d)\1{10}$/.test(cpf)) return false;
         let add = 0;
         for (let i = 0; i < 9; i++) add += parseInt(cpf.charAt(i)) * (10 - i);
         let rev = 11 - (add % 11);
@@ -1791,6 +1850,11 @@ function setupSimulator() {
         // Restore photos
         renderPhotoPreviews();
         document.getElementById('competitor-price').value = state.quote.competitorPrice || 0;
+
+        // Restore panel values
+        const multiplier = state.quote.multiplier || 2; // Default to 2 if not saved
+        document.getElementById('cost-multiplier').value = multiplier;
+        document.getElementById('discount-extra').value = state.quote.discountExtra || 0;
     }
 
     function renderResult() {
@@ -1969,17 +2033,21 @@ function setupSimulator() {
 
         listContainer.innerHTML = filteredQuotes.map(q => {
             const quoteDate = new Date(q.quoteId).toLocaleDateString('pt-BR');
+            const quoteTotal = q.quote.total.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
             return `
-                <div class="bg-gray-700 p-3 rounded-lg" data-quote-id="${q.quoteId}">
+                <div class="bg-gray-800 p-3 rounded-lg border-l-4 border-transparent hover:border-gold transition-all" data-quote-id="${q.quoteId}">
                     <div class="flex justify-between items-center">
                         <div class="flex-grow overflow-hidden">
                             <p class="font-semibold text-white truncate">${q.customer.name}</p>
-                            <p class="text-xs text-gray-400">${q.furnitureType} - ${quoteDate}</p>
+                            <div class="flex items-center gap-x-3 text-xs text-gray-400 mt-1">
+                                <span><i class="fas fa-calendar-alt fa-fw mr-1"></i>${quoteDate}</span>
+                                <span class="font-bold text-gold">${quoteTotal}</span>
+                            </div>
                         </div>
                         <div class="flex-shrink-0 flex items-center gap-1">
-                            <button class="quote-action-btn load-quote-btn" title="Carregar"><i class="fas fa-folder-open"></i></button>
-                            <button class="quote-action-btn duplicate-quote-btn" title="Duplicar"><i class="fas fa-copy"></i></button>
-                            <button class="quote-action-btn delete-quote-btn text-red-400 hover:bg-red-500/20" title="Excluir"><i class="fas fa-trash"></i></button>
+                            <button class="quote-action-btn text-blue-400 hover:bg-blue-500/20 load-quote-btn" title="Carregar"><i class="fas fa-folder-open"></i></button>
+                            <button class="quote-action-btn text-green-400 hover:bg-green-500/20 duplicate-quote-btn" title="Duplicar"><i class="fas fa-copy"></i></button>
+                            <button class="quote-action-btn text-red-400 hover:bg-red-500/20 delete-quote-btn" title="Excluir"><i class="fas fa-trash"></i></button>
                         </div>
                     </div>
                 </div>
@@ -2049,151 +2117,144 @@ function setupSimulator() {
 
         const originalBtnHTML = pdfBtn.innerHTML;
         pdfBtn.disabled = true;
-        pdfBtn.innerHTML = '<div class="spinner mr-2"></div>Gerando...';
-    
+        pdfBtn.innerHTML = '<div class="spinner mr-2"></div>Preparando...';
+
+        const quoteId = state.quoteId || Date.now().toString().slice(-6);
+        document.getElementById('pdf-quote-id').textContent = quoteId;
+        document.getElementById('pdf-date').textContent = new Date().toLocaleDateString('pt-BR');
+        
+        document.getElementById('pdf-name').textContent = state.customer.name;
+        document.getElementById('pdf-email').textContent = state.customer.email || 'Não informado';
+        document.getElementById('pdf-phone').textContent = state.customer.phone;
+
+        // Populate Address and CPF
+        const addressBlock = document.getElementById('pdf-address-block');
+        if (state.customer.street || state.customer.cpf) {
+            addressBlock.classList.remove('hidden');
+            document.getElementById('pdf-cpf').textContent = state.customer.cpf ? `CPF: ${state.customer.cpf}` : '';
+            const addressLine1 = `${state.customer.street || ''}${state.customer.number ? ', ' + state.customer.number : ''}`;
+            const addressLine2 = `${state.customer.neighborhood || ''}${state.customer.city ? ' - ' + state.customer.city : ''}${state.customer.state ? '/' + state.customer.state : ''}`;
+            document.getElementById('pdf-address-line1').textContent = addressLine1.trim() === ',' ? '' : addressLine1;
+            document.getElementById('pdf-address-line2').textContent = addressLine2.trim() === '-/' ? '' : addressLine2;
+        } else {
+            addressBlock.classList.add('hidden');
+        }
+
+        // Populate Specs Table
+        const specsContainer = document.getElementById('pdf-specs-table');
+        specsContainer.innerHTML = ''; // Clear previous
+        const createSpecRow = (label, value) => {
+            if (!value) return '';
+            return `<div class="pdf-spec-item"><span>${label}:</span> <span class="font-bold">${value}</span></div>`;
+        };
+        
+        let specsHTML = '';
+        specsHTML += createSpecRow('Tipo de Móvel', state.furnitureType);
+        
+        let dimsText = '';
+        if (state.furnitureType === 'Guarda-Roupa') {
+            dimsText = `Paredes: ${state.dimensions.walls.map(w => w.width).join('m + ')}m | Altura: ${state.dimensions.height}m`;
+        } else { // Cozinha
+            dimsText = state.dimensions.walls.map(w => `${w.width}m x ${w.height}m`).join(' | ');
+        }
+        specsHTML += createSpecRow('Dimensões', dimsText);
+        specsHTML += createSpecRow('Material', state.material);
+        if (state.customColor && (state.material === 'Premium' || state.material === 'Mesclada')) {
+            specsHTML += createSpecRow('Cor Personalizada', state.customColor);
+        }
+        const hasDoors = state.furnitureType === 'Cozinha' || (state.wardrobeFormat === 'reto' || (state.wardrobeFormat === 'closet' && state.closetHasDoors));
+        if (hasDoors) {
+            specsHTML += createSpecRow('Tipo de Porta', state.doorType === 'abrir' ? 'De Abrir' : 'De Correr');
+            specsHTML += createSpecRow('Puxador', `Perfil ${state.handleType.charAt(0).toUpperCase() + state.handleType.slice(1)}`);
+        }
+        specsHTML += createSpecRow('Ferragens', state.hardwareType === 'padrao' ? 'Padrão' : 'Soft-close');
+        specsHTML += createSpecRow('Projeto 3D', state.projectOption === 'create' ? 'Sim' : (state.projectOption === 'upload' ? 'Fornecido pelo cliente' : 'Não'));
+        if (state.extras.length > 0) {
+            specsHTML += createSpecRow('Adicionais', state.extras.join(', '));
+        }
+        specsContainer.innerHTML = specsHTML;
+
+        // Populate Pricing
+        const formatCurrency = (value) => `R$ ${value.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`;
+        const extrasContainer = document.getElementById('pdf-extras-breakdown');
+
+        // Conditional rendering based on PDF type
+        if (type === 'internal') {
+            document.getElementById('pdf-doc-title').textContent = 'ORDEM DE SERVIÇO';
+            document.getElementById('pdf-pricing-title').textContent = 'Detalhamento de Custos e Lucro';
+            document.getElementById('pdf-cost-section').classList.remove('hidden');
+            document.getElementById('pdf-contract-clauses').classList.add('hidden');
+            document.getElementById('pdf-signature-section').classList.add('hidden');
+            document.getElementById('pdf-total-label').textContent = 'PREÇO FINAL (CLIENTE)';
+
+            document.getElementById('pdf-base-price').textContent = formatCurrency(state.quote.costPrice);
+            document.getElementById('pdf-total').textContent = formatCurrency(state.quote.total);
+            let pdfBreakdownHTML = '';
+
+            // Full breakdown for internal PDF
+            if (state.quote.baseBreakdown?.length) {
+                pdfBreakdownHTML += '<h3>Custos Base:</h3>';
+                state.quote.baseBreakdown.forEach(item => {
+                    pdfBreakdownHTML += `<div class="pdf-price-row text-sm"><span>${item.label}</span><span class="font-bold">${formatCurrency(item.cost)}</span></div>`;
+                });
+            }
+            if (state.quote.extrasBreakdown?.length) {
+                pdfBreakdownHTML += '<h3 style="margin-top: 8mm;">Custos de Acabamentos e Despesas:</h3>';
+                state.quote.extrasBreakdown.forEach(item => {
+                    pdfBreakdownHTML += `<div class="pdf-price-row text-sm"><span>${item.label}</span><span class="font-bold">+ ${formatCurrency(item.cost)}</span></div>`;
+                });
+            }
+            extrasContainer.innerHTML = pdfBreakdownHTML;
+
+        } else if (type === 'client') {
+            document.getElementById('pdf-doc-title').textContent = 'ORÇAMENTO';
+            document.getElementById('pdf-pricing-title').textContent = 'Valor do Investimento';
+            document.getElementById('pdf-cost-section').classList.add('hidden');
+            document.getElementById('pdf-contract-clauses').classList.add('hidden');
+            document.getElementById('pdf-signature-section').classList.add('hidden');
+            document.getElementById('pdf-total-label').textContent = 'VALOR TOTAL';
+            document.getElementById('pdf-total').textContent = formatCurrency(state.quote.total);
+            extrasContainer.innerHTML = '<p class="text-sm">Serviços como visita técnica, entrega, montagem e garantia de 5 anos estão inclusos.</p>';
+        } else { // Contract PDF
+            document.getElementById('pdf-doc-title').textContent = 'CONTRATO DE PRESTAÇÃO DE SERVIÇOS';
+            document.getElementById('pdf-pricing-title').textContent = 'Valor do Investimento';
+            document.getElementById('pdf-cost-section').classList.add('hidden');
+            document.getElementById('pdf-contract-clauses').classList.remove('hidden');
+            document.getElementById('pdf-signature-section').classList.remove('hidden');
+            document.getElementById('pdf-total-label').textContent = 'VALOR TOTAL';
+            document.getElementById('pdf-total').textContent = formatCurrency(state.quote.total);
+            document.getElementById('pdf-contract-total').textContent = formatCurrency(state.quote.total);
+            document.getElementById('pdf-signature-client-name').textContent = state.customer.name;
+            extrasContainer.innerHTML = '<p class="text-sm">As especificações detalhadas do projeto estão descritas acima.</p>';
+        }
+
+        // --- Add Photos to PDF ---
+        const photosSection = document.getElementById('pdf-photos-section');
+        const photosContainer = document.getElementById('pdf-photos-container');
+        photosContainer.innerHTML = '';
+        if (state.photos && state.photos.length > 0) {
+            photosSection.classList.remove('hidden');
+            state.photos.forEach(photo => {
+                const imgElement = document.createElement('img');
+                imgElement.src = photo.src;
+                imgElement.className = 'w-full object-contain border rounded-lg';
+                photosContainer.appendChild(imgElement);
+            });
+        } else {
+            photosSection.classList.add('hidden');
+        }
+
+        return { pdfBtn, originalBtnHTML, quoteId };
+    }
+
+    async function generatePDF(type = 'client') {
+        const { pdfBtn, originalBtnHTML, quoteId } = populatePdfTemplate(type);
+        if (!pdfBtn) return;
+
         try {
             const { jsPDF } = window.jspdf;
             const pdfTemplate = document.getElementById('pdf-template');
-            const pdfElement = document.querySelector('#pdf-template .pdf-container');
-    
-            // --- Populate Template ---
-            const quoteId = state.quoteId || Date.now().toString().slice(-6);
-            document.getElementById('pdf-quote-id').textContent = quoteId;
-            document.getElementById('pdf-date').textContent = new Date().toLocaleDateString('pt-BR');
-            
-            document.getElementById('pdf-name').textContent = state.customer.name;
-            document.getElementById('pdf-email').textContent = state.customer.email || 'Não informado';
-            document.getElementById('pdf-phone').textContent = state.customer.phone;
-
-            // Populate Address and CPF
-            const addressBlock = document.getElementById('pdf-address-block');
-            if (state.customer.street || state.customer.cpf) {
-                addressBlock.classList.remove('hidden');
-                document.getElementById('pdf-cpf').textContent = state.customer.cpf ? `CPF: ${state.customer.cpf}` : '';
-                const addressLine1 = `${state.customer.street || ''}${state.customer.number ? ', ' + state.customer.number : ''}`;
-                const addressLine2 = `${state.customer.neighborhood || ''}${state.customer.city ? ' - ' + state.customer.city : ''}${state.customer.state ? '/' + state.customer.state : ''}`;
-                document.getElementById('pdf-address-line1').textContent = addressLine1.trim() === ',' ? '' : addressLine1;
-                document.getElementById('pdf-address-line2').textContent = addressLine2.trim() === '-/' ? '' : addressLine2;
-            } else {
-                addressBlock.classList.add('hidden');
-            }
-
-    
-            // Populate Specs Table
-            const specsContainer = document.getElementById('pdf-specs-table');
-            specsContainer.innerHTML = ''; // Clear previous
-            const createSpecRow = (label, value) => {
-                if (!value) return '';
-                return `<div class="pdf-spec-item"><span class="spec-label">${label}:</span> <span class="font-bold">${value}</span></div>`;
-            };
-            
-            let specsHTML = '';
-            specsHTML += createSpecRow('Tipo de Móvel', state.furnitureType);
-            
-            let dimsText = '';
-            if (state.furnitureType === 'Guarda-Roupa') {
-                dimsText = `Paredes: ${state.dimensions.walls.map(w => w.width).join('m + ')}m | Altura: ${state.dimensions.height}m`;
-            } else { // Cozinha
-                dimsText = state.dimensions.walls.map(w => `${w.width}m x ${w.height}m`).join(' | ');
-            }
-            specsHTML += createSpecRow('Dimensões', dimsText);
-            specsHTML += createSpecRow('Material', state.material);
-            if (state.customColor && (state.material === 'Premium' || state.material === 'Mesclada')) {
-                specsHTML += createSpecRow('Cor Personalizada', state.customColor);
-            }
-            const hasDoors = state.furnitureType === 'Cozinha' || (state.wardrobeFormat === 'reto' || (state.wardrobeFormat === 'closet' && state.closetHasDoors));
-            if (hasDoors) {
-                specsHTML += createSpecRow('Tipo de Porta', state.doorType === 'abrir' ? 'De Abrir' : 'De Correr');
-                specsHTML += createSpecRow('Puxador', `Perfil ${state.handleType.charAt(0).toUpperCase() + state.handleType.slice(1)}`);
-            }
-            specsHTML += createSpecRow('Ferragens', state.hardwareType === 'padrao' ? 'Padrão' : 'Soft-close');
-            specsHTML += createSpecRow('Projeto 3D', state.projectOption === 'create' ? 'Sim' : (state.projectOption === 'upload' ? 'Fornecido pelo cliente' : 'Não'));
-            if (state.extras.length > 0) {
-                specsHTML += createSpecRow('Adicionais', state.extras.join(', '));
-            }
-            specsContainer.innerHTML = specsHTML;
-    
-            // Populate Pricing
-            const formatCurrency = (value) => `R$ ${value.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`;
-            const extrasContainer = document.getElementById('pdf-extras-breakdown');
-
-            // Conditional rendering based on PDF type
-            if (type === 'internal') {
-                document.getElementById('pdf-doc-title').textContent = 'ORDEM DE SERVIÇO';
-                document.getElementById('pdf-pricing-title').textContent = 'Detalhamento de Custos e Lucro';
-                document.getElementById('pdf-cost-section').classList.remove('hidden');
-                document.getElementById('pdf-contract-clauses').classList.add('hidden');
-                document.getElementById('pdf-signature-section').classList.add('hidden');
-                document.getElementById('pdf-total-label').textContent = 'PREÇO FINAL (CLIENTE)';
-
-                document.getElementById('pdf-base-price').textContent = formatCurrency(state.quote.costPrice);
-                document.getElementById('pdf-total').textContent = formatCurrency(state.quote.total);
-                let pdfBreakdownHTML = '';
-
-                // Full breakdown for internal PDF
-                if (state.quote.baseBreakdown?.length) {
-                    pdfBreakdownHTML += '<h3>Custos Base:</h3>';
-                    state.quote.baseBreakdown.forEach(item => {
-                        pdfBreakdownHTML += `<div class="pdf-price-row text-sm"><span>${item.label}</span><span class="font-bold">${formatCurrency(item.cost)}</span></div>`;
-                    });
-                }
-                if (state.quote.extrasBreakdown?.length) {
-                    pdfBreakdownHTML += '<h3 style="margin-top: 8mm;">Custos de Acabamentos e Despesas:</h3>';
-                    state.quote.extrasBreakdown.forEach(item => {
-                        pdfBreakdownHTML += `<div class="pdf-price-row text-sm"><span>${item.label}</span><span class="font-bold">+ ${formatCurrency(item.cost)}</span></div>`;
-                    });
-                }
-                extrasContainer.innerHTML = pdfBreakdownHTML;
-
-            } else if (type === 'client') {
-                document.getElementById('pdf-doc-title').textContent = 'ORÇAMENTO';
-                document.getElementById('pdf-pricing-title').textContent = 'Valor do Investimento';
-                document.getElementById('pdf-cost-section').classList.add('hidden');
-                document.getElementById('pdf-contract-clauses').classList.add('hidden');
-                document.getElementById('pdf-signature-section').classList.add('hidden');
-                document.getElementById('pdf-total-label').textContent = 'VALOR TOTAL';
-                document.getElementById('pdf-total').textContent = formatCurrency(state.quote.total);
-                extrasContainer.innerHTML = '<p class="text-sm">Serviços como visita técnica, entrega, montagem e garantia de 5 anos estão inclusos.</p>';
-            } else { // Contract PDF
-                document.getElementById('pdf-doc-title').textContent = 'CONTRATO DE PRESTAÇÃO DE SERVIÇOS';
-                document.getElementById('pdf-pricing-title').textContent = 'Valor do Investimento';
-                document.getElementById('pdf-cost-section').classList.add('hidden');
-                document.getElementById('pdf-contract-clauses').classList.remove('hidden');
-                document.getElementById('pdf-signature-section').classList.remove('hidden');
-                document.getElementById('pdf-total-label').textContent = 'VALOR TOTAL';
-                document.getElementById('pdf-total').textContent = formatCurrency(state.quote.total);
-                document.getElementById('pdf-contract-total').textContent = formatCurrency(state.quote.total);
-                document.getElementById('pdf-signature-client-name').textContent = state.customer.name;
-                extrasContainer.innerHTML = '<p class="text-sm">As especificações detalhadas do projeto estão descritas acima.</p>';
-            }
-
-            // --- Add Photos to PDF ---
-            const photosSection = document.getElementById('pdf-photos-section');
-            const photosContainer = document.getElementById('pdf-photos-container');
-            photosContainer.innerHTML = '';
-            if (state.photos && state.photos.length > 0) {
-                photosSection.classList.remove('hidden');
-                state.photos.forEach(photo => {
-                    const imgElement = document.createElement('img');
-                    imgElement.src = photo.src;
-                    imgElement.className = 'w-full object-contain border rounded-lg';
-                    photosContainer.appendChild(imgElement);
-                });
-            } else {
-                photosSection.classList.add('hidden');
-            }
-            // --- End Populate ---
-    
             pdfTemplate.classList.remove('hidden');
-    
-            // Use html2canvas directly for better control
-            const canvas = await html2canvas(pdfElement, {
-                scale: 3, // Higher scale for better quality
-                useCORS: true,
-                logging: false
-            });
-    
-            const imgData = canvas.toDataURL('image/png');
             const pdf = new jsPDF({
                 orientation: 'portrait',
                 unit: 'mm',
@@ -2203,47 +2264,38 @@ function setupSimulator() {
             const pageW = pdf.internal.pageSize.getWidth();
             const pageH = pdf.internal.pageSize.getHeight();
             const margin = 10; // Margem de 10mm
-    
-            // Área útil da página, descontando as margens laterais
             const contentWidth = pageW - (margin * 2);
-            const contentHeight = pageH - (margin * 2);
-    
-            const canvasWidth = canvas.width;
-            const canvasHeight = canvas.height;
-    
-            // Calcula a altura total que a imagem ocupará no PDF, mantendo a proporção
-            const ratio = canvasWidth / contentWidth;
-            const totalImgHeight = canvasHeight / ratio;
-    
-            let heightLeft = totalImgHeight;
-            let position = 0;
-    
-            // Adiciona a primeira página
-            pdf.addImage(imgData, 'PNG', margin, margin, contentWidth, totalImgHeight);
-            heightLeft -= contentHeight;
-    
-            // Adiciona novas páginas se o conteúdo transbordar
-            while (heightLeft > 0) {
-                position -= contentHeight;
-                pdf.addPage();
-                pdf.addImage(imgData, 'PNG', margin, position + margin, contentWidth, totalImgHeight);
-                heightLeft -= contentHeight;
+            const pageContentHeight = pageH - (margin * 2);
+            let cursorY = margin;
+
+            const sections = pdfTemplate.querySelectorAll('.pdf-container > .pdf-section');
+
+            for (const section of sections) {
+                if (section.classList.contains('hidden')) continue;
+
+                const canvas = await html2canvas(section, {
+                    scale: 3,
+                    useCORS: true,
+                    logging: false,
+                    backgroundColor: null // Use transparent background
+                });
+
+                const imgData = canvas.toDataURL('image/png');
+                const imgHeight = (canvas.height * contentWidth) / canvas.width;
+
+                if (cursorY > margin && cursorY + imgHeight > pageContentHeight + margin) {
+                    pdf.addPage();
+                    cursorY = margin;
+                }
+
+                pdf.addImage(imgData, 'PNG', margin, cursorY, contentWidth, imgHeight);
+                cursorY += imgHeight + 5; // Add 5mm spacing between sections
             }
-    
-            // **CORREÇÃO FINAL: Adiciona margens superior/inferior em TODAS as páginas**
-            const pageCount = pdf.internal.getNumberOfPages();
-            for(let i = 1; i <= pageCount; i++) {
-                pdf.setPage(i);
-                pdf.setFillColor(255, 255, 255); // Cor branca
-                pdf.rect(0, 0, pageW, margin, 'F'); // Retângulo no topo (cabeçalho)
-                pdf.rect(0, pageH - margin, pageW, margin, 'F'); // Retângulo na base (rodapé)
-            }
-    
-            const fileName = `orcamento_${type}_${state.customer.name.replace(/\s/g, '_')}_${quoteId}.pdf`;
+
+            const fileName = `orcamento_${type}_${(state.customer.name || 'cliente').replace(/\s/g, '_')}_${quoteId}.pdf`;
             pdf.save(fileName);
     
             pdfTemplate.classList.add('hidden');
-
         } catch (error) {
             console.error("PDF Generation Error:", error);
             showNotification("Erro ao gerar o PDF. Tente novamente.", "error");
@@ -2251,6 +2303,150 @@ function setupSimulator() {
             pdfBtn.disabled = false;
             pdfBtn.innerHTML = originalBtnHTML;
         }
+    }
+
+    function populatePdfTemplate(type) {
+        let pdfBtn;
+        if (type === 'internal') {
+            pdfBtn = document.getElementById('pdf-btn-internal');
+        } else if (type === 'client') {
+            pdfBtn = document.getElementById('pdf-btn-client');
+        } else if (type === 'contract') {
+            pdfBtn = document.getElementById('pdf-btn-contract');
+        }
+
+        if (!pdfBtn) return {};
+
+        const originalBtnHTML = pdfBtn.innerHTML;
+        pdfBtn.disabled = true;
+        pdfBtn.innerHTML = '<div class="spinner mr-2"></div>Preparando...';
+
+        const quoteId = state.quoteId || Date.now().toString().slice(-6);
+        document.getElementById('pdf-quote-id').textContent = quoteId;
+        document.getElementById('pdf-date').textContent = new Date().toLocaleDateString('pt-BR');
+        
+        document.getElementById('pdf-name').textContent = state.customer.name;
+        document.getElementById('pdf-email').textContent = state.customer.email || 'Não informado';
+        document.getElementById('pdf-phone').textContent = state.customer.phone;
+
+        // Populate Address and CPF
+        const addressBlock = document.getElementById('pdf-address-block');
+        if (state.customer.street || state.customer.cpf) {
+            addressBlock.classList.remove('hidden');
+            document.getElementById('pdf-cpf').textContent = state.customer.cpf ? `CPF: ${state.customer.cpf}` : '';
+            const addressLine1 = `${state.customer.street || ''}${state.customer.number ? ', ' + state.customer.number : ''}`;
+            const addressLine2 = `${state.customer.neighborhood || ''}${state.customer.city ? ' - ' + state.customer.city : ''}${state.customer.state ? '/' + state.customer.state : ''}`;
+            document.getElementById('pdf-address-line1').textContent = addressLine1.trim() === ',' ? '' : addressLine1;
+            document.getElementById('pdf-address-line2').textContent = addressLine2.trim() === '-/' ? '' : addressLine2;
+        } else {
+            addressBlock.classList.add('hidden');
+        }
+
+        // Populate Specs Table
+        const specsContainer = document.getElementById('pdf-specs-table');
+        specsContainer.innerHTML = ''; // Clear previous
+        const createSpecRow = (label, value) => {
+            if (!value) return '';
+            return `<div class="pdf-spec-item"><span>${label}:</span> <span class="font-bold">${value}</span></div>`;
+        };
+        
+        let specsHTML = '';
+        specsHTML += createSpecRow('Tipo de Móvel', state.furnitureType);
+        
+        let dimsText = '';
+        if (state.furnitureType === 'Guarda-Roupa') {
+            dimsText = `Paredes: ${state.dimensions.walls.map(w => w.width).join('m + ')}m | Altura: ${state.dimensions.height}m`;
+        } else { // Cozinha
+            dimsText = state.dimensions.walls.map(w => `${w.width}m x ${w.height}m`).join(' | ');
+        }
+        specsHTML += createSpecRow('Dimensões', dimsText);
+        specsHTML += createSpecRow('Material', state.material);
+        if (state.customColor && (state.material === 'Premium' || state.material === 'Mesclada')) {
+            specsHTML += createSpecRow('Cor Personalizada', state.customColor);
+        }
+        const hasDoors = state.furnitureType === 'Cozinha' || (state.wardrobeFormat === 'reto' || (state.wardrobeFormat === 'closet' && state.closetHasDoors));
+        if (hasDoors) {
+            specsHTML += createSpecRow('Tipo de Porta', state.doorType === 'abrir' ? 'De Abrir' : 'De Correr');
+            specsHTML += createSpecRow('Puxador', `Perfil ${state.handleType.charAt(0).toUpperCase() + state.handleType.slice(1)}`);
+        }
+        specsHTML += createSpecRow('Ferragens', state.hardwareType === 'padrao' ? 'Padrão' : 'Soft-close');
+        specsHTML += createSpecRow('Projeto 3D', state.projectOption === 'create' ? 'Sim' : (state.projectOption === 'upload' ? 'Fornecido pelo cliente' : 'Não'));
+        if (state.extras.length > 0) {
+            specsHTML += createSpecRow('Adicionais', state.extras.join(', '));
+        }
+        specsContainer.innerHTML = specsHTML;
+
+        // Populate Pricing
+        const formatCurrency = (value) => `R$ ${value.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`;
+        const extrasContainer = document.getElementById('pdf-extras-breakdown');
+
+        // Conditional rendering based on PDF type
+        if (type === 'internal') {
+            document.getElementById('pdf-doc-title').textContent = 'ORDEM DE SERVIÇO';
+            document.getElementById('pdf-pricing-title').textContent = 'Detalhamento de Custos e Lucro';
+            document.getElementById('pdf-cost-section').classList.remove('hidden');
+            document.getElementById('pdf-contract-clauses').classList.add('hidden');
+            document.getElementById('pdf-signature-section').classList.add('hidden');
+            document.getElementById('pdf-total-label').textContent = 'PREÇO FINAL (CLIENTE)';
+
+            document.getElementById('pdf-base-price').textContent = formatCurrency(state.quote.costPrice);
+            document.getElementById('pdf-total').textContent = formatCurrency(state.quote.total);
+            let pdfBreakdownHTML = '';
+
+            // Full breakdown for internal PDF
+            if (state.quote.baseBreakdown?.length) {
+                pdfBreakdownHTML += '<h3>Custos Base:</h3>';
+                state.quote.baseBreakdown.forEach(item => {
+                    pdfBreakdownHTML += `<div class="pdf-price-row text-sm"><span>${item.label}</span><span class="font-bold">${formatCurrency(item.cost)}</span></div>`;
+                });
+            }
+            if (state.quote.extrasBreakdown?.length) {
+                pdfBreakdownHTML += '<h3 style="margin-top: 8mm;">Custos de Acabamentos e Despesas:</h3>';
+                state.quote.extrasBreakdown.forEach(item => {
+                    pdfBreakdownHTML += `<div class="pdf-price-row text-sm"><span>${item.label}</span><span class="font-bold">+ ${formatCurrency(item.cost)}</span></div>`;
+                });
+            }
+            extrasContainer.innerHTML = pdfBreakdownHTML;
+
+        } else if (type === 'client') {
+            document.getElementById('pdf-doc-title').textContent = 'ORÇAMENTO';
+            document.getElementById('pdf-pricing-title').textContent = 'Valor do Investimento';
+            document.getElementById('pdf-cost-section').classList.add('hidden');
+            document.getElementById('pdf-contract-clauses').classList.add('hidden');
+            document.getElementById('pdf-signature-section').classList.add('hidden');
+            document.getElementById('pdf-total-label').textContent = 'VALOR TOTAL';
+            document.getElementById('pdf-total').textContent = formatCurrency(state.quote.total);
+            extrasContainer.innerHTML = '<p class="text-sm">Serviços como visita técnica, entrega, montagem e garantia de 5 anos estão inclusos.</p>';
+        } else { // Contract PDF
+            document.getElementById('pdf-doc-title').textContent = 'CONTRATO DE PRESTAÇÃO DE SERVIÇOS';
+            document.getElementById('pdf-pricing-title').textContent = 'Valor do Investimento';
+            document.getElementById('pdf-cost-section').classList.add('hidden');
+            document.getElementById('pdf-contract-clauses').classList.remove('hidden');
+            document.getElementById('pdf-signature-section').classList.remove('hidden');
+            document.getElementById('pdf-total-label').textContent = 'VALOR TOTAL';
+            document.getElementById('pdf-total').textContent = formatCurrency(state.quote.total);
+            document.getElementById('pdf-contract-total').textContent = formatCurrency(state.quote.total);
+            document.getElementById('pdf-signature-client-name').textContent = state.customer.name;
+            extrasContainer.innerHTML = '<p class="text-sm">As especificações detalhadas do projeto estão descritas acima.</p>';
+        }
+
+        // --- Add Photos to PDF ---
+        const photosSection = document.getElementById('pdf-photos-section');
+        const photosContainer = document.getElementById('pdf-photos-container');
+        photosContainer.innerHTML = '';
+        if (state.photos && state.photos.length > 0) {
+            photosSection.classList.remove('hidden');
+            state.photos.forEach(photo => {
+                const imgElement = document.createElement('img');
+                imgElement.src = photo.src;
+                imgElement.className = 'w-full object-contain border rounded-lg';
+                photosContainer.appendChild(imgElement);
+            });
+        } else {
+            photosSection.classList.add('hidden');
+        }
+
+        return { pdfBtn, originalBtnHTML, quoteId };
     }
 
     function generateWhatsAppLink() {

@@ -84,6 +84,10 @@
                     <input type="number" id="mdf-premium-cost" value="400" class="panel-input">
                 </div>
                 <div>
+                    <label for="mdf-fundo-cost" class="panel-label">Custo Chapa Fundo (3mm)</label>
+                    <input type="number" id="mdf-fundo-cost" value="140" class="panel-input">
+                </div>
+                <div>
                     <label for="edge-tape-cost" class="panel-label">Custo Fita de Borda (p/ metro)</label>
                     <input type="number" id="edge-tape-cost" value="2.5" step="0.1" class="panel-input">
                 </div>
@@ -110,28 +114,10 @@
                                     <button id="reset-panel-btn" title="Restaurar valores padrão" class="ml-2 text-gold text-base hover:text-yellow-400"><i class="fas fa-undo"></i></button>
                                 </h3>
                                 <div class="relative">
-                                    <label for="fabrication-cost-m2" class="panel-label">Custo de Fabricação (por m²)
-                                        <span class="ml-1" title="Custo de mão de obra, energia, etc., por metro quadrado de área frontal do guarda-roupa."><i class="fas fa-info-circle text-gold"></i></span>
+                                    <label for="cost-multiplier" class="panel-label">Multiplicador (Mão de Obra + Lucro)
+                                        <span class="ml-1" title="Multiplica o custo total de material e ferragens. Ex: 2 para cobrar o dobro."><i class="fas fa-info-circle text-gold"></i></span>
                                     </label>
-                                    <input type="number" id="fabrication-cost-m2" value="450" class="panel-input">
-                                </div>
-                                <div class="relative">
-                                        <label for="shipping-cost" class="panel-label">Custo Frete / Deslocamento
-                                            <span class="ml-1" title="Valor estimado para transporte e entrega"><i class="fas fa-info-circle text-gold"></i></span>
-                                        </label>
-                                        <input type="number" id="shipping-cost" value="150" class="panel-input">
-                                </div>
-                                <div class="relative">
-                                        <label for="daily-rate-cost" class="panel-label">Custo Diária de Instalação
-                                            <span class="ml-1" title="Valor por dia de trabalho na montagem"><i class="fas fa-info-circle text-gold"></i></span>
-                                        </label>
-                                        <input type="number" id="daily-rate-cost" value="200" class="panel-input">
-                                </div>
-                                <div class="relative">
-                                        <label for="profit-margin" class="panel-label">Margem de Lucro (%)
-                                            <span class="ml-1" title="Percentual de lucro sobre o custo total"><i class="fas fa-info-circle text-gold"></i></span>
-                                        </label>
-                                        <input type="number" id="profit-margin" value="80" class="panel-input">
+                                    <input type="number" id="cost-multiplier" value="2" step="0.1" class="panel-input">
                                 </div>
                                 <div class="relative">
                                         <label for="discount-extra" class="panel-label">Desconto ou Acréscimo (R$)
@@ -608,7 +594,7 @@
                                         <div class="relative col-span-1"><input type="text" id="leadState" placeholder=" " class="form-input peer"><label for="leadState" class="form-label">UF</label></div>
                                     </div>
                                 </div>
-                                <!-- Seção de Fotos do Local -->
+                                <!-- Seção de Fotos do Local (MOVIDA PARA CÁ) -->
                                 <div class="mt-8 border-t pt-6 max-w-md mx-auto">
                                     <h4 class="font-semibold text-lg mb-4 text-charcoal text-center">Fotos do Local (Opcional)</h4>
                                     <div class="flex items-center justify-center gap-4">
@@ -663,16 +649,19 @@
                                 <!-- PRO: Custo / Lucro / Preço Final -->
                                 <div class="grid md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8 text-center">
                                     <div class="bg-red-50 border border-red-200 p-6 rounded-2xl">
-                                        <h4 class="text-lg text-red-800 font-semibold">Custo Total</h4>
+                                        <h4 class="text-lg text-red-800 font-semibold">Custo Total (Seu)</h4>
                                         <p id="result-cost-price" class="font-montserrat font-bold text-3xl text-red-600 my-2">R$ 0,00</p>
+                                        <p class="text-xs text-red-700">(Material + Extras)</p>
                                     </div>
                                     <div class="bg-yellow-50 border border-yellow-200 p-6 rounded-2xl">
                                         <h4 class="text-lg text-yellow-800 font-semibold">Lucro</h4>
                                         <p id="result-profit" class="font-montserrat font-bold text-3xl text-yellow-600 my-2">R$ 0,00</p>
+                                        <p class="text-xs text-yellow-700">(Material x Multiplicador)</p>
                                     </div>
                                     <div class="bg-green-50 border border-green-200 p-6 rounded-2xl">
                                         <h4 class="text-lg text-green-800 font-semibold">Preço Final (Cliente)</h4>
                                         <p id="result-total" class="font-montserrat font-bold text-3xl text-green-600 my-2">R$ 0,00</p>
+                                        <p class="text-xs text-green-700">(Custo Total + Lucro)</p>
                                     </div>
                                     <div id="competitor-analysis-card" class="bg-blue-50 border border-blue-200 p-6 rounded-2xl hidden">
                                         <h4 class="text-lg text-blue-800 font-semibold">Análise Concorrência</h4>
