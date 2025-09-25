@@ -673,13 +673,14 @@
                                 <div class="mt-10 text-center">
                                     <h4 class="font-montserrat font-bold text-2xl text-charcoal mb-3">Próximos Passos</h4>
                                     <p class="text-gray-600 mb-6 max-w-2xl mx-auto">Salve este orçamento, envie para o cliente ou gere um PDF para seus registros.</p>
-                                    <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4 mt-8 max-w-4xl mx-auto">
+                                    <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 mt-8 max-w-4xl mx-auto">
                                         <button id="save-quote-btn" class="flex flex-col items-center justify-center gap-2 p-4 rounded-xl text-charcoal bg-white font-semibold text-sm sm:text-xs text-center transition-all duration-300 border border-gray-200 shadow-lg hover:shadow-xl hover:-translate-y-1 hover:border-gold active:translate-y-0 active:shadow-inner active:bg-gray-100 disabled:bg-gray-200 disabled:text-gray-400 disabled:cursor-not-allowed disabled:shadow-none disabled:transform-none disabled:border-transparent group"><i class="fas fa-save text-blue-500 text-3xl transition-transform duration-300 group-hover:scale-110 group-hover:-rotate-3"></i><span>Salvar Orçamento</span></button>
                                         <button id="whatsapp-btn" class="flex flex-col items-center justify-center gap-2 p-4 rounded-xl text-charcoal bg-white font-semibold text-sm sm:text-xs text-center transition-all duration-300 border border-gray-200 shadow-lg hover:shadow-xl hover:-translate-y-1 hover:border-gold active:translate-y-0 active:shadow-inner active:bg-gray-100 disabled:bg-gray-200 disabled:text-gray-400 disabled:cursor-not-allowed disabled:shadow-none disabled:transform-none disabled:border-transparent group"><i class="fab fa-whatsapp text-green-500 text-3xl transition-transform duration-300 group-hover:scale-110 group-hover:-rotate-3"></i><span>WhatsApp</span></button>
                                         <button id="pdf-btn-internal" class="flex flex-col items-center justify-center gap-2 p-4 rounded-xl text-charcoal bg-white font-semibold text-sm sm:text-xs text-center transition-all duration-300 border border-gray-200 shadow-lg hover:shadow-xl hover:-translate-y-1 hover:border-gold active:translate-y-0 active:shadow-inner active:bg-gray-100 disabled:bg-gray-200 disabled:text-gray-400 disabled:cursor-not-allowed disabled:shadow-none disabled:transform-none disabled:border-transparent group"><i class="fas fa-file-pdf text-red-500 text-3xl transition-transform duration-300 group-hover:scale-110 group-hover:-rotate-3"></i><span>PDF Interno</span></button>
                                         <button id="pdf-btn-client" class="flex flex-col items-center justify-center gap-2 p-4 rounded-xl text-charcoal bg-white font-semibold text-sm sm:text-xs text-center transition-all duration-300 border border-gray-200 shadow-lg hover:shadow-xl hover:-translate-y-1 hover:border-gold active:translate-y-0 active:shadow-inner active:bg-gray-100 disabled:bg-gray-200 disabled:text-gray-400 disabled:cursor-not-allowed disabled:shadow-none disabled:transform-none disabled:border-transparent group"><i class="fas fa-file-alt text-purple-500 text-3xl transition-transform duration-300 group-hover:scale-110 group-hover:-rotate-3"></i><span>PDF Cliente</span></button>
                                         <button id="pdf-btn-cutting" class="flex flex-col items-center justify-center gap-2 p-4 rounded-xl text-charcoal bg-white font-semibold text-sm sm:text-xs text-center transition-all duration-300 border border-gray-200 shadow-lg hover:shadow-xl hover:-translate-y-1 hover:border-gold active:translate-y-0 active:shadow-inner active:bg-gray-100 disabled:bg-gray-200 disabled:text-gray-400 disabled:cursor-not-allowed disabled:shadow-none disabled:transform-none disabled:border-transparent group"><i class="fas fa-ruler-combined text-orange-500 text-3xl transition-transform duration-300 group-hover:scale-110 group-hover:-rotate-3"></i><span>Plano de Corte</span></button>
                                         <button id="pdf-btn-contract" class="flex flex-col items-center justify-center gap-2 p-4 rounded-xl text-charcoal bg-white font-semibold text-sm sm:text-xs text-center transition-all duration-300 border border-gray-200 shadow-lg hover:shadow-xl hover:-translate-y-1 hover:border-gold active:translate-y-0 active:shadow-inner active:bg-gray-100 disabled:bg-gray-200 disabled:text-gray-400 disabled:cursor-not-allowed disabled:shadow-none disabled:transform-none disabled:border-transparent group"><i class="fas fa-file-signature text-gray-600 text-3xl transition-transform duration-300 group-hover:scale-110 group-hover:-rotate-3"></i><span>Gerar Contrato</span></button>
+                                        <button id="shopping-list-btn" class="flex flex-col items-center justify-center gap-2 p-4 rounded-xl text-charcoal bg-white font-semibold text-sm sm:text-xs text-center transition-all duration-300 border border-gray-200 shadow-lg hover:shadow-xl hover:-translate-y-1 hover:border-gold active:translate-y-0 active:shadow-inner active:bg-gray-100 disabled:bg-gray-200 disabled:text-gray-400 disabled:cursor-not-allowed disabled:shadow-none disabled:transform-none disabled:border-transparent group"><i class="fas fa-shopping-cart text-teal-500 text-3xl transition-transform duration-300 group-hover:scale-110 group-hover:-rotate-3"></i><span>Lista de Compras</span></button>
                                     </div>
                                     <div class="flex items-center justify-center gap-6 mt-8">
                                         <button class="prev-btn bg-transparent text-gray-500 font-semibold py-2 px-4 hover:text-charcoal transition-colors"><i class="fas fa-edit mr-2"></i>Editar</button>
@@ -797,5 +798,31 @@
     <script src="./bin-packing.js"></script>
     <script src="./script-pro.js"></script>
 
+    <!-- Modal da Lista de Compras -->
+    <div id="shopping-list-modal" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-white rounded-lg w-full max-w-2xl max-h-[90vh] flex flex-col shadow-2xl">
+            <div class="flex justify-between items-center p-4 border-b">
+                <h3 class="font-montserrat font-bold text-xl text-charcoal flex items-center gap-2">
+                    <i class="fas fa-shopping-cart text-gold"></i>
+                    Lista de Compras
+                </h3>
+                <div class="flex items-center gap-2">
+                    <button id="print-shopping-list-btn" class="text-charcoal hover:text-gold transition-colors" title="Imprimir Lista">
+                        <i class="fas fa-print text-xl"></i>
+                    </button>
+                    <button id="shopping-list-modal-close" class="text-charcoal text-2xl hover:text-gold transition-colors" title="Fechar">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+            </div>
+            <div id="shopping-list-content" class="flex-1 p-6 md:p-8 overflow-y-auto">
+                <!-- A lista será inserida aqui pelo JavaScript -->
+                <div class="text-center text-gray-500">
+                    <div class="spinner"></div>
+                    <p>Gerando lista...</p>
+                </div>
+            </div>
+        </div>
+    </div>
 </body>
 </html>

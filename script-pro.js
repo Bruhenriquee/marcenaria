@@ -589,6 +589,7 @@ function setupSimulator() {
         document.getElementById('pdf-btn-client').addEventListener('click', () => generatePDF('client'));
         document.getElementById('pdf-btn-contract').addEventListener('click', () => generatePDF('contract'));
         document.getElementById('pdf-btn-cutting').addEventListener('click', generateCuttingPlanPDF);
+        document.getElementById('shopping-list-btn').addEventListener('click', handleGenerateShoppingList);
         document.getElementById('whatsapp-btn').addEventListener('click', generateWhatsAppLink);
 
         // Step 6: Breakdown toggle
@@ -610,6 +611,10 @@ function setupSimulator() {
 
         // Listener para busca de CEP
         document.getElementById('cep-lookup-btn').addEventListener('click', handleCepLookup);
+
+        // Listeners para o modal da lista de compras
+        document.getElementById('shopping-list-modal-close').addEventListener('click', closeShoppingListModal);
+        document.getElementById('print-shopping-list-btn').addEventListener('click', printShoppingList);
     }
 
     function setupQuoteManagement() {
@@ -2633,4 +2638,77 @@ function setupSimulator() {
     }
 
     init();
+
+    // --- Shopping List Modal Functions ---
+    function handleGenerateShoppingList() {
+        const modal = document.getElementById('shopping-list-modal');
+        const contentDiv = document.getElementById('shopping-list-content');
+        modal.classList.remove('hidden');
+        contentDiv.innerHTML = '<div class="text-center text-gray-500"><div class="spinner mx-auto"></div><p>Gerando lista...</p></div>';
+
+        // Consolidate items
+        const consolidatedList = {};
+
+        // Process base breakdown (materials and hardware)
+        state.quote.baseBreakdown.forEach(item => {
+            // Remove quantity from label to group items like "Chapas de MDF Branco (Interno)" and "Chapas de MDF Branco"
+            const cleanLabel = item.label.replace(/\s*\(.*\)\s*$/, '').trim();
+            if (!consolidatedList[cleanLabel]) {
+                consolidatedList[cleanLabel] = { quantity: 0, unit: '' };
+            }
+            consolidatedList[cleanLabel].quantity += item.quantity || 1;
+            
+            // Define units for better readability
+            if (cleanLabel.toLowerCase().includes('chapa')) consolidatedList[cleanLabel].unit = 'unid.';
+            if (cleanLabel.toLowerCase().includes('fita de borda')) consolidatedList[cleanLabel].unit = 'metros';
+            if (cleanLabel.toLowerCase().includes('corrediça')) consolidatedList[cleanLabel].unit = 'pares';
+            if (cleanLabel.toLowerCase().includes('dobradiça')) consolidatedList[cleanLabel].unit = 'unid.';
+            if (cleanLabel.toLowerCase().includes('puxador')) consolidatedList[cleanLabel].unit = 'barras';
+        });
+
+        // Process extras breakdown
+        state.extras.forEach(extra => {
+            if (!consolidatedList[extra]) {
+                consolidatedList[extra] = { quantity: 0, unit: 'unid.' };
+            }
+            consolidatedList[extra].quantity += 1;
+        });
+
+        // Generate HTML
+        let listHTML = `
+            <div class="space-y-4">
+                <h4 class="text-lg font-bold text-charcoal border-b pb-2">Materiais e Ferragens</h4>
+                <ul class="space-y-2 list-none">
+        `;
+
+        Object.entries(consolidatedList).forEach(([label, data]) => {
+            listHTML += `
+                <li class="flex items-center justify-between p-2 rounded-md even:bg-gray-50">
+                    <span class="text-gray-700">${label}</span>
+                    <span class="font-bold text-charcoal">${Math.ceil(data.quantity)} ${data.unit}</span>
+                </li>
+            `;
+        });
+
+        listHTML += `</ul></div>`;
+        contentDiv.innerHTML = listHTML;
+    }
+
+    function closeShoppingListModal() {
+        document.getElementById('shopping-list-modal').classList.add('hidden');
+    }
+
+    function printShoppingList() {
+        const content = document.getElementById('shopping-list-content').innerHTML;
+        const printWindow = window.open('', '_blank');
+        printWindow.document.write('<html><head><title>Lista de Compras</title>');
+        printWindow.document.write('<link href="https://cdn.tailwindcss.com" rel="stylesheet">'); // For basic styling
+        printWindow.document.write('<style>body { padding: 2rem; font-family: sans-serif; } @page { size: auto; margin: 20mm; }</style>');
+        printWindow.document.write('</head><body>');
+        printWindow.document.write(`<h1>Lista de Compras - ${state.customer.name || 'Projeto'}</h1>`);
+        printWindow.document.write(content);
+        printWindow.document.write('</body></html>');
+        printWindow.document.close();
+        printWindow.print();
+    }
 }
