@@ -252,7 +252,7 @@ function getWardrobeParts(walls, height, depth, numDrawers, hasDoors, numDoors) 
     // CORREÇÃO: Cria um painel de fundo para CADA parede, em vez de um único painel gigante.
     // Isso permite que o otimizador de corte funcione corretamente para closets.
     walls.forEach((wall, index) => {
-        // CORREÇÃO: Também divide o fundo se a parede for muito larga.
+        // CORREÇÃO: A altura geral do móvel (parâmetro 'height') deve ser usada para o forro, não a altura da parede (wall.height).
         mdf3Parts.push(...splitLargePart(wall.width, height, `Back Panel Wall ${index + 1}`));
     });
 
@@ -267,20 +267,25 @@ function getKitchenParts(walls, numDrawers) {
 
     walls.forEach(wall => {
         const { width, height } = wall;
-        const upperCabinetHeight = 700;
-        const lowerCabinetHeight = 850;
+        // CORREÇÃO: Altura do armário inferior é fixa, mas a do superior depende da altura da parede.
+        const lowerCabinetHeight = 850; // Altura padrão do chão à bancada
+        const spaceBetween = 650; // Espaço padrão entre bancada e armário superior
+        const upperCabinetHeight = Math.max(0, height - lowerCabinetHeight - spaceBetween);
         const cabinetDepth = 600;
 
         // Upper cabinets
-        const numUpperCabinets = Math.floor(width / 600); // Módulos de 60cm
-        for (let i = 0; i < numUpperCabinets; i++) {
-            const moduleWidth = 600;
-            mdf15Parts.push({ w: moduleWidth, h: cabinetDepth, description: 'Upper Cabinet Top' });
-            mdf15Parts.push({ w: moduleWidth, h: cabinetDepth, description: 'Upper Cabinet Bottom' });
-            mdf15Parts.push({ w: upperCabinetHeight - (2 * thickness), h: cabinetDepth, description: 'Upper Cabinet Side' });
-            mdf15Parts.push({ w: upperCabinetHeight - (2 * thickness), h: cabinetDepth, description: 'Upper Cabinet Side' });
-            mdf15Parts.push({ w: moduleWidth - 4, h: upperCabinetHeight - 4, description: 'Upper Cabinet Door' });
-            mdf3Parts.push({ w: moduleWidth, h: upperCabinetHeight, description: 'Upper Cabinet Back' });
+        if (upperCabinetHeight > 0) {
+            const numUpperCabinets = Math.floor(width / 600); // Módulos de 60cm
+            for (let i = 0; i < numUpperCabinets; i++) {
+                const moduleWidth = 600;
+                mdf15Parts.push({ w: moduleWidth, h: cabinetDepth, description: 'Upper Cabinet Top' });
+                mdf15Parts.push({ w: moduleWidth, h: cabinetDepth, description: 'Upper Cabinet Bottom' });
+                mdf15Parts.push({ w: upperCabinetHeight - (2 * thickness), h: cabinetDepth, description: 'Upper Cabinet Side' });
+                mdf15Parts.push({ w: upperCabinetHeight - (2 * thickness), h: cabinetDepth, description: 'Upper Cabinet Side' });
+                mdf15Parts.push({ w: moduleWidth - 4, h: upperCabinetHeight - 4, description: 'Upper Cabinet Door' });
+                // CORREÇÃO: Adiciona o fundo do armário superior com a altura calculada.
+                mdf3Parts.push({ w: moduleWidth, h: upperCabinetHeight, description: 'Upper Cabinet Back' });
+            }
         }
 
         // Lower cabinets
@@ -294,6 +299,7 @@ function getKitchenParts(walls, numDrawers) {
             mdf15Parts.push({ w: moduleWidth, h: moduleDepth, description: 'Lower Cabinet Bottom' }); // Base
             mdf15Parts.push({ w: moduleHeight - thickness, h: moduleDepth, description: 'Lower Cabinet Side' });
             mdf15Parts.push({ w: moduleHeight - thickness, h: moduleDepth, description: 'Lower Cabinet Side' });
+            // CORREÇÃO: Adiciona o fundo do armário inferior.
             mdf3Parts.push({ w: moduleWidth, h: moduleHeight, description: 'Lower Cabinet Back' });
 
             // Decide if this module will have drawers or a door
@@ -1025,10 +1031,10 @@ function setupSimulator() {
             updateDrawerRecommendation();
             updateWardrobeRecommendation();
         } else if (state.furnitureType === 'Cozinha') {
-            const widths = Array.from(document.querySelectorAll('input[name="kitchen-wall-width"]')).map(input => parseFloat(input.value) || 0);
-            const heights = Array.from(document.querySelectorAll('input[name="kitchen-wall-height"]')).map(input => parseFloat(input.value) || 0);
-        } else {
-            const widths = Array.from(document.querySelectorAll('input[name="kitchen-wall-width"]')).map(input => parseFloat(input.value) || 0);
+            // CORREÇÃO: Movido para dentro do 'else' para evitar execução duplicada e garantir que as dimensões da cozinha sejam sempre atualizadas.
+            // const widths = Array.from(document.querySelectorAll('input[name="kitchen-wall-width"]')).map(input => parseFloat(input.value) || 0);
+            // const heights = Array.from(document.querySelectorAll('input[name="kitchen-wall-height"]')).map(input => parseFloat(input.value) || 0);
+        } else { // Cozinha
             const heights = Array.from(document.querySelectorAll('input[name="kitchen-wall-height"]')).map(input => parseFloat(input.value) || 0);
             state.dimensions.walls = widths.map((w, i) => ({ width: w, height: heights[i] || 0 }));
             state.sinkStoneWidth = parseFloat(document.getElementById('sinkStoneWidth').value) || 0;
@@ -1295,7 +1301,7 @@ function setupSimulator() {
         const extrasBreakdown = [];
 
         // 1. MDF Cost (com lógica para Mesclado)
-        const { mdf15Parts: allParts, mdf3Parts: backAndBottomParts } = getWardrobeParts(state.dimensions.walls.map(w => ({ width: w.width * 1000 })), height * 1000, state.dimensions.depth * 10, state.numDrawers, hasDoors, numDoors);
+        const { mdf15Parts: allParts, mdf3Parts: backAndBottomParts } = getWardrobeParts(state.dimensions.walls.map(w => ({ width: w.width * 1000, height: w.height * 1000 })), height * 1000, state.dimensions.depth * 10, state.numDrawers, hasDoors, numDoors);
         let sheets = [];
 
         if (state.material === 'Mesclada') {
@@ -1385,7 +1391,7 @@ function setupSimulator() {
         const extrasBreakdown = [];
 
         // Material area calculation
-        const { mdf15Parts: parts, mdf3Parts: backAndBottomParts } = getKitchenParts(state.dimensions.walls.map(wall => ({width: wall.width * 1000, height: wall.height * 1000})), numDrawers);
+        const { mdf15Parts: parts, mdf3Parts: backAndBottomParts } = getKitchenParts(state.dimensions.walls.map(wall => ({ width: wall.width * 1000, height: wall.height * 1000 })), numDrawers);
 
         let sheets = [];
         if (state.material === 'Mesclada') {
@@ -1898,18 +1904,18 @@ function setupSimulator() {
             // ETAPA 2: Restaurar valores nos campos que agora estão visíveis
             // Usamos um timeout para garantir que a UI teve tempo de se atualizar após os cliques.
             setTimeout(() => {
-                // Step 2 Values
+                // Step 2 Values - CORREÇÃO INICIA AQUI
                 if (state.furnitureType === 'Guarda-Roupa') {
                     const wardrobeWallsContainer = document.getElementById('wardrobe-walls-container');
-                    // CORREÇÃO: Remove todas as paredes extras antes de recriá-las.
+                    // 1. Remove todas as paredes extras, deixando apenas a primeira.
                     while (wardrobeWallsContainer.children.length > 1) {
                         wardrobeWallsContainer.lastChild.remove();
                     }
-                    // Recria as paredes extras com base no estado salvo.
+                    // 2. Recria as paredes extras com base no estado salvo.
                     if (state.dimensions.walls && state.dimensions.walls.length > 1) {
                         state.dimensions.walls.slice(1).forEach(() => addWardrobeWall());
                     }
-                    // Preenche os valores de todas as paredes.
+                    // 3. Preenche os valores de largura em todas as paredes agora existentes.
                     document.querySelectorAll('#wardrobe-walls-container input[name="wardrobe-width"]').forEach((input, i) => {
                         input.value = state.dimensions.walls[i]?.width || 0;
                     });
@@ -1917,18 +1923,19 @@ function setupSimulator() {
                 } else { // Cozinha
                     document.getElementById('sinkStoneWidth').value = state.sinkStoneWidth;
                     const kitchenWallsContainer = document.getElementById('kitchen-walls-container');
-                    // CORREÇÃO: Remove todas as paredes extras antes de recriá-las.
+                    // 1. Remove todas as paredes extras, deixando apenas a primeira.
                     while (kitchenWallsContainer.children.length > 1) {
                         kitchenWallsContainer.lastChild.remove();
                     }
-                    // Recria as paredes extras com base no estado salvo.
+                    // 2. Recria as paredes extras com base no estado salvo.
                     if (state.dimensions.walls && state.dimensions.walls.length > 1) {
                         state.dimensions.walls.slice(1).forEach(() => addKitchenWall());
                     }
-                    // Preenche os valores de todas as paredes.
+                    // 3. Preenche os valores de largura e altura em todas as paredes agora existentes.
                     document.querySelectorAll('input[name="kitchen-wall-width"]').forEach((input, i) => input.value = state.dimensions.walls[i]?.width || 0);
                     document.querySelectorAll('input[name="kitchen-wall-height"]').forEach((input, i) => input.value = state.dimensions.walls[i]?.height || 0);
                 }
+                // CORREÇÃO TERMINA AQUI
 
                 // Step 3 Values
                 document.querySelector(`input[name="material"][value="${state.material}"]`)?.click();
