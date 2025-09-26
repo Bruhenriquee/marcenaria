@@ -119,7 +119,7 @@ const SIMULATOR_CONFIG = {
             // Comprimento padrão de uma barra de puxador em metros. Usado para calcular quantas barras são necessárias.
             HANDLE_BAR_LENGTH: 3.0,
             // Custo por UNIDADE de dobradiça. O sistema calcula a quantidade com base na altura da porta.
-            HINGE_COST_PER_UNIT: { 'padrao': 5.00, 'softclose': 20.00 },
+            HINGE_COST_PER_UNIT: { 'padrao': 2.50, 'softclose': 5.00 },
             // Custo do PAR de corrediças por GAVETA.
             SLIDE_COST_PER_DRAWER: 20.00,
         },
@@ -148,9 +148,9 @@ const SIMULATOR_CONFIG = {
         // Custos detalhados de ferragens e puxadores.
         HARDWARE: {
             // Custo por UNIDADE de dobradiça. Para cozinhas, o padrão é 2 por porta.
-            HINGE_COST_PER_UNIT: { 'padrao': 5.00, 'softclose': 20.00 },
+            HINGE_COST_PER_UNIT: { 'padrao': 2.50, 'softclose': 5.00 },
             // Custo do PAR de corrediças por GAVETA.
-            SLIDE_COST_PER_DRAWER: 20.00,
+            SLIDE_COST_PER_DRAWER: 20.00, // O valor já estava em 20, mantido.
             // Custo por BARRA de 3 metros de puxador perfil.
             HANDLE_BAR_COST: { 'aluminio': 75.00, 'premium': 100.00 },
             // Custo ADICIONAL por porta/gaveta ao usar puxador premium (se houver algum custo de mão de obra extra).
@@ -758,9 +758,9 @@ function setupSimulator() {
                 document.getElementById('mdf-premium-cost').value = 400;
                 document.getElementById('mdf-fundo-cost').value = 140;
                 document.getElementById('edge-tape-cost').value = 2.5;
-                document.getElementById('hinge-standard-cost').value = 5;
-                document.getElementById('hinge-softclose-cost').value = 20;
-                document.getElementById('slide-cost').value = 25;
+                document.getElementById('hinge-standard-cost').value = 2.5;
+                document.getElementById('hinge-softclose-cost').value = 5;
+                document.getElementById('slide-cost').value = 20;
                 document.getElementById('cost-multiplier').value = 2;
                 document.getElementById('discount-extra').value = 0;
                 showNotification('Valores padrão restaurados!', 'success');
@@ -995,6 +995,9 @@ function setupSimulator() {
             state.dimensions.height = height;
             updateDrawerRecommendation();
             updateWardrobeRecommendation();
+        } else if (state.furnitureType === 'Cozinha') {
+            const widths = Array.from(document.querySelectorAll('input[name="kitchen-wall-width"]')).map(input => parseFloat(input.value) || 0);
+            const heights = Array.from(document.querySelectorAll('input[name="kitchen-wall-height"]')).map(input => parseFloat(input.value) || 0);
         } else {
             const widths = Array.from(document.querySelectorAll('input[name="kitchen-wall-width"]')).map(input => parseFloat(input.value) || 0);
             const heights = Array.from(document.querySelectorAll('input[name="kitchen-wall-height"]')).map(input => parseFloat(input.value) || 0);
@@ -1527,14 +1530,15 @@ function setupSimulator() {
         // Reset specific input values to their defaults
         document.getElementById('wardrobe-width1').value = 3.0;
         document.getElementById('wardrobe-height').value = 2.7;
-        const wardrobeWallsContainer = document.getElementById('wardrobe-walls-container');
-        Array.from(wardrobeWallsContainer.children).slice(1).forEach(wall => wall.remove());
+        // FIX: Do not remove walls here. This will be handled by updateFormFromState.
+        // Just reset the values of any existing extra walls.
+        document.querySelectorAll('#wardrobe-walls-container input[name="wardrobe-width"]:not(#wardrobe-width1)').forEach(input => input.value = '0');
         document.getElementById('add-wardrobe-wall-btn').classList.remove('hidden');
+
         document.getElementById('sinkStoneWidth').value = 1.8;
         document.getElementById('cooktop-location-step').classList.add('hidden');
-        document.getElementById('kitchenNumDrawers').value = 4;
-        document.getElementById('kitchenNumDrawers').value = 4;
-        document.getElementById('numDrawers').value = 4;
+        document.getElementById('numDrawers').value = 4; // For wardrobe
+        document.getElementById('kitchenNumDrawers').value = 4; // For kitchen
         document.getElementById('kitchen-wall-width1').value = 2.2;
         document.getElementById('kitchen-wall-height1').value = 2.7;
 
@@ -1595,16 +1599,10 @@ function setupSimulator() {
             leadNameInput.focus();
             return;
         }
-        if (!isRecalculation && !state.customer.phone) {
-            showNotification('Por favor, preencha o WhatsApp do cliente.', 'error');
-            leadPhoneInput.classList.add('invalid');
-            leadPhoneInput.focus();
-            return;
-        }
 
         // --- Validação Avançada de Celular (Brasil) ---
         const phoneDigits = state.customer.phone.replace(/\D/g, '');
-        if (!isRecalculation && phoneDigits.length !== 11) {
+        if (!isRecalculation && state.customer.phone && phoneDigits.length !== 11) {
             showNotification('Por favor, insira um WhatsApp válido com DDD (11 dígitos).', 'error');
             leadPhoneInput.classList.add('invalid');
             leadPhoneInput.focus();
@@ -1768,7 +1766,7 @@ function setupSimulator() {
         }
     }
 
-    async function handleLoadQuote(quoteId) { // A função já é async, o que é ótimo.
+    async function handleLoadQuote(quoteId) {
         const quotes = getSavedQuotes();
         const quoteToLoad = quotes.find(q => q.quoteId === parseInt(quoteId));
 
@@ -1780,7 +1778,7 @@ function setupSimulator() {
             Object.assign(state, loadedState);
     
             // Update UI from state
-            updateFormFromState();
+            await updateFormFromState();
             
             // Go to the last step and show results
             currentStep = totalSteps;
@@ -1807,90 +1805,133 @@ function setupSimulator() {
         }
     }
 
-    function handleDuplicateQuote(quoteId) {
-        handleLoadQuote(quoteId);
+    async function handleDuplicateQuote(quoteId) {
+        await handleLoadQuote(quoteId);
         // After loading, unset the ID and modify the name to indicate it's a copy
         state.quoteId = null;
-        state.customer.name = `(Cópia) ${state.customer.name}`;
+        state.customer.name = `(Cópia) ${state.customer.name || ''}`;
         document.getElementById('leadName').value = state.customer.name;
         showNotification("Orçamento duplicado. Modifique e salve como um novo.", "info");
     }
 
     function updateFormFromState() {
-        // Reset all inputs first
-        resetFormUI();
+        return new Promise(resolve => {
+            // ETAPA 1: Restaurar seleções que alteram a UI (mostram/escondem campos)
+            // Clicks são síncronos, mas os efeitos na UI (animações) não são.
 
         // Step 1: Furniture Type
         document.querySelector(`input[name="furnitureType"][value="${state.furnitureType}"]`)?.click();
 
         // Step 2: Dimensions & Sub-options
+        // FIX: Restore all sub-step selections before populating dimension values.
         if (state.furnitureType === 'Guarda-Roupa') {
-            document.querySelector(`input[name="wardrobeFormat"][value="${state.wardrobeFormat}"]`)?.click();
+            const wardrobeFormatRadio = document.querySelector(`input[name="wardrobeFormat"][value="${state.wardrobeFormat}"]`);
+            // This click() is crucial as it triggers UI changes (e.g., showing closet options)
+            if (wardrobeFormatRadio) wardrobeFormatRadio.click();
+
             if (state.wardrobeFormat === 'closet') {
-                document.querySelector(`input[name="closetDoors"][value="${state.closetHasDoors ? 'sim' : 'nao'}"]`)?.click();
+                const closetDoorsRadio = document.querySelector(`input[name="closetDoors"][value="${state.closetHasDoors ? 'sim' : 'nao'}"]`);
+                if (closetDoorsRadio) closetDoorsRadio.click();
             }
-            document.getElementById('numDrawers').value = state.numDrawers;
-            // Restore walls
-            const wardrobeWallsContainer = document.getElementById('wardrobe-walls-container');
-            Array.from(wardrobeWallsContainer.children).slice(1).forEach(wall => wall.remove());
-            state.dimensions.walls.slice(1).forEach(() => addWardrobeWall());
-            document.querySelectorAll('#wardrobe-walls-container input[name="wardrobe-width"]').forEach((input, i) => {
-                input.value = state.dimensions.walls[i]?.width || 0;
-            });
-            document.getElementById('wardrobe-height').value = state.dimensions.height;
+            document.getElementById('numDrawers').value = state.numDrawers || 4;
         } else { // Cozinha
-            document.querySelector(`input[name="kitchenSink"][value="${state.kitchenHasSinkCabinet ? 'sim' : 'nao'}"]`)?.click();
-            document.querySelector(`input[name="hasHotTower"][value="${state.hasHotTower ? 'sim' : 'nao'}"]`)?.click();
-            document.querySelector(`input[name="stoveType"][value="${state.stoveType}"]`)?.click();
+            const kitchenSinkRadio = document.querySelector(`input[name="kitchenSink"][value="${state.kitchenHasSinkCabinet ? 'sim' : 'nao'}"]`);
+            if (kitchenSinkRadio) kitchenSinkRadio.click();
+
+            const hotTowerRadio = document.querySelector(`input[name="hasHotTower"][value="${state.hasHotTower ? 'sim' : 'nao'}"]`);
+            if (hotTowerRadio) hotTowerRadio.click();
+
+            const stoveTypeRadio = document.querySelector(`input[name="stoveType"][value="${state.stoveType}"]`);
+            if (stoveTypeRadio) stoveTypeRadio.click();
+
             if (state.stoveType === 'cooktop') {
-                document.querySelector(`input[name="cooktopLocation"][value="${state.cooktopLocation}"]`)?.click();
+                const cooktopLocationRadio = document.querySelector(`input[name="cooktopLocation"][value="${state.cooktopLocation}"]`);
+                if (cooktopLocationRadio) cooktopLocationRadio.click();
             }
-            document.getElementById('kitchenNumDrawers').value = state.numDrawers;
-            document.getElementById('sinkStoneWidth').value = state.sinkStoneWidth;
-            // Restore walls
-            const kitchenWallsContainer = document.getElementById('kitchen-walls-container');
-            Array.from(kitchenWallsContainer.children).slice(1).forEach(wall => wall.remove());
-            state.dimensions.walls.slice(1).forEach(() => addKitchenWall());
-            document.querySelectorAll('input[name="kitchen-wall-width"]').forEach((input, i) => input.value = state.dimensions.walls[i]?.width || 0);
-            document.querySelectorAll('input[name="kitchen-wall-height"]').forEach((input, i) => input.value = state.dimensions.walls[i]?.height || 0);
+            document.getElementById('kitchenNumDrawers').value = state.numDrawers || 4;
         }
 
-        // Step 3: Material
-        document.querySelector(`input[name="material"][value="${state.material}"]`)?.click();
-        document.getElementById('customColor').value = state.customColor;
-
         // Step 4: Extras
-        document.querySelector(`input[name="doorType"][value="${state.doorType}"]`)?.click();
-        document.querySelector(`input[name="handleType"][value="${state.handleType}"]`)?.click();
-        document.querySelector(`input[name="hardwareType"][value="${state.hardwareType}"]`)?.click();
-        state.extras.forEach(extra => {
-            document.querySelector(`input[name="extras"][value="${extra}"]`).checked = true;
-        });
+        // FIX: Ensure doorType and handleType are restored correctly by clicking the corresponding radio button.
+        if (state.doorType) {
+            const doorTypeRadio = document.querySelector(`input[name="doorType"][value="${state.doorType}"]`);
+            if (doorTypeRadio) doorTypeRadio.click();
+        }
+        if (state.handleType) {
+            const handleTypeRadio = document.querySelector(`input[name="handleType"][value="${state.handleType}"]`);
+            if (handleTypeRadio) handleTypeRadio.click();
+        }
+
+        // Step 3: Material (can be done after UI is stable)
+        document.querySelector(`input[name="material"][value="${state.material}"]`)?.click();
 
         // Step 5: Project
         document.querySelector(`input[name="projectOption"][value="${state.projectOption}"]`)?.click();
 
-        // Step 6: Customer Info
-        document.getElementById('leadName').value = state.customer.name;
-        document.getElementById('leadEmail').value = state.customer.email;
-        document.getElementById('leadPhone').value = state.customer.phone;
-        document.getElementById('leadCpf').value = state.customer.cpf || '';
-        document.getElementById('leadCep').value = state.customer.cep || '';
-        document.getElementById('leadStreet').value = state.customer.street || '';
-        document.getElementById('leadNumber').value = state.customer.number || '';
-        document.getElementById('leadComplement').value = state.customer.complement || '';
-        document.getElementById('leadNeighborhood').value = state.customer.neighborhood || '';
-        document.getElementById('leadCity').value = state.customer.city || '';
-        document.getElementById('leadState').value = state.customer.state || '';
+            // ETAPA 2: Restaurar valores nos campos que agora estão visíveis
+            // Usamos um timeout para garantir que a UI teve tempo de se atualizar após os cliques.
+            // ETAPA 2: Restaurar valores nos campos que agora estão visíveis
+            // Usamos um timeout para garantir que a UI teve tempo de se atualizar após os cliques.
+            setTimeout(() => {
+                resetFormUI(); // Limpa os valores dos campos antes de preencher com os dados salvos.
+                // Step 2 Values
+                if (state.furnitureType === 'Guarda-Roupa') {
+                    const wardrobeWallsContainer = document.getElementById('wardrobe-walls-container');
+                    // BRUTE FORCE FIX: Remove all but the first wall to ensure a clean state.
+                    while (wardrobeWallsContainer.children.length > 1) {
+                        wardrobeWallsContainer.lastChild.remove();
+                    }
+                    if (state.dimensions.walls && state.dimensions.walls.length > 1) {
+                        state.dimensions.walls.slice(1).forEach(() => addWardrobeWall());
+                    }
+                    document.querySelectorAll('#wardrobe-walls-container input[name="wardrobe-width"]').forEach((input, i) => {
+                        input.value = state.dimensions.walls[i]?.width || 0;
+                    });
+                    document.getElementById('wardrobe-height').value = state.dimensions.height;
+                } else { // Cozinha
+                    document.getElementById('sinkStoneWidth').value = state.sinkStoneWidth;
+                    const kitchenWallsContainer = document.getElementById('kitchen-walls-container');
+                    // BRUTE FORCE FIX: Remove all but the first wall to ensure a clean state.
+                    while (kitchenWallsContainer.children.length > 1) {
+                        kitchenWallsContainer.lastChild.remove();
+                    }
+                    if (state.dimensions.walls && state.dimensions.walls.length > 1) {
+                        state.dimensions.walls.slice(1).forEach(() => addKitchenWall());
+                    }
+                    document.querySelectorAll('input[name="kitchen-wall-width"]').forEach((input, i) => input.value = state.dimensions.walls[i]?.width || 0);
+                    document.querySelectorAll('input[name="kitchen-wall-height"]').forEach((input, i) => input.value = state.dimensions.walls[i]?.height || 0);
+                }
 
-        // Restore photos
-        renderPhotoPreviews();
-        document.getElementById('competitor-price').value = state.quote.competitorPrice || 0;
+                // Step 3 Values
+                document.getElementById('customColor').value = state.customColor;
 
-        // Restore panel values
-        const multiplier = state.quote.multiplier || 2; // Default to 2 if not saved
-        document.getElementById('cost-multiplier').value = multiplier;
-        document.getElementById('discount-extra').value = state.quote.discountExtra || 0;
+                // Step 4 Values
+                document.querySelector(`input[name="hardwareType"][value="${state.hardwareType}"]`)?.click();
+                state.extras.forEach(extra => {
+                    const checkbox = document.querySelector(`input[name="extras"][value="${extra}"]`);
+                    if (checkbox) checkbox.checked = true;
+                });
+
+                // Step 6: Customer Info
+                document.getElementById('leadName').value = state.customer.name;
+                document.getElementById('leadEmail').value = state.customer.email;
+                document.getElementById('leadPhone').value = state.customer.phone;
+                document.getElementById('leadCpf').value = state.customer.cpf || '';
+                document.getElementById('leadCep').value = state.customer.cep || '';
+                document.getElementById('leadStreet').value = state.customer.street || '';
+                document.getElementById('leadNumber').value = state.customer.number || '';
+                document.getElementById('leadComplement').value = state.customer.complement || '';
+                document.getElementById('leadNeighborhood').value = state.customer.neighborhood || '';
+                document.getElementById('leadCity').value = state.customer.city || '';
+                document.getElementById('leadState').value = state.customer.state || '';
+
+                // Restore photos
+                renderPhotoPreviews();
+                document.getElementById('competitor-price').value = state.quote.competitorPrice || 0;
+
+                resolve(); // Resolve a Promise após tudo ser preenchido
+            }, 100); // Aumentado para 100ms para garantir a renderização completa da UI.
+        });
     }
 
     function renderResult() {
