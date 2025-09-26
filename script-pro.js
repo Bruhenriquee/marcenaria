@@ -78,6 +78,7 @@ function maskCep(event) {
     value = value.replace(/(\d{5})(\d)/, '$1-$2');
     event.target.value = value;
 }
+
 // --- CONFIGURATION OBJECT ---
 // Valores PADRÃO de custo. Na versão PRO, esses valores são sobrescritos pelos inputs do painel.
 const SIMULATOR_CONFIG = {
@@ -172,37 +173,55 @@ const SIMULATOR_CONFIG = {
     }
 };
 
-function getWardrobeParts(totalWidth, height, depth, numDrawers, hasDoors, numDoors) {
+/**
+ * Splits a large part into smaller pieces if it exceeds the sheet width.
+ * @param {number} width - The width of the part.
+ * @param {number} height - The height of the part.
+ * @param {string} description - The description of the part.
+ * @param {number} sheetWidthLimit - The maximum width of the sheet.
+ * @returns {Array<Object>} An array of part objects.
+ */
+function splitLargePart(width, height, description, sheetWidthLimit = 2750) {
+    if (width <= sheetWidthLimit) {
+        return [{ w: width, h: height, description }];
+    }
+    const numPieces = Math.ceil(width / sheetWidthLimit);
+    const pieceWidth = width / numPieces;
+    return Array.from({ length: numPieces }, (_, i) => ({ w: pieceWidth, h: height, description: `${description} #${i + 1}` }));
+}
+function getWardrobeParts(walls, height, depth, numDrawers, hasDoors, numDoors) {
     const thickness = 15; // MDF thickness in mm
-    const sheetWidthLimit = 2750; // Max width of an MDF sheet
     const mdf15Parts = [];
     const mdf3Parts = [];
 
-    // Divide the wardrobe into modules if it's too wide
-    const numModules = Math.ceil(totalWidth / 900); // Create modules of max ~90cm
-    const moduleWidth = totalWidth / numModules;
-
-    // Add main carcass sides
+    // --- Caixaria Principal (Corrigido) ---
+    // Adiciona as duas laterais externas, o tampo e a base do móvel inteiro.
     mdf15Parts.push({ w: height, h: depth, description: 'Left Side' });
+    const totalWidth = walls.reduce((acc, wall) => acc + wall.width, 0);
     mdf15Parts.push({ w: height, h: depth, description: 'Right Side' });
+    // CORREÇÃO: Divide o tampo e a base se forem maiores que a chapa.
+    mdf15Parts.push(...splitLargePart(totalWidth, depth, 'Top'));
+    mdf15Parts.push(...splitLargePart(totalWidth, depth, 'Bottom'));
 
+    // Divide o espaço interno em módulos para prateleiras e divisórias.
+    const internalHeight = height - (2 * thickness); // Altura interna real (desconta tampo e base).
+    const numModules = Math.ceil(totalWidth / 900); // Módulos de no máximo 90cm.
+    const numDividers = numModules - 1;
+    // Largura interna útil para prateleiras (desconta laterais e divisórias).
+    const internalModuleWidth = (totalWidth - (2 * thickness) - (numDividers * thickness)) / numModules;
+
+    // Adiciona as divisórias internas (uma a menos que o número de módulos).
+    for (let i = 0; i < numDividers; i++) {
+        mdf15Parts.push({ w: internalHeight, h: depth, description: `Divider ${i+1}` });
+    }
+
+    // Adiciona prateleiras dentro de cada módulo.
     for (let i = 0; i < numModules; i++) {
-        const currentModuleWidth = Math.min(moduleWidth, sheetWidthLimit);
-
-        // Add top, bottom, and back for each module
-        mdf15Parts.push({ w: currentModuleWidth, h: depth, description: `Top ${i+1}` });
-        mdf15Parts.push({ w: currentModuleWidth, h: depth, description: `Bottom ${i+1}` }); // Back panel is now calculated separately
-
-        // Add internal dividers between modules (but not for the last one)
-        if (i < numModules - 1) {
-            mdf15Parts.push({ w: height - (2 * thickness), h: depth, description: `Divider ${i+1}` });
-        }
-
         // Add shelves for each module
         // Ajustado para um número mais realista de prateleiras (1 prateleira a cada ~80cm)
         const numShelves = Math.floor(height / 800); // Shelves per module
         for (let s = 0; s < numShelves; s++) {
-            mdf15Parts.push({ w: currentModuleWidth - (2 * thickness), h: depth - 20, description: `Shelf ${i+1}-${s+1}` });
+            mdf15Parts.push({ w: internalModuleWidth, h: depth - 20, description: `Shelf ${i+1}-${s+1}` });
         }
     }
 
@@ -216,7 +235,7 @@ function getWardrobeParts(totalWidth, height, depth, numDrawers, hasDoors, numDo
 
     // Drawers (using the exact number from state)
     // We assume drawers are in one of the modules, with a standard width
-    const drawerWidth = Math.min(500, moduleWidth - 40); // Use module width, max 50cm
+    const drawerWidth = Math.min(500, internalModuleWidth - 40); // Use module width, max 50cm
     const drawerDepth = depth - 50;
     const drawerBoxWidth = drawerWidth - 40;
     const drawerBoxDepth = drawerDepth - 50;
@@ -230,6 +249,13 @@ function getWardrobeParts(totalWidth, height, depth, numDrawers, hasDoors, numDo
         mdf3Parts.push({ w: drawerBoxWidth, h: drawerBoxDepth, description: 'Drawer Bottom' });
     }
 
+    // CORREÇÃO: Cria um painel de fundo para CADA parede, em vez de um único painel gigante.
+    // Isso permite que o otimizador de corte funcione corretamente para closets.
+    walls.forEach((wall, index) => {
+        // CORREÇÃO: Também divide o fundo se a parede for muito larga.
+        mdf3Parts.push(...splitLargePart(wall.width, height, `Back Panel Wall ${index + 1}`));
+    });
+
     return { mdf15Parts, mdf3Parts };
 }
 
@@ -238,55 +264,64 @@ function getKitchenParts(walls, numDrawers) {
     const mdf15Parts = [];
     const mdf3Parts = [];
     let drawersToCreate = numDrawers;
-    let doorCount = 0;
 
     walls.forEach(wall => {
         const { width, height } = wall;
+        const upperCabinetHeight = 700;
+        const lowerCabinetHeight = 850;
+        const cabinetDepth = 600;
 
         // Upper cabinets
-        const numUpperCabinets = Math.floor(width / 600);
+        const numUpperCabinets = Math.floor(width / 600); // Módulos de 60cm
         for (let i = 0; i < numUpperCabinets; i++) {
-            mdf15Parts.push({ w: 600, h: 350, description: 'Upper Cabinet Top' });
-            mdf15Parts.push({ w: 600, h: 350, description: 'Upper Cabinet Bottom' });
-            mdf15Parts.push({ w: 700 - (2 * thickness), h: 350, description: 'Upper Cabinet Side' });
-            mdf15Parts.push({ w: 700 - (2 * thickness), h: 350, description: 'Upper Cabinet Side' });
-            mdf15Parts.push({ w: 596, h: 696, description: 'Upper Cabinet Door' });
-            doorCount++;
+            const moduleWidth = 600;
+            mdf15Parts.push({ w: moduleWidth, h: cabinetDepth, description: 'Upper Cabinet Top' });
+            mdf15Parts.push({ w: moduleWidth, h: cabinetDepth, description: 'Upper Cabinet Bottom' });
+            mdf15Parts.push({ w: upperCabinetHeight - (2 * thickness), h: cabinetDepth, description: 'Upper Cabinet Side' });
+            mdf15Parts.push({ w: upperCabinetHeight - (2 * thickness), h: cabinetDepth, description: 'Upper Cabinet Side' });
+            mdf15Parts.push({ w: moduleWidth - 4, h: upperCabinetHeight - 4, description: 'Upper Cabinet Door' });
+            mdf3Parts.push({ w: moduleWidth, h: upperCabinetHeight, description: 'Upper Cabinet Back' });
         }
 
         // Lower cabinets
         const numLowerCabinets = Math.floor(width / 600);
         for (let i = 0; i < numLowerCabinets; i++) { // Assume 60cm wide modules
             const moduleWidth = 600;
-            const moduleDepth = 600;
-            const moduleHeight = 850;
+            const moduleDepth = cabinetDepth;
+            const moduleHeight = lowerCabinetHeight;
 
-            mdf15Parts.push({ w: moduleWidth, h: moduleDepth, description: 'Lower Cabinet Top' });
-            mdf15Parts.push({ w: moduleWidth, h: moduleDepth, description: 'Lower Cabinet Bottom' });
-            mdf15Parts.push({ w: moduleHeight - (2 * thickness), h: moduleDepth, description: 'Lower Cabinet Side' });
-            mdf15Parts.push({ w: moduleHeight - (2 * thickness), h: moduleDepth, description: 'Lower Cabinet Side' });
+            mdf15Parts.push({ w: moduleWidth, h: moduleDepth, description: 'Lower Cabinet Top' }); // Travessas
+            mdf15Parts.push({ w: moduleWidth, h: moduleDepth, description: 'Lower Cabinet Bottom' }); // Base
+            mdf15Parts.push({ w: moduleHeight - thickness, h: moduleDepth, description: 'Lower Cabinet Side' });
+            mdf15Parts.push({ w: moduleHeight - thickness, h: moduleDepth, description: 'Lower Cabinet Side' });
+            mdf3Parts.push({ w: moduleWidth, h: moduleHeight, description: 'Lower Cabinet Back' });
 
             // Decide if this module will have drawers or a door
             if (drawersToCreate > 0) {
                 // This module will be a drawer module (e.g., 3 drawers)
                 const numDrawersInModule = Math.min(drawersToCreate, 3); // Max 3 drawers per module
+                const drawerFrontHeight = (moduleHeight - (numDrawersInModule * 4)) / numDrawersInModule;
+                const drawerBoxHeight = drawerFrontHeight - 20;
+
                 for (let d = 0; d < numDrawersInModule; d++) {
-                    mdf15Parts.push({ w: moduleWidth - 4, h: (moduleHeight / numDrawersInModule) - 4, description: 'Drawer Front' });
-                    mdf15Parts.push({ w: moduleDepth - 50, h: (moduleHeight / numDrawersInModule) - 20, description: 'Drawer Side' });
-                    mdf15Parts.push({ w: moduleDepth - 50, h: (moduleHeight / numDrawersInModule) - 20, description: 'Drawer Side' });
-                    mdf15Parts.push({ w: moduleWidth - 40, h: (moduleHeight / numDrawersInModule) - 20, description: 'Drawer Back' });
-                    mdf3Parts.push({ w: moduleWidth - 40, h: moduleDepth - 50, description: 'Drawer Bottom' });
+                    const drawerBoxWidth = moduleWidth - 40;
+                    const drawerBoxDepth = moduleDepth - 50;
+
+                    mdf15Parts.push({ w: moduleWidth - 4, h: drawerFrontHeight, description: 'Drawer Front' });
+                    mdf15Parts.push({ w: drawerBoxDepth, h: drawerBoxHeight, description: 'Drawer Side' });
+                    mdf15Parts.push({ w: drawerBoxDepth, h: drawerBoxHeight, description: 'Drawer Side' });
+                    mdf15Parts.push({ w: drawerBoxWidth, h: drawerBoxHeight, description: 'Drawer Back' });
+                    mdf3Parts.push({ w: drawerBoxWidth, h: drawerBoxDepth, description: 'Drawer Bottom' });
                 }
                 drawersToCreate -= numDrawersInModule;
             } else {
                 // This is a standard door module
                 mdf15Parts.push({ w: moduleWidth - 4, h: moduleHeight - 4, description: 'Lower Cabinet Door' });
-                doorCount++;
             }
         }
     });
 
-    return { mdf15Parts, mdf3Parts, doorCount };
+    return { mdf15Parts, mdf3Parts };
 }
 
 function optimizeCutting(parts, sheetWidth, sheetHeight) {
@@ -718,7 +753,6 @@ function setupSimulator() {
         const toggleBtn = document.getElementById('toggle-controls-btn');
         const mainContent = document.getElementById('main-content');
         const closeBtn = document.getElementById('close-controls-btn');
-        const overlay = document.getElementById('controls-overlay');
 
         const openPanel = () => {
             proControlsPanel.classList.remove('-translate-x-full');
@@ -726,7 +760,6 @@ function setupSimulator() {
             if (window.innerWidth >= 768) { // Desktop
                 mainContent.style.marginLeft = proControlsPanel.offsetWidth + 'px';
             } else { // Mobile
-                overlay.classList.remove('hidden');
                 document.body.style.overflow = 'hidden';
             }
         };
@@ -735,7 +768,6 @@ function setupSimulator() {
             proControlsPanel.classList.add('-translate-x-full');
             mainContent.style.marginLeft = '0';
             toggleBtn.classList.remove('hidden');
-            overlay.classList.add('hidden');
             document.body.style.overflow = 'auto';
         };
 
@@ -745,9 +777,6 @@ function setupSimulator() {
 
         if (closeBtn) {
             closeBtn.addEventListener('click', closePanel);
-        }
-        if (overlay) {
-            overlay.addEventListener('click', closePanel);
         }
 
         // Botão de reset dos valores do painel
@@ -1208,6 +1237,34 @@ function setupSimulator() {
         state.numDrawers = minDrawers;
     }
 
+    /**
+     * Calculates the cost of edge tape for a given set of parts.
+     * @param {Array} parts - The array of MDF parts.
+     * @param {Object} panelCosts - The costs from the pro panel.
+     * @returns {Object|null} - The breakdown object for edge tape cost or null.
+     */
+    function calculateEdgeTapeCost(parts, panelCosts) {
+        const totalPerimeter = parts.reduce((acc, part) => acc + 2 * (part.w + part.h), 0) / 1000; // em metros
+        const edgeTapeUsageFactor = 0.7; // Fator realista: assume que ~70% das bordas recebem fita.
+        const edgeTapeCost = totalPerimeter * edgeTapeUsageFactor * panelCosts.edgeTapePerMeter;
+        if (edgeTapeCost > 0) {
+            return { label: 'Fita de Borda', quantity: Math.round(totalPerimeter * edgeTapeUsageFactor), cost: edgeTapeCost };
+        }
+        return null;
+    }
+
+    /**
+     * Calculates the cost of common extras (like 3D project and LED).
+     * @param {number} totalWidth - The total width of the furniture in meters.
+     * @returns {Array} - An array of breakdown objects for common extras.
+     */
+    function calculateCommonExtrasCost(totalWidth) {
+        const extras = [];
+        if (state.projectOption === 'create') extras.push({ label: 'Criação do Projeto 3D', cost: SIMULATOR_CONFIG.COMMON_COSTS.PROJECT_3D });
+        if (state.extras.includes('Iluminação LED')) extras.push({ label: 'Iluminação LED', cost: SIMULATOR_CONFIG.COMMON_COSTS['Iluminação LED'] * totalWidth });
+        return extras;
+    }
+
     function calculateWardrobeQuote() {
         // Obtém todos os custos do painel de uma vez
         const panelCosts = getPanelCosts();
@@ -1238,7 +1295,7 @@ function setupSimulator() {
         const extrasBreakdown = [];
 
         // 1. MDF Cost (com lógica para Mesclado)
-        const { mdf15Parts: allParts, mdf3Parts: drawerBottoms } = getWardrobeParts(width * 1000, height * 1000, state.dimensions.depth * 10, state.numDrawers, hasDoors, numDoors);
+        const { mdf15Parts: allParts, mdf3Parts: backAndBottomParts } = getWardrobeParts(state.dimensions.walls.map(w => ({ width: w.width * 1000 })), height * 1000, state.dimensions.depth * 10, state.numDrawers, hasDoors, numDoors);
         let sheets = [];
 
         if (state.material === 'Mesclada') {
@@ -1269,15 +1326,12 @@ function setupSimulator() {
         const totalMaterialArea = allParts.reduce((acc, part) => acc + (part.w * part.h), 0) / 1000000;
 
         // 1.5. Back Panel (Fundo) Cost
-        let totalBackPanelArea = width * height; // Wardrobe back
-        // Add drawer bottoms area
-        const drawerBottomsArea = drawerBottoms.reduce((acc, part) => acc + (part.w * part.h), 0) / 1000000;
-        totalBackPanelArea += drawerBottomsArea;
+        // CORREÇÃO: Usa o otimizador de corte para as chapas de 3mm para maior precisão.
+        const backPanelSheets = optimizeCutting(backAndBottomParts, 2750, 1850);
+        const numBackPanelSheets = backPanelSheets.length;
 
-        const backPanelSheetSize = 2.75 * 1.85; // Standard 3mm sheet size
-        const numBackPanelSheets = Math.ceil(totalBackPanelArea / backPanelSheetSize);
         if (numBackPanelSheets > 0) {
-            baseBreakdown.push({ label: 'Chapas de Fundo (3mm)', quantity: numBackPanelSheets, cost: numBackPanelSheets * panelCosts.mdfFundo });
+            baseBreakdown.push({ label: 'Chapas de Fundo (3mm)', quantity: numBackPanelSheets, cost: numBackPanelSheets * panelCosts.mdfFundo, cuttingPlan: backPanelSheets });
         }
 
         // 2. Hardware Cost (Hinges, Slides, Handles)
@@ -1303,24 +1357,18 @@ function setupSimulator() {
         }
 
         // 3.5 Edge Tape Cost
-        // Cálculo preciso: soma o perímetro de todas as peças e aplica um fator de uso.
-        const totalPerimeter = allParts.reduce((acc, part) => acc + 2 * (part.w + part.h), 0) / 1000; // em metros
-        const edgeTapeUsageFactor = 0.7; // Fator realista: assume que ~70% das bordas recebem fita.
-        const edgeTapeCost = totalPerimeter * edgeTapeUsageFactor * panelCosts.edgeTapePerMeter;
-        if (edgeTapeCost > 0) {
-            baseBreakdown.push({ label: 'Fita de Borda', quantity: Math.round(totalPerimeter * edgeTapeUsageFactor), cost: edgeTapeCost });
-        }
+        const edgeTapeBreakdown = calculateEdgeTapeCost(allParts, panelCosts);
+        if (edgeTapeBreakdown) baseBreakdown.push(edgeTapeBreakdown);
 
         // 4. Optional Extras
-        if (state.projectOption === 'create') {
-            const cost = SIMULATOR_CONFIG.COMMON_COSTS.PROJECT_3D;
-            if (cost > 0) extrasBreakdown.push({ label: 'Criação do Projeto 3D', cost });
-        }
+        extrasBreakdown.push(...calculateCommonExtrasCost(width));
 
+        // Wardrobe-specific extras
         state.extras.forEach(extra => {
+            if (extra === 'Iluminação LED') return; // Já calculado nos extras comuns
             const cost = config.EXTRAS_COST[extra] || SIMULATOR_CONFIG.COMMON_COSTS[extra] || 0;
-            const finalCost = (extra === 'Iluminação LED') ? cost * width : cost;
-            if (finalCost > 0) extrasBreakdown.push({ label: extra, cost: finalCost });
+            // A lógica de custo por largura já foi tratada nos extras comuns
+            if (cost > 0) extrasBreakdown.push({ label: extra, cost: cost });
         });
 
         return { baseBreakdown, extrasBreakdown, totalMaterialArea, cuttingPlan: sheets };
@@ -1331,11 +1379,13 @@ function setupSimulator() {
         const panelCosts = getPanelCosts();
 
         const config = SIMULATOR_CONFIG.KITCHEN;
-        const baseBreakdown = [];
+        const baseBreakdown = []; // Renomeado para clareza
+        const totalWidth = state.dimensions.walls.reduce((acc, wall) => acc + wall.width, 0);
+        const numDrawers = state.numDrawers; // Usa o valor exato informado
         const extrasBreakdown = [];
 
         // Material area calculation
-        const { mdf15Parts: parts, mdf3Parts: drawerBottomsKitchen, doorCount: numDoors } = getKitchenParts(state.dimensions.walls.map(wall => ({width: wall.width * 1000, height: wall.height * 1000})), state.numDrawers);
+        const { mdf15Parts: parts, mdf3Parts: backAndBottomParts } = getKitchenParts(state.dimensions.walls.map(wall => ({width: wall.width * 1000, height: wall.height * 1000})), numDrawers);
 
         let sheets = [];
         if (state.material === 'Mesclada') {
@@ -1362,28 +1412,13 @@ function setupSimulator() {
         state.quote.cuttingPlan = sheets;
         const totalMaterialArea = parts.reduce((acc, part) => acc + (part.w * part.h), 0) / 1000000;
 
-        // 1.5. Back Panel (Fundo) Cost for Kitchen
-        const backPanelSheetSize = 2.75 * 1.85; // Standard 3mm sheet size
-        let totalBackPanelArea = 0;
+        // 1.5. Back Panel (Fundo) Cost for Kitchen - PRECISION IMPROVEMENT
+        // Usa o otimizador de corte para as chapas de 3mm para maior precisão.
+        const backPanelSheets = optimizeCutting(backAndBottomParts, 2750, 1850);
+        const numBackPanelSheets = backPanelSheets.length;
 
-        // Add drawer bottoms area for kitchen
-        const drawerBottomsArea = drawerBottomsKitchen.reduce((acc, part) => acc + (part.w * part.h), 0) / 1000000;
-        totalBackPanelArea += drawerBottomsArea;
-
-        // Calculate back panel area for all standard cabinets
-        state.dimensions.walls.forEach(wall => {
-            // Assuming upper cabinets are 0.7m high and lower are 0.85m high
-            totalBackPanelArea += wall.width * 0.7; // Upper cabinets back
-            totalBackPanelArea += wall.width * 0.85; // Lower cabinets back
-        });
-
-        // If there's a sink cabinet, it does NOT have a back panel, so we subtract its area.
-        if (state.kitchenHasSinkCabinet && state.sinkStoneWidth > 0) {
-            totalBackPanelArea -= state.sinkStoneWidth * 0.85; // Subtract lower cabinet back area for the sink
-        }
-        const numBackPanelSheets = Math.ceil(Math.max(0, totalBackPanelArea) / backPanelSheetSize);
         if (numBackPanelSheets > 0) {
-            baseBreakdown.push({ label: 'Chapas de Fundo (3mm)', quantity: numBackPanelSheets, cost: numBackPanelSheets * panelCosts.mdfFundo });
+            baseBreakdown.push({ label: 'Chapas de Fundo (3mm)', quantity: numBackPanelSheets, cost: numBackPanelSheets * panelCosts.mdfFundo, cuttingPlan: backPanelSheets });
         }
 
         // --- Extras Calculation ---
@@ -1399,7 +1434,8 @@ function setupSimulator() {
             if (cost > 0) extrasBreakdown.push({ label: 'Torre Quente', cost });
         }
 
-        const numDrawers = state.numDrawers; // Usa o valor exato informado
+        // Contagem de portas a partir das peças geradas
+        const numDoors = parts.filter(p => p.description.includes('Door')).length;
 
         // Lógica de dobradiças aprimorada para cozinha (padrão de 2 por porta)
         const hingesPerDoor = 2;
@@ -1426,23 +1462,19 @@ function setupSimulator() {
         }
 
         // Edge Tape Cost
-        // Cálculo preciso: soma o perímetro de todas as peças e aplica um fator de uso.
-        const totalPerimeter = parts.reduce((acc, part) => acc + 2 * (part.w + part.h), 0) / 1000; // em metros
-        const edgeTapeUsageFactor = 0.7; // Fator realista: assume que ~70% das bordas recebem fita.
-        const edgeTapeCost = totalPerimeter * edgeTapeUsageFactor * panelCosts.edgeTapePerMeter;
-        if (edgeTapeCost > 0) {
-            baseBreakdown.push({ label: 'Fita de Borda', quantity: Math.round(totalPerimeter * edgeTapeUsageFactor), cost: edgeTapeCost });
-        }
+        const edgeTapeBreakdown = calculateEdgeTapeCost(parts, panelCosts);
+        if (edgeTapeBreakdown) baseBreakdown.push(edgeTapeBreakdown);
 
-        if (state.projectOption === 'create') {
-            const cost = SIMULATOR_CONFIG.COMMON_COSTS.PROJECT_3D;
-            if (cost > 0) extrasBreakdown.push({ label: 'Criação do Projeto 3D', cost });
-        }
+        // Common Extras
+        extrasBreakdown.push(...calculateCommonExtrasCost(totalWidth));
 
+        // Kitchen-specific extras
         state.extras.forEach(extra => {
+            if (extra === 'Iluminação LED') return; // Já calculado
             const cost = config.EXTRAS_COST[extra] || SIMULATOR_CONFIG.COMMON_COSTS[extra] || 0;
-            const finalCost = (extra === 'Iluminação LED') ? cost * totalWidth : cost;
-            if (finalCost > 0) extrasBreakdown.push({ label: extra, cost: finalCost });
+            if (cost > 0) {
+                extrasBreakdown.push({ label: extra, cost });
+            }
         });
 
         return { baseBreakdown, extrasBreakdown, totalMaterialArea };
@@ -1523,15 +1555,11 @@ function setupSimulator() {
 
     function resetFormUI() {
         // Uncheck all radio buttons and checkboxes within the simulator
-        document.querySelectorAll('#simulador input[type="radio"], #simulador input[type="checkbox"]').forEach(input => {
-            input.checked = false;
-        });
+        document.querySelectorAll('#simulador input[type="radio"], #simulador input[type="checkbox"]').forEach(input => { input.checked = false; });
 
         // Reset specific input values to their defaults
         document.getElementById('wardrobe-width1').value = 3.0;
         document.getElementById('wardrobe-height').value = 2.7;
-        // FIX: Do not remove walls here. This will be handled by updateFormFromState.
-        // Just reset the values of any existing extra walls.
         document.querySelectorAll('#wardrobe-walls-container input[name="wardrobe-width"]:not(#wardrobe-width1)').forEach(input => input.value = '0');
         document.getElementById('add-wardrobe-wall-btn').classList.remove('hidden');
 
@@ -1542,9 +1570,6 @@ function setupSimulator() {
         document.getElementById('kitchen-wall-width1').value = 2.2;
         document.getElementById('kitchen-wall-height1').value = 2.7;
 
-        const kitchenWallsContainer = document.getElementById('kitchen-walls-container');
-        Array.from(kitchenWallsContainer.children).slice(1).forEach(wall => wall.remove());
-        document.getElementById('add-wall-btn').classList.remove('hidden');
         document.getElementById('premium-options').classList.add('hidden');
         document.getElementById('customColor').value = '';
         document.getElementById('project-upload-container').classList.add('hidden');
@@ -1873,17 +1898,18 @@ function setupSimulator() {
             // ETAPA 2: Restaurar valores nos campos que agora estão visíveis
             // Usamos um timeout para garantir que a UI teve tempo de se atualizar após os cliques.
             setTimeout(() => {
-                resetFormUI(); // Limpa os valores dos campos antes de preencher com os dados salvos.
                 // Step 2 Values
                 if (state.furnitureType === 'Guarda-Roupa') {
                     const wardrobeWallsContainer = document.getElementById('wardrobe-walls-container');
-                    // BRUTE FORCE FIX: Remove all but the first wall to ensure a clean state.
+                    // CORREÇÃO: Remove todas as paredes extras antes de recriá-las.
                     while (wardrobeWallsContainer.children.length > 1) {
                         wardrobeWallsContainer.lastChild.remove();
                     }
+                    // Recria as paredes extras com base no estado salvo.
                     if (state.dimensions.walls && state.dimensions.walls.length > 1) {
                         state.dimensions.walls.slice(1).forEach(() => addWardrobeWall());
                     }
+                    // Preenche os valores de todas as paredes.
                     document.querySelectorAll('#wardrobe-walls-container input[name="wardrobe-width"]').forEach((input, i) => {
                         input.value = state.dimensions.walls[i]?.width || 0;
                     });
@@ -1891,22 +1917,24 @@ function setupSimulator() {
                 } else { // Cozinha
                     document.getElementById('sinkStoneWidth').value = state.sinkStoneWidth;
                     const kitchenWallsContainer = document.getElementById('kitchen-walls-container');
-                    // BRUTE FORCE FIX: Remove all but the first wall to ensure a clean state.
+                    // CORREÇÃO: Remove todas as paredes extras antes de recriá-las.
                     while (kitchenWallsContainer.children.length > 1) {
                         kitchenWallsContainer.lastChild.remove();
                     }
+                    // Recria as paredes extras com base no estado salvo.
                     if (state.dimensions.walls && state.dimensions.walls.length > 1) {
                         state.dimensions.walls.slice(1).forEach(() => addKitchenWall());
                     }
+                    // Preenche os valores de todas as paredes.
                     document.querySelectorAll('input[name="kitchen-wall-width"]').forEach((input, i) => input.value = state.dimensions.walls[i]?.width || 0);
                     document.querySelectorAll('input[name="kitchen-wall-height"]').forEach((input, i) => input.value = state.dimensions.walls[i]?.height || 0);
                 }
 
                 // Step 3 Values
+                document.querySelector(`input[name="material"][value="${state.material}"]`)?.click();
                 document.getElementById('customColor').value = state.customColor;
 
                 // Step 4 Values
-                document.querySelector(`input[name="hardwareType"][value="${state.hardwareType}"]`)?.click();
                 state.extras.forEach(extra => {
                     const checkbox = document.querySelector(`input[name="extras"][value="${extra}"]`);
                     if (checkbox) checkbox.checked = true;
@@ -1929,7 +1957,7 @@ function setupSimulator() {
                 renderPhotoPreviews();
                 document.getElementById('competitor-price').value = state.quote.competitorPrice || 0;
 
-                resolve(); // Resolve a Promise após tudo ser preenchido
+                resolve(); // Resolve a Promise após tudo ser preenchido.
             }, 100); // Aumentado para 100ms para garantir a renderização completa da UI.
         });
     }
