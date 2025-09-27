@@ -29,7 +29,8 @@ function initializeApp() {
     setupSmoothScrolling();
     setupContactForm();
     // Initialize AOS-like animations
-    observeElements();    setupGalleryLightbox();
+    observeElements();    
+    setupGalleryLightbox();
     setupPdfViewer();    setupTermsModal();
     setupOtherFurnitureModal();
     setupSimulator(); // Re-ativando o simulador da página inicial
@@ -427,7 +428,7 @@ function setupGalleryLightbox() {
     }
 
     function openLightbox(projectElement) {
-        const images = projectElement.dataset.images.split(',').map(s => s.trim());
+        const images = projectElement.dataset.images.split(',');
         const title = projectElement.dataset.title || '';
         const description = projectElement.dataset.description || '';
 
