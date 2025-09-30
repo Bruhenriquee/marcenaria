@@ -366,8 +366,8 @@
         </div>
     </section>
 
-    <!-- Diferenciais -->
-    <section class="py-20 bg-charcoal text-white reveal reveal-up">
+    <!-- Diferenciais (agora parte do conteúdo colapsável) -->
+    <section id="diferenciais-content" class="py-20 bg-charcoal text-white reveal reveal-up hidden md:block">
         <div class="container mx-auto px-4 sm:px-6">
             <div class="text-center mb-16">
                 <h2 class="font-montserrat font-bold text-4xl md:text-5xl mb-6">
@@ -377,53 +377,41 @@
                     O que nos torna únicos na criação de móveis planejados de alto padrão
                 </p>
             </div>
-
             <div class="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
                 <div class="text-center group">
-                    <div class="bg-gold/10 rounded-full w-20 h-20 flex items-center justify-center mx-auto mb-6 group-hover:bg-gold/20 transition-colors duration-300">
-                        <i class="fas fa-gem text-3xl text-gold"></i>
-                    </div>
+                    <div class="bg-gold/10 rounded-full w-20 h-20 flex items-center justify-center mx-auto mb-6 group-hover:bg-gold/20 transition-colors duration-300"><i class="fas fa-gem text-3xl text-gold"></i></div>
                     <h3 class="font-montserrat font-bold text-xl mb-4">Materiais de Alta Qualidade</h3>
-                    <p class="text-gray-300 leading-relaxed">
-                        Utilizamos apenas MDF de primeira linha e ferragens robustas, garantindo durabilidade e beleza por muitos anos.
-                    </p>
+                    <p class="text-gray-300 leading-relaxed">Utilizamos apenas MDF de primeira linha e ferragens robustas, garantindo durabilidade e beleza por muitos anos.</p>
                 </div>
-
                 <div class="text-center group">
-                    <div class="bg-gold/10 rounded-full w-20 h-20 flex items-center justify-center mx-auto mb-6 group-hover:bg-gold/20 transition-colors duration-300">
-                        <i class="fas fa-hand-sparkles text-3xl text-gold"></i>
-                    </div>
+                    <div class="bg-gold/10 rounded-full w-20 h-20 flex items-center justify-center mx-auto mb-6 group-hover:bg-gold/20 transition-colors duration-300"><i class="fas fa-hand-sparkles text-3xl text-gold"></i></div>
                     <h3 class="font-montserrat font-bold text-xl mb-4">Acabamento Impecável</h3>
-                    <p class="text-gray-300 leading-relaxed">
-                        Cada detalhe, do corte à montagem, é executado com precisão para um resultado final superior.
-                    </p>
+                    <p class="text-gray-300 leading-relaxed">Cada detalhe, do corte à montagem, é executado com precisão para um resultado final superior.</p>
                 </div>
-
                 <div class="text-center group">
-                    <div class="bg-gold/10 rounded-full w-20 h-20 flex items-center justify-center mx-auto mb-6 group-hover:bg-gold/20 transition-colors duration-300">
-                        <i class="fas fa-palette text-3xl text-gold"></i>
-                    </div>
+                    <div class="bg-gold/10 rounded-full w-20 h-20 flex items-center justify-center mx-auto mb-6 group-hover:bg-gold/20 transition-colors duration-300"><i class="fas fa-palette text-3xl text-gold"></i></div>
                     <h3 class="font-montserrat font-bold text-xl mb-4">Design Exclusivo</h3>
-                    <p class="text-gray-300 leading-relaxed">
-                        Cada projeto é único, desenvolvido especialmente para seu espaço e necessidades específicas.
-                    </p>
+                    <p class="text-gray-300 leading-relaxed">Cada projeto é único, desenvolvido especialmente para seu espaço e necessidades específicas.</p>
                 </div>
-
                 <div class="text-center group">
-                    <div class="bg-gold/10 rounded-full w-20 h-20 flex items-center justify-center mx-auto mb-6 group-hover:bg-gold/20 transition-colors duration-300">
-                        <i class="fas fa-tools text-3xl text-gold"></i>
-                    </div>
+                    <div class="bg-gold/10 rounded-full w-20 h-20 flex items-center justify-center mx-auto mb-6 group-hover:bg-gold/20 transition-colors duration-300"><i class="fas fa-tools text-3xl text-gold"></i></div>
                     <h3 class="font-montserrat font-bold text-xl mb-4">Montagem Profissional</h3>
-                    <p class="text-gray-300 leading-relaxed">
-                        Equipe especializada em montagem, garantindo acabamento perfeito e instalação segura.
-                    </p>
+                    <p class="text-gray-300 leading-relaxed">Equipe especializada em montagem, garantindo acabamento perfeito e instalação segura.</p>
                 </div>
             </div>
         </div>
     </section>
 
+    <!-- Botão de toggle ÚNICO para mobile (para ABRIR) -->
+    <div id="collapsible-open-btn-container" class="py-10 bg-white text-center md:hidden">
+        <button data-collapsible-toggle="diferenciais-content,processo-content" class="collapsible-toggle-btn bg-gray-100 text-charcoal font-semibold py-4 px-6 rounded-lg hover:bg-gray-200 hover:shadow-lg transition-all duration-300 w-full max-w-xs mx-auto flex items-center justify-center gap-3 group">
+            <span class="toggle-text">Ver Diferenciais e Processo</span>
+            <i class="fas fa-chevron-down text-gold toggle-icon transition-transform group-hover:translate-y-0.5"></i>
+        </button>
+    </div>
+
     <!-- Nosso Processo -->
-    <section id="processo" class="py-20 bg-white">
+    <section id="processo-content" class="py-20 bg-white hidden md:block reveal reveal-up">
         <div class="container mx-auto px-4 sm:px-6">
             <div class="text-center mb-16">
                 <h2 class="font-montserrat font-bold text-4xl md:text-5xl text-charcoal mb-6">
@@ -433,7 +421,7 @@
                     Da sua ideia à realidade em 4 passos simples e transparentes.
                 </p>
             </div>
-
+            
             <div class="relative max-w-5xl mx-auto">
                 <!-- Linha Conectora (apenas para telas médias e maiores) -->
                 <div class="hidden md:block absolute top-12 left-0 w-full h-0.5 bg-gold/30">
@@ -492,6 +480,14 @@
                         <p class="text-sm text-gray-600">Nossa equipe especializada realiza a entrega e montagem com perfeição.</p>
                     </div>
                 </div>
+            </div>
+
+            <!-- Botão de toggle para FECHAR no mobile -->
+            <div class="text-center mt-12 md:hidden">
+                <button data-collapsible-toggle="diferenciais-content,processo-content" class="collapsible-toggle-btn text-gray-500 font-semibold py-3 px-6 rounded-lg hover:text-charcoal transition-colors">
+                    <span class="toggle-text">Ocultar Detalhes</span>
+                    <i class="fas fa-chevron-up toggle-icon ml-2"></i>
+                </button>
             </div>
         </div>
     </section>
@@ -901,28 +897,22 @@
                                     <h4 class="font-semibold text-lg mb-4 text-charcoal">Adicionais para Guarda-Roupa</h4>
                                     <div class="space-y-4">
                                         <label id="extra-mirror-door" class="extra-option-card"><input type="checkbox" name="extras" value="Porta com Espelho"><div class="flex-grow"><h4>Porta com Espelho</h4><p class="text-sm text-gray-500">Amplia e ilumina o ambiente.</p></div></label>
-                                        <label class="extra-option-card"><input type="checkbox" name="extras" value="Gaveteiro com Chave"><div class="flex-grow"><h4>Gaveteiro com Chave</h4><p class="text-sm text-gray-500">Mais segurança para seus pertences.</p></div></label>
                                     </div>
                                 </div>
                             </div>
 
                             <!-- Kitchen Specific Options -->
                             <div id="kitchen-options" class="hidden space-y-8 smooth-toggle">
-                                <div class="space-y-4">
-                                    <h4 class="font-semibold text-lg mb-4 text-charcoal">Adicionais para Cozinha</h4>
-                                    <label class="extra-option-card"><input type="checkbox" name="extras" value="Porta-temperos"><div class="flex-grow"><h4>Porta-temperos Embutido</h4><p class="text-sm text-gray-500">Praticidade ao cozinhar.</p></div></label>
-                                    <label class="extra-option-card"><input type="checkbox" name="extras" value="Lixeira Embutida"><div class="flex-grow"><h4>Lixeira Embutida na Bancada</h4><p class="text-sm text-gray-500">Design limpo e funcional.</p></div></label>
-                                </div>
+                                <!-- Adicionais de cozinha foram removidos do simulador público para simplificar -->
                             </div>
 
                             <!-- Common Extras -->
                             <div id="handle-type-section" class="smooth-toggle">
-                                <h4 class="font-semibold text-lg mb-4 text-charcoal">Tipo de Puxador (Perfil)</h4>
-                                <div class="grid md:grid-cols-2 gap-6">
-                                    <label class="step-card"><input type="radio" name="handleType" value="aluminio" class="sr-only peer"><div class="card-content"><div class="check-icon"><i class="fas fa-check-circle"></i></div><h4 class="font-semibold text-lg">Alumínio</h4><p class="text-sm text-gray-500">Padrão moderno (Incluso)</p></div></label>
-                                    <label class="step-card"><input type="radio" name="handleType" value="inox" class="sr-only peer"><div class="card-content"><div class="check-icon"><i class="fas fa-check-circle"></i></div><h4 class="font-semibold text-lg">Inox</h4><p class="text-sm text-gray-500">Alta durabilidade</p></div></label>
-                                    <label class="step-card"><input type="radio" name="handleType" value="preto" class="sr-only peer"><div class="card-content"><div class="check-icon"><i class="fas fa-check-circle"></i></div><h4 class="font-semibold text-lg">Preto</h4><p class="text-sm text-gray-500">Acabamento sofisticado</p></div></label>
-                                    <label class="step-card"><input type="radio" name="handleType" value="dourado" class="sr-only peer"><div class="card-content"><div class="check-icon"><i class="fas fa-check-circle"></i></div><h4 class="font-semibold text-lg">Dourado</h4><p class="text-sm text-gray-500">Toque de luxo</p></div></label>
+                                <h4 class="font-semibold text-lg mb-4 text-charcoal">Tipo de Puxador</h4>
+                                <div class="grid md:grid-cols-3 gap-6">
+                                    <label class="step-card"><input type="radio" name="handleType" value="aluminio" class="sr-only peer"><div class="card-content"><div class="check-icon"><i class="fas fa-check-circle"></i></div><i class="fas fa-grip-lines text-3xl mb-3"></i><h4 class="font-semibold text-lg">Perfil Alumínio</h4><p class="text-sm text-gray-500">Padrão moderno (Incluso)</p></div></label>
+                                    <label class="step-card"><input type="radio" name="handleType" value="inox_cor" class="sr-only peer"><div class="card-content"><div class="check-icon"><i class="fas fa-check-circle"></i></div><i class="fas fa-palette text-3xl mb-3"></i><h4 class="font-semibold text-lg">Perfil Inox/Cor</h4><p class="text-sm text-gray-500">Inox, preto, dourado, etc.</p></div></label>
+                                    <label class="step-card"><input type="radio" name="handleType" value="convencional" class="sr-only peer"><div class="card-content"><div class="check-icon"><i class="fas fa-check-circle"></i></div><i class="fas fa-dot-circle text-3xl mb-3"></i><h4 class="font-semibold text-lg">Convencional</h4><p class="text-sm text-gray-500">Puxadores externos (ponto, alça)</p></div></label>
                                 </div>
                             </div>
                             <div class="mt-8">
@@ -931,10 +921,6 @@
                                     <label class="step-card"><input type="radio" name="hardwareType" value="padrao" class="sr-only peer"><div class="card-content"><div class="check-icon"><i class="fas fa-check-circle"></i></div><i class="fas fa-cogs text-3xl mb-3"></i><h4 class="font-semibold text-lg">Padrão</h4><p class="text-sm text-gray-500">Ferragens convencionais (Incluso).</p></div></label>
                                     <label class="step-card"><input type="radio" name="hardwareType" value="softclose" class="sr-only peer"><div class="card-content"><div class="check-icon"><i class="fas fa-check-circle"></i></div><i class="fas fa-feather-alt text-3xl mb-3"></i><h4 class="font-semibold text-lg">Com Amortecimento</h4><p class="text-sm text-gray-500">Fechamento suave (soft-close).</p></div></label>
                                 </div>
-                            </div>
-                            <div class="mt-8">
-                                <h4 class="font-semibold text-lg mb-4 text-charcoal">Outros Acabamentos</h4>
-                                <div class="space-y-4"><label class="extra-option-card"><input type="checkbox" name="extras" value="Iluminação LED"><div class="flex-grow"><h4>Iluminação em LED</h4><p class="text-sm text-gray-500">Fitas de LED internas ou em nichos.</p></div></label></div>
                             </div>
                         </div>
                         <div class="flex justify-between mt-12">
@@ -1286,15 +1272,18 @@
                         <div class="space-y-4 text-gray-300">
                             <div class="flex items-start space-x-4">
                                 <i class="fas fa-map-marker-alt text-gold mt-1 w-5 text-center"></i>
-                                <span>São Paulo - SP</span>
+                                <div>
+                                    <span>Rua Sud Menucci, 74 - Centro</span>
+                                    <span class="block text-sm text-gray-400">Rinópolis - SP, 17740-000</span>
+                                </div>
                             </div>
                             <div class="flex items-start space-x-4">
                                 <i class="fas fa-phone text-gold mt-1 w-5 text-center"></i>
-                                <span>(11) 99999-9999</span>
+                                <span>(18) 99731-2957</span>
                             </div>
                             <div class="flex items-start space-x-4">
                                 <i class="fas fa-envelope text-gold mt-1 w-5 text-center"></i>
-                                <span>contato@ronimarceneiro.com</span>
+                                <span>contato@ronimarceneiro.com.br</span>
                             </div>
                             <div class="flex items-start space-x-4">
                                 <i class="fas fa-clock text-gold mt-1 w-5 text-center"></i>
@@ -1308,7 +1297,7 @@
                         <h4 class="font-montserrat font-semibold text-lg mb-4">Nossa Localização</h4>
                         <div class="rounded-lg overflow-hidden flex-grow min-h-[200px]">
                             <iframe
-                                src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d234028.3411000118!2d-46.82550089492187!3d-23.5594029!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x94ce448183a461d1%3A0x9ba94b08ff335bae!2sS%C3%A3o%20Paulo%2C%20State%20of%20S%C3%A3o%20Paulo%2C%20Brazil!5e0!3m2!1sen!2sus!4v1620312948591!5m2!1sen!2sus"
+                                src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3705.419189956634!2d-50.72483862473139!3d-21.76450177997861!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x9496d7413d33a379%3A0x33a1e54a6e559397!2sR.%20Sud%20Menucci%2C%2074%20-%20Centro%2C%20Rin%C3%B3polis%20-%20SP%2C%2017740-000!5e0!3m2!1sen!2sbr!4v1717789950395!5m2!1sen!2sbr"
                                 class="w-full h-full"
                                 style="border:0;"
                                 allowfullscreen=""
@@ -1317,10 +1306,10 @@
                             </iframe>
                         </div>
                         <div class="grid grid-cols-2 gap-4 mt-4">
-                            <a href="https://waze.com/ul?ll=-23.5594029,-46.8255008&navigate=yes" target="_blank" class="bg-gold/20 hover:bg-gold/40 text-white font-semibold py-2 px-4 rounded-lg flex items-center justify-center transition-colors">
+                            <a href="https://waze.com/ul?ll=-21.7645017,-50.7248386&navigate=yes" target="_blank" class="bg-gold/20 hover:bg-gold/40 text-white font-semibold py-2 px-4 rounded-lg flex items-center justify-center transition-colors">
                                 <i class="fab fa-waze mr-2"></i> Waze
                             </a>
-                            <a href="https://www.google.com/maps/search/?api=1&query=-23.5594029,-46.8255008" target="_blank" class="bg-gold/20 hover:bg-gold/40 text-white font-semibold py-2 px-4 rounded-lg flex items-center justify-center transition-colors">
+                            <a href="https://www.google.com/maps/search/?api=1&query=-21.7645017,-50.7248386" target="_blank" class="bg-gold/20 hover:bg-gold/40 text-white font-semibold py-2 px-4 rounded-lg flex items-center justify-center transition-colors">
                                 <i class="fas fa-map-marked-alt mr-2"></i> Google Maps
                             </a>
                         </div>
@@ -1362,9 +1351,9 @@
 
                 <!-- Ícones Sociais -->
                 <div class="flex justify-center space-x-6 mb-8">
-                    <a href="#" class="text-gray-400 hover:text-gold transition-transform hover:scale-110" aria-label="Instagram"><i class="fab fa-instagram text-2xl"></i></a>
+                    <a href="https://instagram.com/roni.marceneiro" target="_blank" class="text-gray-400 hover:text-gold transition-transform hover:scale-110" aria-label="Instagram"><i class="fab fa-instagram text-2xl"></i></a>
                     <a href="#" class="text-gray-400 hover:text-gold transition-transform hover:scale-110" aria-label="Facebook"><i class="fab fa-facebook text-2xl"></i></a>
-                    <a href="https://wa.me/5511999999999" target="_blank" class="text-gray-400 hover:text-gold transition-transform hover:scale-110" aria-label="WhatsApp"><i class="fab fa-whatsapp text-2xl"></i></a>
+                    <a href="https://wa.me/5518997312957" target="_blank" class="text-gray-400 hover:text-gold transition-transform hover:scale-110" aria-label="WhatsApp"><i class="fab fa-whatsapp text-2xl"></i></a>
                 </div>
 
                 <!-- Logo e Copyright -->
@@ -1374,7 +1363,7 @@
                         <p class="text-xs text-gold tracking-widest uppercase">Móveis Planejados</p>
                     </div>
                     <div class="text-gray-500 text-xs flex flex-col sm:flex-row gap-x-3 mt-2">
-                        <span>© 2024. Todos os direitos reservados.</span>
+                        <span>© 2025. Todos os direitos reservados.</span>
                         <span class="hidden sm:inline">|</span>
                         <button id="open-terms-modal-footer" class="underline hover:text-gold">Termos e Política de Privacidade</button>
                     </div>
@@ -1384,7 +1373,7 @@
     </footer>
 
     <!-- WhatsApp Float Button -->
-    <a href="https://wa.me/5511999999999?text=Olá! Gostaria de saber mais sobre móveis planejados." 
+    <a href="https://wa.me/5518997312957?text=Olá! Gostaria de saber mais sobre móveis planejados." 
        target="_blank" 
        class="fixed bottom-6 right-6 bg-green-500 text-white w-16 h-16 rounded-full flex items-center justify-center shadow-2xl hover:bg-green-600 transition-all duration-300 transform hover:scale-110 z-50">
         <i class="fab fa-whatsapp text-2xl"></i>
@@ -1400,21 +1389,40 @@
                 </button>
             </div>
             <div class="flex-1 p-6 md:p-8 overflow-y-auto text-gray-700 leading-relaxed space-y-6">
-                <h4 class="font-montserrat font-bold text-lg text-charcoal">1. Termos de Uso</h4>
-                <p class="text-sm">Ao acessar este site, você concorda em cumprir estes termos de serviço, todas as leis e regulamentos aplicáveis ​​e concorda que é responsável pelo cumprimento de todas as leis locais aplicáveis. Se você não concordar com algum desses termos, está proibido de usar ou acessar este site. Os materiais contidos neste site são protegidos pelas leis de direitos autorais e marcas comerciais aplicáveis.</p>
-                
-                <h4 class="font-montserrat font-bold text-lg text-charcoal">2. Termos de Uso do Simulador de Orçamento</h4>
-                <p class="text-sm">O simulador de orçamento disponível neste site é uma ferramenta projetada para fornecer uma <strong>estimativa de custo inicial</strong> com base nas informações fornecidas pelo usuário. O valor gerado é meramente informativo e não constitui uma proposta final ou contrato.</p>
+                <h4 class="font-montserrat font-bold text-lg text-charcoal">1. Termos e Condições de Uso</h4>
+                <p class="text-sm">Bem-vindo ao site Roni Marceneiro. Ao navegar neste site, você concorda com os seguintes termos e condições. Se não concordar com qualquer parte destes termos, por favor, não utilize nosso site.</p>
                 <ul class="list-disc list-inside space-y-2 text-sm">
-                    <li>O preço final do projeto será determinado somente após uma visita técnica realizada por um de nossos profissionais, onde todas as medidas, materiais e detalhes específicos serão confirmados.</li>
-                    <li>Não nos responsabilizamos por imprecisões no orçamento estimado que resultem de dados incorretos ou incompletos inseridos pelo usuário.</li>
-                    <li>Os preços de materiais e mão de obra utilizados no simulador estão sujeitos a alterações sem aviso prévio.</li>
+                    <li><strong>Propriedade Intelectual:</strong> Todo o conteúdo presente neste site, incluindo textos, imagens, logotipos e design, é propriedade de Roni Marceneiro e protegido por leis de direitos autorais. A reprodução não autorizada de qualquer material é proibida.</li>
+                    <li><strong>Uso do Site:</strong> Este site e seu conteúdo são fornecidos para fins informativos. Você concorda em não utilizar o site para fins ilícitos ou que possam prejudicar a funcionalidade ou a segurança do mesmo.</li>
+                    <li><strong>Limitação de Responsabilidade:</strong> Esforçamo-nos para manter as informações precisas e atualizadas, mas não garantimos a exatidão completa. Não nos responsabilizamos por quaisquer perdas ou danos decorrentes do uso das informações aqui contidas.</li>
+                </ul>
+
+                <h4 class="font-montserrat font-bold text-lg text-charcoal">2. Termos de Uso do Simulador de Orçamento</h4>
+                <p class="text-sm">O simulador de orçamento é uma ferramenta de conveniência para fornecer uma <strong>estimativa de custo inicial</strong>, baseada exclusivamente nos dados inseridos pelo usuário. Este valor não representa uma proposta comercial final.</p>
+                <ul class="list-disc list-inside space-y-2 text-sm">
+                    <li><strong>Caráter Informativo:</strong> O valor gerado é uma aproximação e não constitui um contrato ou compromisso de preço.</li>
+                    <li><strong>Validação Técnica:</strong> O orçamento final e formal será fornecido somente após uma visita técnica para medição precisa, análise do local e definição de todos os materiais e acabamentos.</li>
+                    <li><strong>Variações de Preço:</strong> Os custos de materiais e serviços podem variar. O orçamento final pode diferir da estimativa do simulador devido a fatores técnicos, escolhas de materiais específicos ou ajustes no projeto.</li>
+                    <li><strong>Responsabilidade do Usuário:</strong> A precisão da estimativa depende da exatidão das informações fornecidas. Não nos responsabilizamos por discrepâncias resultantes de dados incorretos.</li>
                 </ul>
 
                 <h4 class="font-montserrat font-bold text-lg text-charcoal">3. Política de Privacidade</h4>
-                <p class="text-sm">A sua privacidade é importante para nós. Solicitamos informações pessoais (nome, e-mail, telefone) através dos formulários de contato e do simulador, com o seu conhecimento e consentimento, exclusivamente para os seguintes fins: entrar em contato para discutir seu projeto, enviar propostas comerciais e agendar visitas técnicas. Não compartilhamos suas informações com terceiros, exceto quando exigido por lei.</p>
-                <p class="text-sm">O uso continuado de nosso site será considerado como aceitação de nossas práticas em torno de privacidade e informações pessoais. Se você tiver alguma dúvida sobre como lidamos com dados do usuário, entre em contato conosco.</p>
-                <p class="text-sm"><em>Esta política é efetiva a partir de Outubro de 2024.</em></p>
+                <p class="text-sm">A sua privacidade é uma prioridade para nós. Esta política descreve como coletamos, usamos e protegemos suas informações pessoais.</p>
+                <ul class="list-disc list-inside space-y-2 text-sm">
+                    <li><strong>Coleta de Dados:</strong> Coletamos informações pessoais (nome, e-mail, telefone) que você nos fornece voluntariamente através dos formulários de contato e do simulador de orçamento.</li>
+                    <li><strong>Uso dos Dados:</strong> Suas informações são utilizadas exclusivamente para:
+                        <ul class="list-['-_'] list-inside ml-4 mt-1">
+                            <li>Responder às suas solicitações e entrar em contato sobre seu projeto.</li>
+                            <li>Enviar propostas comerciais e orçamentos formais.</li>
+                            <li>Agendar visitas técnicas e a execução dos serviços.</li>
+                        </ul>
+                    </li>
+                    <li><strong>Armazenamento e Segurança:</strong> Seus dados são armazenados de forma segura e acessados apenas por nossa equipe. Adotamos medidas para proteger suas informações contra acesso não autorizado, alteração ou divulgação.</li>
+                    <li><strong>Compartilhamento de Dados:</strong> Não vendemos, alugamos ou compartilhamos suas informações pessoais com terceiros para fins de marketing. O compartilhamento só ocorrerá se exigido por lei.</li>
+                    <li><strong>Seus Direitos:</strong> Você pode, a qualquer momento, solicitar o acesso, correção ou exclusão de suas informações pessoais de nossos registros, entrando em contato conosco.</li>
+                </ul>
+                <p class="text-sm">Ao utilizar nosso site, você concorda com a coleta e uso de informações de acordo com esta política.</p>
+                <p class="text-sm mt-4"><em>Última atualização: Outubro de 2025.</em></p>
             </div>
         </div>
     </div>
@@ -1430,7 +1438,7 @@
             <p class="text-gray-600 mb-6">
                 Que legal que você tem um projeto único em mente! Para ambientes como <strong>Home Office, Painéis de TV, Banheiros</strong> ou qualquer outra ideia, nosso especialista está pronto para te atender pessoalmente e criar um orçamento sob medida.
             </p>
-            <a href="https://wa.me/5511999999999?text=Olá! Gostaria de um orçamento para um projeto especial que não está no simulador." 
+            <a href="https://wa.me/5518997312957?text=Olá! Gostaria de um orçamento para um projeto especial que não está no simulador." 
                target="_blank" 
                class="inline-flex items-center justify-center w-full max-w-xs mx-auto bg-green-500 text-white font-bold py-3 px-6 rounded-lg shadow-lg hover:bg-green-600 hover:shadow-xl transform hover:-translate-y-1 transition-all duration-300 text-lg">
                 <i class="fab fa-whatsapp mr-3"></i>
@@ -1512,8 +1520,8 @@
                 <div class="text-right">
                     <h3 class="font-semibold text-gray-500 mb-2 text-sm">PREPARADO POR:</h3>
                     <p class="font-bold">Roni Marceneiro</p>
-                    <p class="text-sm">contato@ronimarceneiro.com</p>
-                    <p class="text-sm">(11) 99999-9999</p>
+                    <p class="text-sm">contato@ronimarceneiro.com.br</p>
+                    <p class="text-sm">(18) 99731-2957</p>
                 </div>
             </section>
     

@@ -89,10 +89,6 @@ const SIMULATOR_CONFIG = {
     COMMON_COSTS: {
         // Custo fixo cobrado se o cliente optar pela criação de um projeto 3D.
         'PROJECT_3D': 350,
-        // Custo por METRO LINEAR de fita de LED instalada.
-        // O cálculo multiplica este valor pela largura total do móvel.
-            // =========================================================================
-        'Iluminação LED': 350,
     },
     // =========================================================================
     // CONFIGURAÇÕES DE CÁLCULO PARA GUARDA-ROUPA
@@ -1030,14 +1026,6 @@ function setupSimulator() {
             state.dimensions.height = height;
             updateDrawerRecommendation();
             updateWardrobeRecommendation();
-        } else if (state.furnitureType === 'Cozinha') {
-            // CORREÇÃO: Movido para dentro do 'else' para evitar execução duplicada e garantir que as dimensões da cozinha sejam sempre atualizadas.
-            // const widths = Array.from(document.querySelectorAll('input[name="kitchen-wall-width"]')).map(input => parseFloat(input.value) || 0);
-            // const heights = Array.from(document.querySelectorAll('input[name="kitchen-wall-height"]')).map(input => parseFloat(input.value) || 0);
-        } else { // Cozinha
-            const heights = Array.from(document.querySelectorAll('input[name="kitchen-wall-height"]')).map(input => parseFloat(input.value) || 0);
-            state.dimensions.walls = widths.map((w, i) => ({ width: w, height: heights[i] || 0 }));
-            state.sinkStoneWidth = parseFloat(document.getElementById('sinkStoneWidth').value) || 0;
         }
         updateKitchenDrawerRecommendation();
         // Save state after dimension update
@@ -1068,6 +1056,11 @@ function setupSimulator() {
                 }
                 if (state.wardrobeFormat === null) {
                     showNotification('Por favor, escolha o formato do projeto.', 'error');
+                    return false;
+                }
+                // Validação para closet com portas
+                if (state.wardrobeFormat === 'closet' && state.closetHasDoors === null) {
+                    showNotification('Informe se o seu closet terá portas.', 'error');
                     return false;
                 }
             } else { // Cozinha
@@ -1118,6 +1111,11 @@ function setupSimulator() {
                     return false;
                 }
             }
+            // Validação para tipo de ferragem
+            if (!state.hardwareType) {
+                showNotification('Por favor, escolha o tipo de acabamento interno (ferragens).', 'error');
+                return false;
+            }
         }
         if (step === 5 && !state.projectOption) {
             showNotification('Por favor, informe sobre o projeto 3D.', 'error');
@@ -1135,6 +1133,9 @@ function setupSimulator() {
             hingeStandard: parseFloat(document.getElementById('hinge-standard-cost').value) || 5,
             hingeSoftclose: parseFloat(document.getElementById('hinge-softclose-cost').value) || 20,
             slide: parseFloat(document.getElementById('slide-cost').value) || 25,
+            handleAluminio: parseFloat(document.getElementById('handle-aluminio-cost').value) || 75,
+            handleInoxCor: parseFloat(document.getElementById('handle-inox-cor-cost').value) || 100,
+            handleConvencional: parseFloat(document.getElementById('handle-convencional-cost').value) || 15,
             multiplier: parseFloat(document.getElementById('cost-multiplier').value) || 2,
             discountExtra: parseFloat(document.getElementById('discount-extra').value) || 0,
             competitorPrice: parseFloat(document.getElementById('competitor-price').value) || 0
@@ -1267,7 +1268,6 @@ function setupSimulator() {
     function calculateCommonExtrasCost(totalWidth) {
         const extras = [];
         if (state.projectOption === 'create') extras.push({ label: 'Criação do Projeto 3D', cost: SIMULATOR_CONFIG.COMMON_COSTS.PROJECT_3D });
-        if (state.extras.includes('Iluminação LED')) extras.push({ label: 'Iluminação LED', cost: SIMULATOR_CONFIG.COMMON_COSTS['Iluminação LED'] * totalWidth });
         return extras;
     }
 
@@ -1305,12 +1305,22 @@ function setupSimulator() {
         let sheets = [];
 
         if (state.material === 'Mesclada') {
-            // Lógica precisa para Mesclado: calcula chapas de portas (Premium) e caixaria (Branco) separadamente.
-            const doorParts = allParts.filter(p => p.description.includes('Door'));
-            const carcassParts = allParts.filter(p => !p.description.includes('Door'));
+            // Lógica aprimorada para material mesclado em guarda-roupas.
+            let premiumParts;
+            let whiteParts;
 
-            const premiumSheets = optimizeCutting(doorParts, 2750, 1850);
-            const whiteSheets = optimizeCutting(carcassParts, 2750, 1850);
+            if (hasDoors) {
+                // Se tem portas, as gavetas são internas e, portanto, brancas. Apenas as portas são coloridas.
+                premiumParts = allParts.filter(p => p.description.includes('Door'));
+                whiteParts = allParts.filter(p => !p.description.includes('Door'));
+            } else {
+                // Se é um closet aberto (sem portas), as frentes de gaveta são visíveis e, portanto, coloridas.
+                premiumParts = allParts.filter(p => p.description.includes('Drawer Front'));
+                whiteParts = allParts.filter(p => !p.description.includes('Drawer Front'));
+            }
+
+            const premiumSheets = optimizeCutting(premiumParts, 2750, 1850);
+            const whiteSheets = optimizeCutting(whiteParts, 2750, 1850);
             
             const numPremiumSheets = premiumSheets.length;
             const numWhiteSheets = whiteSheets.length;
@@ -1354,11 +1364,19 @@ function setupSimulator() {
             }
 
             // Wardrobe handles are only for doors, not internal drawers
-            const totalHandleLength = (state.doorType === 'correr' && numDoors >= 2) ? (2 * numDoors - 2) * height : numDoors * height;
-            if (totalHandleLength > 0) {
-                const numBarsNeeded = Math.ceil(totalHandleLength / config.HARDWARE.HANDLE_BAR_LENGTH);
-                const handleCost = numBarsNeeded * config.HARDWARE.HANDLE_BAR_COST.premium;
-                if (handleCost > 0) baseBreakdown.push({ label: `Barras de Puxador Perfil ${state.handleType}`, quantity: numBarsNeeded, cost: handleCost });
+            if (state.handleType === 'convencional') {
+                const cost = numDoors * panelCosts.handleConvencional;
+                if (cost > 0) baseBreakdown.push({ label: `Puxadores Convencionais`, quantity: numDoors, cost: cost });
+            } else { // Perfil Alumínio ou Inox/Cor
+                const totalHandleLength = (state.doorType === 'correr' && numDoors >= 2) ? (2 * numDoors - 2) * height : numDoors * height;
+                if (totalHandleLength > 0) {
+                    const numBarsNeeded = Math.ceil(totalHandleLength / config.HARDWARE.HANDLE_BAR_LENGTH);
+                    let handleCost = 0;
+                    if (state.handleType === 'aluminio') handleCost = numBarsNeeded * panelCosts.handleAluminio;
+                    if (state.handleType === 'inox_cor') handleCost = numBarsNeeded * panelCosts.handleInoxCor;
+                    const label = state.handleType === 'aluminio' ? 'Barras de Puxador Perfil Alumínio' : 'Barras de Puxador Perfil (Inox/Cor)';
+                    if (handleCost > 0) baseBreakdown.push({ label: label, quantity: numBarsNeeded, cost: handleCost });
+                }
             }
         }
 
@@ -1371,7 +1389,6 @@ function setupSimulator() {
 
         // Wardrobe-specific extras
         state.extras.forEach(extra => {
-            if (extra === 'Iluminação LED') return; // Já calculado nos extras comuns
             const cost = config.EXTRAS_COST[extra] || SIMULATOR_CONFIG.COMMON_COSTS[extra] || 0;
             // A lógica de custo por largura já foi tratada nos extras comuns
             if (cost > 0) extrasBreakdown.push({ label: extra, cost: cost });
@@ -1460,11 +1477,14 @@ function setupSimulator() {
         const numBarsNeeded = Math.ceil(totalHandleLength / config.HARDWARE.HANDLE_BAR_LENGTH);
 
         if (state.handleType === 'aluminio') {
-            const cost = numBarsNeeded * config.HARDWARE.HANDLE_BAR_COST.aluminio;
+            const cost = numBarsNeeded * panelCosts.handleAluminio;
             if (cost > 0) baseBreakdown.push({ label: 'Barras de Puxador Perfil Alumínio', quantity: numBarsNeeded, cost: cost });
-        } else {
-            const cost = (numBarsNeeded * config.HARDWARE.HANDLE_BAR_COST.premium) + (totalHandleUnits * config.HARDWARE.HANDLE_PREMIUM_EXTRA_PER_UNIT);
-            if (cost > 0) baseBreakdown.push({ label: `Barras de Puxador Perfil ${state.handleType}`, quantity: numBarsNeeded, cost: cost });
+        } else if (state.handleType === 'inox_cor') {
+            const cost = numBarsNeeded * panelCosts.handleInoxCor;
+            if (cost > 0) baseBreakdown.push({ label: `Barras de Puxador Perfil (Inox/Cor)`, quantity: numBarsNeeded, cost: cost });
+        } else if (state.handleType === 'convencional') {
+            const cost = totalHandleUnits * panelCosts.handleConvencional;
+            if (cost > 0) baseBreakdown.push({ label: `Puxadores Convencionais`, quantity: totalHandleUnits, cost: cost });
         }
 
         // Edge Tape Cost
@@ -1476,7 +1496,6 @@ function setupSimulator() {
 
         // Kitchen-specific extras
         state.extras.forEach(extra => {
-            if (extra === 'Iluminação LED') return; // Já calculado
             const cost = config.EXTRAS_COST[extra] || SIMULATOR_CONFIG.COMMON_COSTS[extra] || 0;
             if (cost > 0) {
                 extrasBreakdown.push({ label: extra, cost });
@@ -1502,7 +1521,7 @@ function setupSimulator() {
  
         const multipliedMaterialCost = materialAndHardwareCost * panelCosts.multiplier;
         const profitAmount = multipliedMaterialCost - materialAndHardwareCost;
-        const costPrice = materialAndHardwareCost + extrasPrice; // Custo real (material + extras)
+        const costPrice = materialAndHardwareCost + extrasPrice + panelCosts.discountExtra; // Custo real (material + extras + ajuste)
         let finalTotal = multipliedMaterialCost + extrasPrice;
  
         // Desconto ou acréscimo
@@ -2179,12 +2198,50 @@ function setupSimulator() {
         if (state.projectOption === 'upload' && !state.projectFile) projectDetails = '\n*Projeto 3D:* Cliente informou que tem o projeto (não anexado).';
         const hardwareDetails = `\n*Acabamento Interno:* ${state.hardwareType === 'padrao' ? 'Padrão' : 'Com Amortecimento (Soft-close)'}`;
 
-        const handleName = state.handleType.charAt(0).toUpperCase() + state.handleType.slice(1);
+        let handleName = '';
+        if (state.handleType === 'aluminio') {
+            handleName = 'Perfil Alumínio';
+        } else if (state.handleType === 'inox_cor') {
+            handleName = 'Perfil Inox/Cor';
+        } else if (state.handleType === 'convencional') {
+            handleName = 'Convencional';
+        }
 
-        // Para o marceneiro, o WhatsApp pode ser um resumo simples para o cliente
-        const breakdownText = `\n\n*Resumo para o Cliente:*`;
+        // Cria uma descrição de material mais detalhada e vendedora
+        let materialDescription = '';
+        if (state.material === 'Branco') {
+            materialDescription = '- *Material:* Projeto 100% em MDF Branco TX, garantindo um visual clean e atemporal.';
+        } else if (state.material === 'Mesclada') {
+            materialDescription = `- *Material:* Estrutura interna em MDF Branco e frentes no padrão *${state.customColor || 'a definir'}*, combinando economia e design sofisticado.`;
+        } else { // Premium
+            materialDescription = `- *Material:* Projeto 100% no padrão MDF Premium *${state.customColor || 'a definir'}*, para um acabamento exclusivo e de alto padrão.`;
+        }
 
-        return `*Orçamento de Móveis Planejados*\n---------------------------------\n*Cliente:* ${state.customer.name}\n*Móvel:* ${state.furnitureType}${formatDetails}${kitchenDetails}\n${details}${projectDetails}\n*Material:* ${state.material} ${state.customColor ? `(Cor: ${state.customColor})` : ''}\n*Puxador:* Perfil ${handleName}${hardwareDetails}\n*Extras:* ${state.extras.join(', ') || 'Nenhum'}\n---------------------------------\n*Total Estimado: ${formatCurrency(state.quote.total)}*${breakdownText}\n\n_Este é um orçamento informativo. O valor final será definido após visita técnica._`;
+        // Memorial Descritivo para agregar valor técnico e profissional
+        const descriptiveMemorial = `
+*Memorial Descritivo do Projeto:*
+- *Estrutura:* Fabricado 100% em MDF, garantindo robustez e alinhamento perfeito.
+- *Acabamento:* ${materialDescription.substring(12)}
+- *Acabamento Interno:* Ferragens de alto padrão, com ${state.hardwareType === 'softclose' ? 'dobradiças com amortecimento (soft-close)' : 'mecanismos de alta resistência'}.
+- *Puxadores:* ${handleName}${state.handleType.includes('Perfil') ? ', que confere um design moderno e clean.' : '.'}
+- *Itens Adicionais:* ${state.extras.join(', ') || 'Nenhum'}.
+`;
+
+        const servicesIncluded = `
+*Serviços e Garantia:*
+Sua proposta inclui nossa consultoria completa, visita técnica para medição de precisão, entrega, montagem por equipe própria e a limpeza do ambiente após a instalação. Oferecemos garantia total de 5 anos para móveis e ferragens, assegurando sua tranquilidade e satisfação.
+`;
+
+        // Mensagem final com uma chamada para ação mais forte
+        const closingMessage = `
+*Proposta de Investimento: ${formatCurrency(state.quote.total)}*
+
+Esta proposta foi elaborada para oferecer a melhor combinação de qualidade, design e durabilidade para o seu lar. Para garantir estas condições e darmos o próximo passo, basta me confirmar por aqui para formalizarmos o seu pedido.
+
+Fico à sua inteira disposição para qualquer ajuste ou dúvida!
+`;
+
+        return `*Proposta de Móveis Planejados*\n---------------------------------\n*Cliente:* ${state.customer.name}\n*Móvel:* ${state.furnitureType}${formatDetails}${kitchenDetails}\n${details}${projectDetails}\n---------------------------------\n${descriptiveMemorial}\n${servicesIncluded}\n---------------------------------\n${closingMessage}`;
     }
 
     async function generatePDF(type = 'client') {
@@ -2710,7 +2767,7 @@ function setupSimulator() {
         if (state.projectOption === 'upload' && state.projectFile) {
             text += '\n\n*(Anexei o arquivo do meu projeto no simulador. Por favor, me informe como posso enviá-lo.)*';
         }
-        window.open(`https://wa.me/${state.customer.phone.replace(/\D/g, '')}?text=${encodeURIComponent(text)}`, '_blank');
+        window.open(`https://wa.me/5518997312957?text=${encodeURIComponent(text)}`, '_blank');
     }
 
     init();

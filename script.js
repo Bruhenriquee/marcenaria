@@ -29,6 +29,7 @@ function initializeApp() {
     setupSmoothScrolling();
     setupContactForm();
     // Initialize AOS-like animations
+    setupCollapsibleSections();
     observeElements();    
     setupGalleryLightbox();
     setupPdfViewer();    setupTermsModal();
@@ -351,6 +352,52 @@ function observeElements() {
     const elementsToAnimate = document.querySelectorAll('.reveal');
     elementsToAnimate.forEach(element => {
         observer.observe(element);
+    });
+}
+
+// Collapsible sections for mobile
+function setupCollapsibleSections() {
+    const toggles = document.querySelectorAll('.collapsible-toggle-btn');
+    const openBtnContainer = document.getElementById('collapsible-open-btn-container');
+
+    toggles.forEach(toggle => {
+        const contentIds = toggle.dataset.collapsibleToggle.split(',');
+        const contents = contentIds.map(id => document.getElementById(id.trim())).filter(Boolean);
+
+        if (contents.length === 0) return;
+
+        // Adjust initial state for mobile
+        if (window.innerWidth < 768) {
+            contents.forEach(content => content.classList.add('hidden', 'md:block'));
+        } else {
+            contents.forEach(content => content.classList.remove('hidden', 'md:block'));
+        }
+
+        toggle.addEventListener('click', () => {
+            // Check the state of the first content element to decide the action
+            const isCurrentlyHidden = contents[0].classList.contains('hidden');
+
+            contents.forEach(content => {
+                content.classList.toggle('hidden', !isCurrentlyHidden);
+            });
+
+            // Hide the "open" button when content is shown, and show it when content is hidden
+            if (openBtnContainer) {
+                openBtnContainer.classList.toggle('hidden', isCurrentlyHidden);
+            }
+
+            // Scroll to the top of the first content section when opening
+            if (isCurrentlyHidden) {
+                setTimeout(() => {
+                    contents[0].scrollIntoView({ behavior: 'smooth', block: 'start' });
+                }, 100);
+            } else {
+                // When closing, scroll to the "open" button's position for better UX
+                if (openBtnContainer) {
+                    openBtnContainer.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                }
+            }
+        });
     });
 }
 
@@ -785,10 +832,6 @@ function setupSimulator() {
         COMMON_COSTS: {
             // Custo fixo cobrado se o cliente optar pela criação de um projeto 3D.
             'PROJECT_3D': 350,
-            // Custo por METRO LINEAR de fita de LED instalada.
-            // O cálculo multiplica este valor pela largura total do móvel.
-                // =========================================================================
-            'Iluminação LED': 350,
         },
         // =========================================================================
         // CONFIGURAÇÕES DE CÁLCULO PARA GUARDA-ROUPA
@@ -810,8 +853,9 @@ function setupSimulator() {
             // Custos de ferragens e puxadores para guarda-roupa.
             HARDWARE: {
                 HANDLE_BAR_COST: {
-                        'aluminio': 0, // Custo da barra de alumínio (padrão, já incluso no preço/m²).
-                    'premium': 100.00   // Custo ADICIONAL por BARRA de 3m para puxadores premium (inox, preto, dourado).
+                    'aluminio': 0, // Custo da barra de alumínio (padrão, já incluso no preço/m²).
+                    'inox_cor': 100.00,   // Custo ADICIONAL por BARRA de 3m para puxadores premium (inox, preto, dourado).
+                    'convencional': 15.00 // Custo por unidade
                 },
                 // Comprimento padrão de uma barra de puxador em metros. Usado para calcular quantas barras são necessárias.
                 HANDLE_BAR_LENGTH: 3.0,
@@ -824,8 +868,6 @@ function setupSimulator() {
             EXTRAS_COST: {
                 // Custo FIXO por CADA porta que tiver espelho.
                 'Porta com Espelho': 700,
-                // Custo FIXO por CADA gaveteiro que tiver chave.
-                'Gaveteiro com Chave': 200,
                 // Custo ADICIONAL por UNIDADE (porta ou gaveta) para adicionar amortecedores (soft-close).
                 'HARDWARE_SOFT_CLOSE_PER_UNIT': 80,
             }
@@ -849,18 +891,15 @@ function setupSimulator() {
                 // Custo do PAR de corrediças por GAVETA.
                 SLIDE_COST_PER_DRAWER: 20.00,
                 // Custo por BARRA de 3 metros de puxador perfil.
-                HANDLE_BAR_COST: { 'aluminio': 75.00, 'premium': 100.00 },
+                HANDLE_BAR_COST: { 'aluminio': 75.00, 'inox_cor': 100.00, 'convencional': 15.00 },
                 // Custo ADICIONAL por porta/gaveta ao usar puxador premium (se houver algum custo de mão de obra extra).
                 HANDLE_PREMIUM_EXTRA_PER_UNIT: 6.00,
                 // Comprimento padrão de uma barra de puxador em metros.
                 HANDLE_BAR_LENGTH: 3.0,
                 // Largura média de uma porta/gaveta em metros. Usado para estimar a quantidade de ferragens.
                 UNIT_WIDTH: 0.4,
-            },
-            // Custos de itens extras específicos para cozinha.
+            }, // Custos de itens extras específicos para cozinha.
             EXTRAS_COST: {
-                'Porta-temperos': 350, // Custo FIXO para um porta-temperos embutido.
-                'Lixeira Embutida': 400, // Custo FIXO para uma lixeira embutida.
                 // Custo por METRO LINEAR de armário de pia (balcão inferior).
                 'SINK_CABINET_PER_METER': 450,
                 // Custo por METRO LINEAR de altura da torre quente (para forno/micro-ondas).
@@ -1455,11 +1494,16 @@ function setupSimulator() {
                 if (hingeCost > 0) baseBreakdown.push({ label: hingeLabel, quantity: totalHinges, cost: hingeCost });
             }
 
-            const totalHandleLength = (state.doorType === 'correr' && numDoors >= 2) ? (2 * numDoors - 2) * height : numDoors * height;
-            if (totalHandleLength > 0) {
-                const numBarsNeeded = Math.ceil(totalHandleLength / config.HARDWARE.HANDLE_BAR_LENGTH);
-                const handleCost = numBarsNeeded * config.HARDWARE.HANDLE_BAR_COST.premium;
-                if (handleCost > 0) baseBreakdown.push({ label: `Barras de Puxador Perfil ${state.handleType}`, quantity: numBarsNeeded, cost: handleCost });
+            if (state.handleType === 'convencional') {
+                const cost = numDoors * config.HARDWARE.HANDLE_BAR_COST.convencional;
+                if (cost > 0) baseBreakdown.push({ label: `Puxadores Convencionais`, quantity: numDoors, cost: cost });
+            } else { // Perfil
+                const totalHandleLength = (state.doorType === 'correr' && numDoors >= 2) ? (2 * numDoors - 2) * height : numDoors * height;
+                if (totalHandleLength > 0) {
+                    const numBarsNeeded = Math.ceil(totalHandleLength / config.HARDWARE.HANDLE_BAR_LENGTH);
+                    const handleCost = numBarsNeeded * (config.HARDWARE.HANDLE_BAR_COST[state.handleType] || 0);
+                    if (handleCost > 0) baseBreakdown.push({ label: `Barras de Puxador Perfil ${state.handleType}`, quantity: numBarsNeeded, cost: handleCost });
+                }
             }
         }
 
@@ -1471,8 +1515,7 @@ function setupSimulator() {
 
         state.extras.forEach(extra => {
             const cost = config.EXTRAS_COST[extra] || SIMULATOR_CONFIG.COMMON_COSTS[extra] || 0;
-            const finalCost = (extra === 'Iluminação LED') ? cost * width : cost;
-            if (finalCost > 0) extrasBreakdown.push({ label: extra, cost: finalCost });
+            if (cost > 0) extrasBreakdown.push({ label: extra, cost: cost });
         });
 
         return { baseBreakdown, extrasBreakdown, totalMaterialArea };
@@ -1540,13 +1583,16 @@ function setupSimulator() {
         const totalHandleUnits = numDoors + numDrawers;
         const totalHandleLength = totalHandleUnits * UNIT_WIDTH;
         const numBarsNeeded = Math.ceil(totalHandleLength / config.HARDWARE.HANDLE_BAR_LENGTH);
-
-        if (state.handleType === 'aluminio') {
-            const cost = numBarsNeeded * config.HARDWARE.HANDLE_BAR_COST.aluminio;
+        
+        if (state.handleType === 'convencional') {
+            const cost = totalHandleUnits * config.HARDWARE.HANDLE_BAR_COST.convencional;
+            if (cost > 0) baseBreakdown.push({ label: `Puxadores Convencionais`, quantity: totalHandleUnits, cost: cost });
+        } else if (state.handleType === 'aluminio') {
+            const cost = numBarsNeeded * config.HARDWARE.HANDLE_BAR_COST[state.handleType];
             if (cost > 0) baseBreakdown.push({ label: 'Barras de Puxador Perfil Alumínio', quantity: numBarsNeeded, cost: cost });
-        } else {
-            const cost = (numBarsNeeded * config.HARDWARE.HANDLE_BAR_COST.premium) + (totalHandleUnits * config.HARDWARE.HANDLE_PREMIUM_EXTRA_PER_UNIT);
-            if (cost > 0) baseBreakdown.push({ label: `Barras de Puxador Perfil ${state.handleType}`, quantity: numBarsNeeded, cost: cost });
+        } else if (state.handleType === 'inox_cor') {
+            const cost = (numBarsNeeded * config.HARDWARE.HANDLE_BAR_COST[state.handleType]) + (totalHandleUnits * config.HARDWARE.HANDLE_PREMIUM_EXTRA_PER_UNIT);
+            if (cost > 0) baseBreakdown.push({ label: `Barras de Puxador Perfil Inox/Cor`, quantity: numBarsNeeded, cost: cost });
         }
 
         if (state.projectOption === 'create') {
@@ -1556,8 +1602,7 @@ function setupSimulator() {
 
         state.extras.forEach(extra => {
             const cost = config.EXTRAS_COST[extra] || SIMULATOR_CONFIG.COMMON_COSTS[extra] || 0;
-            const finalCost = (extra === 'Iluminação LED') ? cost * totalWidth : cost;
-            if (finalCost > 0) extrasBreakdown.push({ label: extra, cost: finalCost });
+            if (cost > 0) extrasBreakdown.push({ label: extra, cost: cost });
         });
 
         return { baseBreakdown, extrasBreakdown, totalMaterialArea };
@@ -1999,7 +2044,7 @@ function setupSimulator() {
         if (state.projectOption === 'upload' && state.projectFile) {
             text += '\n\n*(Anexei o arquivo do meu projeto no simulador. Por favor, me informe como posso enviá-lo.)*';
         }
-        window.open(`https://wa.me/5511999999999?text=${encodeURIComponent(text)}`, '_blank');
+        window.open(`https://wa.me/5518997312957?text=${encodeURIComponent(text)}`, '_blank');
     }
 
     function generateEmailLink() {

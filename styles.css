@@ -273,6 +273,11 @@ a:focus {
     transform: scale(0.9);
 }
 
+/* Ícone do botão colapsável */
+.toggle-icon {
+    transition: transform 0.3s ease-in-out;
+}
+
 /* Adiciona um pequeno atraso para elementos filhos, criando um efeito cascata */
 .reveal.revealed .reveal-child-1 { transition-delay: 0.1s; }
 .reveal.revealed .reveal-child-2 { transition-delay: 0.2s; }
