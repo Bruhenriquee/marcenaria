@@ -1,6 +1,185 @@
 // Global variables
 let isMenuOpen = false;
 
+/**
+ * =================================================================
+ * LÓGICA DE CÁLCULO DE PEÇAS E OTIMIZAÇÃO DE CORTE
+ * (Copiado e adaptado do script-pro.js para garantir consistência)
+ * =================================================================
+ */
+
+/**
+ * Splits a large part into smaller pieces if it exceeds the sheet width.
+ * @param {number} width - The width of the part.
+ * @param {number} height - The height of the part.
+ * @param {string} description - The description of the part.
+ * @param {number} sheetWidthLimit - The maximum width of the sheet.
+ * @returns {Array<Object>} An array of part objects.
+ */
+function splitLargePart(width, height, description, sheetWidthLimit = 2750) {
+    if (width <= sheetWidthLimit) {
+        return [{ w: width, h: height, description }];
+    }
+    const numPieces = Math.ceil(width / sheetWidthLimit);
+    const pieceWidth = width / numPieces;
+    return Array.from({ length: numPieces }, (_, i) => ({ w: pieceWidth, h: height, description: `${description} #${i + 1}` }));
+}
+
+function getWardrobeParts(walls, height, depth, numDrawers, hasDoors, numDoors) {
+    const thickness = 15; // MDF thickness in mm
+    const mdf15Parts = [];
+    const mdf3Parts = [];
+
+    const totalWidth = walls.reduce((acc, wall) => acc + wall.width, 0);
+    mdf15Parts.push({ w: height, h: depth, description: 'Lateral Esquerda' });
+    mdf15Parts.push({ w: height, h: depth, description: 'Lateral Direita' });
+    mdf15Parts.push(...splitLargePart(totalWidth, depth, 'Tampo'));
+    mdf15Parts.push(...splitLargePart(totalWidth, depth, 'Base'));
+
+    const internalHeight = height - (2 * thickness);
+    const numModules = Math.ceil(totalWidth / 900);
+    const numDividers = numModules - 1;
+    const internalModuleWidth = (totalWidth - (2 * thickness) - (numDividers * thickness)) / numModules;
+
+    for (let i = 0; i < numDividers; i++) {
+        mdf15Parts.push({ w: internalHeight, h: depth, description: `Divisória ${i+1}` });
+    }
+
+    for (let i = 0; i < numModules; i++) {
+        const numShelves = Math.floor(height / 800);
+        for (let s = 0; s < numShelves; s++) {
+            mdf15Parts.push({ w: internalModuleWidth, h: depth - 20, description: `Prateleira ${i+1}-${s+1}` });
+        }
+    }
+
+    if (hasDoors) {
+        const doorWidth = totalWidth / numDoors;
+        for (let i = 0; i < numDoors; i++) {
+            mdf15Parts.push({ w: doorWidth, h: height, description: 'Porta' });
+        }
+    }
+
+    const drawerWidth = Math.min(500, internalModuleWidth - 40);
+    const drawerDepth = depth - 50;
+    const drawerBoxWidth = drawerWidth - 40;
+    const drawerBoxDepth = drawerDepth - 50;
+
+    for (let i = 0; i < numDrawers; i++) {
+        mdf15Parts.push({ w: drawerWidth, h: 200, description: 'Frente de Gaveta' });
+        mdf15Parts.push({ w: drawerBoxDepth, h: 180, description: 'Lateral de Gaveta' });
+        mdf15Parts.push({ w: drawerBoxDepth, h: 180, description: 'Lateral de Gaveta' });
+        mdf15Parts.push({ w: drawerBoxWidth, h: 180, description: 'Fundo de Gaveta' });
+        mdf3Parts.push({ w: drawerBoxWidth, h: drawerBoxDepth, description: 'Fundo de Gaveta (3mm)' });
+    }
+
+    walls.forEach((wall, index) => {
+        mdf3Parts.push(...splitLargePart(wall.width, height, `Painel de Fundo Parede ${index + 1}`));
+    });
+
+    return { mdf15Parts, mdf3Parts };
+}
+
+function getKitchenParts(walls, numDrawers) {
+    const thickness = 15;
+    const mdf15Parts = [];
+    const mdf3Parts = [];
+    let drawersToCreate = numDrawers;
+
+    walls.forEach(wall => {
+        const { width, height } = wall;
+        const lowerCabinetHeight = 850;
+        const spaceBetween = 650;
+        const upperCabinetHeight = Math.max(0, height - lowerCabinetHeight - spaceBetween);
+        const cabinetDepth = 600;
+
+        if (upperCabinetHeight > 0) {
+            const numUpperCabinets = Math.floor(width / 600);
+            for (let i = 0; i < numUpperCabinets; i++) {
+                const moduleWidth = 600;
+                mdf15Parts.push({ w: moduleWidth, h: cabinetDepth, description: 'Tampo Superior' });
+                mdf15Parts.push({ w: moduleWidth, h: cabinetDepth, description: 'Base Superior' });
+                mdf15Parts.push({ w: upperCabinetHeight - (2 * thickness), h: cabinetDepth, description: 'Lateral Superior' });
+                mdf15Parts.push({ w: upperCabinetHeight - (2 * thickness), h: cabinetDepth, description: 'Lateral Superior' });
+                mdf15Parts.push({ w: moduleWidth - 4, h: upperCabinetHeight - 4, description: 'Porta Superior' });
+                mdf3Parts.push({ w: moduleWidth, h: upperCabinetHeight, description: 'Fundo Superior' });
+            }
+        }
+
+        const numLowerCabinets = Math.floor(width / 600);
+        for (let i = 0; i < numLowerCabinets; i++) {
+            const moduleWidth = 600;
+            const moduleDepth = cabinetDepth;
+            const moduleHeight = lowerCabinetHeight;
+
+            mdf15Parts.push({ w: moduleWidth, h: moduleDepth, description: 'Travessa Inferior' });
+            mdf15Parts.push({ w: moduleWidth, h: moduleDepth, description: 'Base Inferior' });
+            mdf15Parts.push({ w: moduleHeight - thickness, h: moduleDepth, description: 'Lateral Inferior' });
+            mdf15Parts.push({ w: moduleHeight - thickness, h: moduleDepth, description: 'Lateral Inferior' });
+            mdf3Parts.push({ w: moduleWidth, h: moduleHeight, description: 'Fundo Inferior' });
+
+            if (drawersToCreate > 0) {
+                const numDrawersInModule = Math.min(drawersToCreate, 3);
+                const drawerFrontHeight = (moduleHeight - (numDrawersInModule * 4)) / numDrawersInModule;
+                const drawerBoxHeight = drawerFrontHeight - 20;
+
+                for (let d = 0; d < numDrawersInModule; d++) {
+                    const drawerBoxWidth = moduleWidth - 40;
+                    const drawerBoxDepth = moduleDepth - 50;
+                    mdf15Parts.push({ w: moduleWidth - 4, h: drawerFrontHeight, description: 'Frente de Gaveta' });
+                    mdf15Parts.push({ w: drawerBoxWidth, h: drawerBoxHeight, description: 'Lateral de Gaveta' });
+                    mdf15Parts.push({ w: drawerBoxWidth, h: drawerBoxHeight, description: 'Lateral de Gaveta' });
+                    mdf15Parts.push({ w: drawerBoxWidth, h: drawerBoxHeight, description: 'Fundo de Gaveta' });
+                    mdf3Parts.push({ w: drawerBoxWidth, h: drawerBoxDepth, description: 'Fundo de Gaveta (3mm)' });
+                }
+                drawersToCreate -= numDrawersInModule;
+            } else {
+                mdf15Parts.push({ w: moduleWidth - 4, h: moduleHeight - 4, description: 'Porta Inferior' });
+            }
+        }
+    });
+
+    return { mdf15Parts, mdf3Parts };
+}
+
+function optimizeCutting(parts, sheetWidth, sheetHeight) {
+    if (!parts || parts.length === 0) return [];
+
+    const processedParts = parts.map(part => {
+        const newPart = { ...part };
+        if (newPart.h > sheetHeight && newPart.h <= sheetWidth && newPart.w <= sheetHeight) {
+            [newPart.w, newPart.h] = [newPart.h, newPart.w];
+            newPart.rotated = true;
+        }
+        return newPart;
+    });
+
+    processedParts.sort((a, b) => Math.max(b.w, b.h) - Math.max(a.w, a.h));
+
+    const sheets = [];
+    let remainingParts = processedParts.map(p => ({ ...p }));
+
+    while (remainingParts.length > 0) {
+        const packer = new Packer(sheetWidth, sheetHeight);
+        const packedParts = [];
+        const unpackedParts = [];
+        packer.fit(remainingParts);
+        remainingParts.forEach(part => {
+            if (part.fit) packedParts.push(part);
+            else {
+                delete part.fit;
+                unpackedParts.push(part);
+            }
+        });
+        if (packedParts.length === 0 && unpackedParts.length > 0) {
+            console.warn("Não foi possível encaixar as peças restantes:", unpackedParts);
+            break;
+        }
+        if (packedParts.length > 0) sheets.push(packedParts);
+        remainingParts = unpackedParts;
+    }
+    return sheets;
+}
+
 // =================================================================
 // DOM Elements
 // =================================================================
@@ -13,35 +192,28 @@ const contactForm = document.getElementById('contact-form');
 const fileInput = document.getElementById('attachment');
 
 
-
-
-// Initialize when DOM is loaded
 document.addEventListener('DOMContentLoaded', function() {
     initializeApp();
 });
 
-// Main initialization function
 function initializeApp() {
-    // Setup all interactive components of the site
     setupMobileMenu();
     setupScrollEffects();
-    // Add smooth scrolling to all anchor links
     setupSmoothScrolling();
     setupContactForm();
-    // Initialize AOS-like animations
     setupCollapsibleSections();
     observeElements();    
     setupGalleryLightbox();
     setupPdfViewer();    setupTermsModal();
     setupOtherFurnitureModal();
-    setupSimulator(); // Re-ativando o simulador da página inicial
+    setupSimulator();
+    setupInstagramModal();
     setupLazyLoading();
-    setupActiveNavLinks(); // Highlight active nav link on scroll
+    setupActiveNavLinks();
 
     console.log('Roni Marceneiro website initialized successfully!');
 }
 
-// Mobile menu functionality
 function setupMobileMenu() {
     if (mobileMenuToggle && mobileMenu) {
         mobileMenuToggle.addEventListener('click', (e) => {
@@ -49,18 +221,15 @@ function setupMobileMenu() {
             isMenuOpen ? closeMobileMenu() : openMobileMenu();
         });
 
-        // Close menu when clicking on links
         const mobileLinks = mobileMenu.querySelectorAll('a, button');
         mobileLinks.forEach(link => {
             link.addEventListener('click', closeMobileMenu);
         });
         
-        // Impede que cliques dentro do menu mobile o fechem imediatamente
         mobileMenu.addEventListener('click', (e) => {
             e.stopPropagation();
         });
 
-        // Close menu when clicking on the overlay
         if (pageOverlay) {
             pageOverlay.addEventListener('click', closeMobileMenu);
         }
@@ -74,11 +243,9 @@ function openMobileMenu() {
     const barsIcon = mobileMenuToggle.querySelector('.fa-bars');
     const timesIcon = mobileMenuToggle.querySelector('.fa-times');
 
-    // Animate icons
     barsIcon.classList.add('opacity-0', 'scale-50', 'rotate-90');
     timesIcon.classList.remove('opacity-0', 'scale-50');
 
-    // Show menu
     mobileMenu.classList.remove('translate-x-full');
     mobileMenu.classList.add('is-open'); // For staggered animations
     pageOverlay.classList.remove('opacity-0', 'invisible');
@@ -93,7 +260,6 @@ function closeMobileMenu() {
     const barsIcon = mobileMenuToggle.querySelector('.fa-bars');
     const timesIcon = mobileMenuToggle.querySelector('.fa-times');
 
-    // Animate icons back
     barsIcon.classList.remove('opacity-0', 'scale-50', 'rotate-90');
     timesIcon.classList.add('opacity-0', 'scale-50');
 
@@ -104,7 +270,6 @@ function closeMobileMenu() {
     document.body.style.overflow = 'auto';
 }
 
-// Scroll effects
 function setupScrollEffects() {
     const handleScroll = () => {
         if (isMenuOpen) return; // Ignore scroll effects when menu is open
@@ -113,7 +278,6 @@ function setupScrollEffects() {
 
         if (header) {
             const isScrolled = currentScrollY > 50;
-            // When scrolled, it's shrunk.
             header.classList.toggle('header-shrunk', isScrolled);
         }
     };
@@ -124,7 +288,6 @@ function setupScrollEffects() {
     window.addEventListener('scroll', handleScroll);
 }
 
-// Smooth scrolling functionality
 function setupSmoothScrolling() {
     const links = document.querySelectorAll('a[href^="#"]');
     
@@ -143,7 +306,6 @@ function setupSmoothScrolling() {
                     behavior: 'smooth'
                 });
                 
-                // Close mobile menu if open
                 if (isMenuOpen) {
                     closeMobileMenu();
                 }
@@ -152,7 +314,6 @@ function setupSmoothScrolling() {
     });
 }
 
-// Scroll to section function (used by buttons)
 function scrollToSection(sectionId) {
     const targetElement = document.getElementById(sectionId);
     if (targetElement) {
@@ -166,7 +327,6 @@ function scrollToSection(sectionId) {
     }
 }
 
-// Contact form functionality
 function setupContactForm() {
     if (contactForm) {
         contactForm.addEventListener('submit', handleContactFormSubmit);
@@ -194,7 +354,6 @@ function setupContactForm() {
 async function handleContactFormSubmit(e) {
     e.preventDefault();
 
-    // --- Validação do Arquivo ---
     if (fileInput && fileInput.files.length > 0) {
         const file = fileInput.files[0];
         const MAX_SIZE = 5 * 1024 * 1024; // 5MB
@@ -210,7 +369,6 @@ async function handleContactFormSubmit(e) {
             return;
         }
     }
-    // --- Fim da Validação ---
 
     
     const requiredInputs = contactForm.querySelectorAll('[required]');
@@ -229,7 +387,6 @@ async function handleContactFormSubmit(e) {
     const submitButton = contactForm.querySelector('button[type="submit"]');
     const originalText = submitButton.innerHTML;
     
-    // Show loading state
     submitButton.innerHTML = '<div class="spinner mr-2"></div>Enviando...';
     submitButton.disabled = true;
     
@@ -257,13 +414,11 @@ async function handleContactFormSubmit(e) {
     } catch (error) {
         showNotification('Ocorreu um erro de rede. Verifique sua conexão e tente novamente.', 'error');
     } finally {
-        // Reset button
         submitButton.innerHTML = originalText;
         submitButton.disabled = false;
     }
 }
 
-// Notification system
 function showNotification(message, type = 'info') {
     const notification = document.createElement('div');
     notification.className = `
@@ -290,12 +445,10 @@ function showNotification(message, type = 'info') {
     
     document.body.appendChild(notification);
     
-    // Animate in
     setTimeout(() => {
         notification.style.transform = 'translateX(0)';
     }, 100);
     
-    // Auto remove after 5 seconds
     setTimeout(() => {
         notification.style.transform = 'translateX(100%)';
         setTimeout(() => {
@@ -306,7 +459,6 @@ function showNotification(message, type = 'info') {
     }, 5000);
 }
 
-// Function to animate numbers
 function animateCounter(element, start, end, duration, suffix = '') {
     let startTime = null;
 
@@ -322,16 +474,13 @@ function animateCounter(element, start, end, duration, suffix = '') {
     requestAnimationFrame(animation);
 }
 
-// Intersection Observer for animations
 function observeElements() {
     const observer = new IntersectionObserver((entries, observer) => {
         entries.forEach(entry => {
             if (entry.isIntersecting) {
-                // Only act if the element has not been revealed yet
                 if (!entry.target.classList.contains('revealed')) {
                     entry.target.classList.add('revealed');
     
-                    // Check for counters inside the revealed element
                     const counters = entry.target.querySelectorAll('.counter');
                     counters.forEach(counter => {
                         if (counter.dataset.animated === 'true') return;
@@ -348,14 +497,12 @@ function observeElements() {
         rootMargin: '0px 0px -50px 0px'
     });
     
-    // Observe elements for animation
     const elementsToAnimate = document.querySelectorAll('.reveal');
     elementsToAnimate.forEach(element => {
         observer.observe(element);
     });
 }
 
-// Collapsible sections for mobile
 function setupCollapsibleSections() {
     const toggles = document.querySelectorAll('.collapsible-toggle-btn');
     const openBtnContainer = document.getElementById('collapsible-open-btn-container');
@@ -366,7 +513,6 @@ function setupCollapsibleSections() {
 
         if (contents.length === 0) return;
 
-        // Adjust initial state for mobile
         if (window.innerWidth < 768) {
             contents.forEach(content => content.classList.add('hidden', 'md:block'));
         } else {
@@ -374,19 +520,16 @@ function setupCollapsibleSections() {
         }
 
         toggle.addEventListener('click', () => {
-            // Check the state of the first content element to decide the action
             const isCurrentlyHidden = contents[0].classList.contains('hidden');
 
             contents.forEach(content => {
                 content.classList.toggle('hidden', !isCurrentlyHidden);
             });
 
-            // Hide the "open" button when content is shown, and show it when content is hidden
             if (openBtnContainer) {
                 openBtnContainer.classList.toggle('hidden', isCurrentlyHidden);
             }
 
-            // Scroll to the top of the first content section when opening
             if (isCurrentlyHidden) {
                 setTimeout(() => {
                     contents[0].scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -401,7 +544,6 @@ function setupCollapsibleSections() {
     });
 }
 
-// Service/Portfolio Filter
 function setupServiceFilters() {
     const filtersContainer = document.getElementById('service-filters');
     const servicesGrid = document.getElementById('services-grid');
@@ -417,22 +559,18 @@ function setupServiceFilters() {
 
         const filter = targetButton.dataset.filter;
 
-        // Update active button
         filterButtons.forEach(btn => btn.classList.remove('active'));
         targetButton.classList.add('active');
 
-        // Filter cards
         serviceCards.forEach(card => {
             const category = card.dataset.category;
             const shouldShow = filter === 'all' || category === filter;
             
-            // The 'hidden' class from Tailwind handles display:none
             card.classList.toggle('hidden', !shouldShow);
         });
     });
 }
 
-// Gallery Lightbox functionality
 function setupGalleryLightbox() {
     const projectItems = document.querySelectorAll('[data-gallery-project]');
     const lightbox = document.getElementById('gallery-lightbox');
@@ -489,7 +627,7 @@ function setupGalleryLightbox() {
     function closeLightbox() {
         lightbox.classList.add('hidden');
         document.body.style.overflow = 'auto';
-        thumbnailsContainer.innerHTML = ''; // Clean up
+        thumbnailsContainer.innerHTML = '';
     }
 
     function showNext() {
@@ -527,7 +665,6 @@ function setupGalleryLightbox() {
     });
 }
 
-// PDF Viewer Modal Logic
 function setupPdfViewer() {
     const pdfModal = document.getElementById('pdf-viewer-modal');
     const closeBtn = document.getElementById('pdf-viewer-close');
@@ -550,11 +687,10 @@ function setupPdfViewer() {
 
     const closePdfViewer = () => {
         pdfModal.classList.add('hidden');
-        pdfIframe.src = ''; // Stop loading PDF to save resources
+        pdfIframe.src = '';
         document.body.style.overflow = 'auto';
     };
 
-    // Use event delegation on the document body
     document.body.addEventListener('click', (e) => {
         const trigger = e.target.closest('[data-pdf-src]');
         if (trigger) {
@@ -572,7 +708,6 @@ function setupPdfViewer() {
     });
 }
 
-// Terms Modal Logic
 function setupTermsModal() {
     const termsModal = document.getElementById('terms-modal');
     if (!termsModal) return;
@@ -592,7 +727,7 @@ function setupTermsModal() {
 
     openTriggers.forEach(trigger => {
         trigger.addEventListener('click', (e) => {
-            e.preventDefault(); // Prevent default link behavior if it's an <a>
+            e.preventDefault();
             openModal();
         });
     });
@@ -612,7 +747,6 @@ function setupTermsModal() {
     });
 }
 
-// Other Furniture Modal Logic
 function setupOtherFurnitureModal() {
     const modal = document.getElementById('other-furniture-modal');
     if (!modal) return;
@@ -651,7 +785,43 @@ function setupOtherFurnitureModal() {
     });
 }
 
-// Active navigation link highlighting on scroll
+function setupInstagramModal() {
+    const modal = document.getElementById('instagram-modal');
+    if (!modal) return;
+
+    const openBtn = document.getElementById('open-instagram-modal-btn');
+    const closeBtn = document.getElementById('instagram-modal-close');
+    const iframe = document.getElementById('instagram-iframe');
+    const instagramUrl = "https://www.instagram.com/roni.marceneiro/embed";
+
+    const openModal = () => {
+        iframe.src = instagramUrl;
+        modal.classList.remove('hidden');
+        document.body.style.overflow = 'hidden';
+    };
+
+    const closeModal = () => {
+        modal.classList.add('hidden');
+        iframe.src = ""; // Limpa o src para parar o carregamento
+        document.body.style.overflow = 'auto';
+    };
+
+    if (openBtn) {
+        openBtn.addEventListener('click', openModal);
+    }
+
+    if (closeBtn) {
+        closeBtn.addEventListener('click', closeModal);
+    }
+
+    modal.addEventListener('click', (e) => {
+        if (e.target === modal) {
+            closeModal();
+        }
+    });
+}
+
+
 function setupActiveNavLinks() {
     const sections = document.querySelectorAll('section[id]');
     const navLinks = document.querySelectorAll('header nav a.nav-link');
@@ -664,19 +834,16 @@ function setupActiveNavLinks() {
             const navLink = document.querySelector(`header nav a[href="#${id}"]`);
             
             if (navLink && entry.isIntersecting) {
-                // Remove 'active' from all links
                 navLinks.forEach(link => link.classList.remove('active'));
-                // Add 'active' to the intersecting one
                 navLink.classList.add('active');
             }
         });
     }, {
-        rootMargin: '-50% 0px -50% 0px', // Trigger when the section is in the middle of the viewport
+        rootMargin: '-50% 0px -50% 0px',
     });
 
     sections.forEach(section => observer.observe(section));
 }
-// Lazy loading for images
 function setupLazyLoading() {
     const images = document.querySelectorAll('img[loading="lazy"]');
     
@@ -695,20 +862,15 @@ function setupLazyLoading() {
     }
 }
 
-// Error handling
 window.addEventListener('error', (e) => {
     console.error('JavaScript Error:', e.error);
-    // In production, you might want to send this to an error tracking service
 });
 
-// SEO and Analytics helpers
 function trackEvent(eventName, parameters = {}) {
-    // Google Analytics 4 event tracking
     if (typeof gtag !== 'undefined') {
         gtag('event', eventName, parameters);
     }
     
-    // Console log for development
     console.log('Event tracked:', eventName, parameters);
 }
 
@@ -731,7 +893,6 @@ document.addEventListener('click', (e) => {
             });
         }
         
-        // Track WhatsApp clicks
         if (href && href.includes('wa.me')) {
             trackEvent('whatsapp_click', {
                 source: 'float_button'
@@ -740,7 +901,6 @@ document.addEventListener('click', (e) => {
     }
 });
 
-// Track form submissions
 document.addEventListener('submit', (e) => {
     const form = e.target;
     const formId = form.id || 'unknown_form';
@@ -751,25 +911,8 @@ document.addEventListener('submit', (e) => {
     });
 });
 
-// Service Worker registration (for PWA capabilities)
-// O arquivo sw.js não existe, então registrar um Service Worker causará um erro 404.
-// Comentado para evitar o erro e melhorar a performance.
-// if ('serviceWorker' in navigator) {
-//     window.addEventListener('load', () => {
-//         navigator.serviceWorker.register('/sw.js')
-//             .then(registration => {
-//                 console.log('SW registered: ', registration);
-//             })
-//             .catch(registrationError => {
-//                 console.log('SW registration failed: ', registrationError);
-//             });
-//     });
-// }
-
-// Export functions for global access
 window.scrollToSection = scrollToSection;
 
-// Phone mask function
 function maskPhone(event) {
     const input = event.target;
     let value = input.value.replace(/\D/g, '');
@@ -793,6 +936,7 @@ function setupSimulator() {
         dimensions: { height: 2.7, depth: 60, walls: [{width: 3.0, height: 2.7}] },
         wardrobeFormat: null,
         material: null,
+        numDrawers: 4, // Adicionado para consistência
         kitchenHasSinkCabinet: null,
         sinkStoneWidth: 1.8,
         hasHotTower: null,
@@ -813,7 +957,7 @@ function setupSimulator() {
 
     // --- DOM ELEMENTS ---
     const disclaimerCheckbox = document.getElementById('accept-disclaimer-checkbox');
-    if (!disclaimerCheckbox) return; // Don't run if simulator HTML is not on the page
+    if (!disclaimerCheckbox) return;
     
     const simulatorOverlay = document.getElementById('simulator-overlay');
     const steps = document.querySelectorAll('.form-step');
@@ -822,45 +966,34 @@ function setupSimulator() {
     const progressBarLines = document.querySelectorAll('.progress-line');
 
     // --- INITIALIZATION ---
-    // --- CONFIGURATION OBJECT ---
-    // Valores PADRÃO de custo. Na versão PRO, esses valores são sobrescritos pelos inputs do painel.
     const SIMULATOR_CONFIG = {
-        // =========================================================================
-        // CUSTOS COMUNS (Aplicável a Guarda-Roupa e Cozinha)
-        // Na versão PRO, a margem de lucro é adicionada sobre estes custos.
-        // =========================================================================
+        MDF_FUNDO_COST: 140, // Custo da chapa de fundo (3mm)
+        EDGE_TAPE_COST_PER_METER: 2.5, // Custo da fita de borda por metro
+        MDF_3MM_SHEET_SIZE: 5.09, // Tamanho da chapa de 3mm
+
         COMMON_COSTS: {
             // Custo fixo cobrado se o cliente optar pela criação de um projeto 3D.
             'PROJECT_3D': 350,
         },
-        // =========================================================================
-        // CONFIGURAÇÕES DE CÁLCULO PARA GUARDA-ROUPA
-        // =========================================================================
         WARDROBE: {
-            // O preço do guarda-roupa é calculado com base na ÁREA FRONTAL (largura x altura).
-            // O preço por m² é usado como base para o custo de produção.
-            PRODUCTION_COST_PER_M2: 450, // Custo de fabricação, montagem, etc. por m² de área frontal.
             // Preço por CHAPA de MDF.
             MDF_SHEET_PRICING: {
                 'Branco': 240,
                 'Premium': 400,
             },
-            // Fator de multiplicação para estimar a área total de material (carcaça, prateleiras) a partir da área frontal.
-            // Ex: 2.5 significa que a área total de MDF é 2.5x a área frontal.
-            MATERIAL_AREA_MULTIPLIER: 2.5,
             // Área total de uma chapa de MDF (padrão 2.75m * 1.85m = 5.0875 m²). Usado para estimar a quantidade de chapas.
             MDF_SHEET_SIZE: 5.09,
             // Custos de ferragens e puxadores para guarda-roupa.
             HARDWARE: {
                 HANDLE_BAR_COST: {
-                    'aluminio': 0, // Custo da barra de alumínio (padrão, já incluso no preço/m²).
-                    'inox_cor': 100.00,   // Custo ADICIONAL por BARRA de 3m para puxadores premium (inox, preto, dourado).
+                    'aluminio': 75.00,
+                    'inox_cor': 100.00,
                     'convencional': 15.00 // Custo por unidade
                 },
                 // Comprimento padrão de uma barra de puxador em metros. Usado para calcular quantas barras são necessárias.
                 HANDLE_BAR_LENGTH: 3.0,
                 // Custo por UNIDADE de dobradiça. O sistema calcula a quantidade com base na altura da porta.
-                HINGE_COST_PER_UNIT: { 'padrao': 5.00, 'softclose': 20.00 },
+                HINGE_COST_PER_UNIT: { 'padrao': 2.50, 'softclose': 5.00 }, // Alinhado com o PRO
                 // Custo do PAR de corrediças por GAVETA.
                 SLIDE_COST_PER_DRAWER: 20.00,
             },
@@ -868,13 +1001,8 @@ function setupSimulator() {
             EXTRAS_COST: {
                 // Custo FIXO por CADA porta que tiver espelho.
                 'Porta com Espelho': 700,
-                // Custo ADICIONAL por UNIDADE (porta ou gaveta) para adicionar amortecedores (soft-close).
-                'HARDWARE_SOFT_CLOSE_PER_UNIT': 80,
             }
         },
-        // =========================================================================
-        // CONFIGURAÇÕES DE CÁLCULO PARA COZINHA
-        // =========================================================================
         KITCHEN: {
             // O preço da cozinha é calculado com base no CUSTO DAS CHAPAS de MDF.
             // Defina aqui o preço por CHAPA para cada tipo de material.
@@ -887,7 +1015,7 @@ function setupSimulator() {
             // Custos detalhados de ferragens e puxadores.
             HARDWARE: {
                 // Custo por UNIDADE de dobradiça. Para cozinhas, o padrão é 2 por porta.
-                HINGE_COST_PER_UNIT: { 'padrao': 5.00, 'softclose': 20.00 },
+                HINGE_COST_PER_UNIT: { 'padrao': 2.50, 'softclose': 5.00 }, // Alinhado com o PRO
                 // Custo do PAR de corrediças por GAVETA.
                 SLIDE_COST_PER_DRAWER: 20.00,
                 // Custo por BARRA de 3 metros de puxador perfil.
@@ -910,14 +1038,10 @@ function setupSimulator() {
 
     function init() {
         setupEventListeners();
-        // Recalculate height on window resize to handle responsive changes. Debounce is defined inline.
         window.addEventListener('resize', debounce(updateContainerHeight, 200));
-        updateUI(false); // Pass false to prevent scrolling on initial load
+        updateUI(false);
     }
 
-    /**
-     * Utility function to limit the rate at which a function gets called.
-     */
     function debounce(func, wait) {
         let timeout;
         return function executedFunction(...args) {
@@ -935,7 +1059,6 @@ function setupSimulator() {
     }
     function setupEventListeners() {
         disclaimerCheckbox.addEventListener('change', handleDisclaimer);
-        // Event delegation for navigation buttons
         document.getElementById('simulator-content').addEventListener('click', (e) => {
             if (e.target.closest('.next-btn')) {
                 handleNextStep();
@@ -954,12 +1077,10 @@ function setupSimulator() {
         document.querySelectorAll('input[name="furnitureType"]').forEach(radio => {
             radio.addEventListener('change', (e) => {
                 updateStateAndSave({ furnitureType: e.target.value });
-                // This function will now also trigger a height update
                 updateUIForFurnitureType();
             });
         });
 
-        // Step 2: Dimensions
         document.querySelectorAll('#wardrobe-dims input').forEach(input => {
             input.addEventListener('input', updateDimensionsState);
         });
@@ -969,7 +1090,6 @@ function setupSimulator() {
         document.getElementById('add-wall-btn').addEventListener('click', addKitchenWall);
         document.getElementById('add-wardrobe-wall-btn').addEventListener('click', addWardrobeWall);
 
-        // Step 2.1: Wardrobe Format
         document.querySelectorAll('input[name="wardrobeFormat"]').forEach(radio => {
             radio.addEventListener('change', (e) => {
                 updateStateAndSave({ wardrobeFormat: e.target.value });
@@ -978,7 +1098,6 @@ function setupSimulator() {
             });
         });
 
-        // Step 2.2: Closet Doors
         document.querySelectorAll('input[name="closetDoors"]').forEach(radio => {
             radio.addEventListener('change', (e) => {
                 updateStateAndSave({ closetHasDoors: e.target.value === 'sim' });
@@ -988,7 +1107,6 @@ function setupSimulator() {
             });
         });
 
-        // Step 2: Kitchen Sink
         document.querySelectorAll('input[name="kitchenSink"]').forEach(radio => {
             radio.addEventListener('change', (e) => {
                 updateStateAndSave({ kitchenHasSinkCabinet: e.target.value === 'sim' });
@@ -997,7 +1115,6 @@ function setupSimulator() {
             });
         });
 
-        // Step 2: Kitchen Hot Tower
         document.querySelectorAll('input[name="hasHotTower"]').forEach(radio => {
             radio.addEventListener('change', (e) => {
                 updateStateAndSave({ hasHotTower: e.target.value === 'sim' });
@@ -1005,7 +1122,6 @@ function setupSimulator() {
             });
         });
 
-        // Step 2: Kitchen Stove Type
         document.querySelectorAll('input[name="stoveType"]').forEach(radio => {
             radio.addEventListener('change', (e) => {
                 updateStateAndSave({ stoveType: e.target.value });
@@ -1014,14 +1130,12 @@ function setupSimulator() {
             });
         });
 
-        // Step 2: Cooktop Location
         document.querySelectorAll('input[name="cooktopLocation"]').forEach(radio => {
             radio.addEventListener('change', (e) => {
                 updateStateAndSave({ cooktopLocation: e.target.value });
             });
         });
 
-        // Step 6 (old Step 5): 3D Project
         document.querySelectorAll('input[name="projectOption"]').forEach(radio => {
             radio.addEventListener('change', (e) => {
                 updateStateAndSave({ projectOption: e.target.value });
@@ -1043,7 +1157,6 @@ function setupSimulator() {
             }
         });
 
-        // Step 3: Material
         document.querySelectorAll('input[name="material"]').forEach(radio => {
             radio.addEventListener('change', (e) => {
                 updateStateAndSave({ material: e.target.value });
@@ -1054,51 +1167,52 @@ function setupSimulator() {
         });
         document.getElementById('customColor').addEventListener('input', (e) => updateStateAndSave({ customColor: e.target.value }));
 
-        // Step 4: Door Type (Wardrobe)
+        const numDrawersInput = document.getElementById('numDrawers');
+        if (numDrawersInput) {
+            numDrawersInput.addEventListener('input', (e) => {
+                updateStateAndSave({
+                    numDrawers: parseInt(e.target.value) || 0
+                });
+            });
+        }
+        const kitchenNumDrawersInput = document.getElementById('kitchenNumDrawers');
+        if (kitchenNumDrawersInput) {
+            kitchenNumDrawersInput.addEventListener('input', (e) => {
+                updateStateAndSave({
+                    numDrawers: parseInt(e.target.value) || 0
+                });
+            });
+        }
         document.querySelectorAll('input[name="doorType"]').forEach(radio => {
             radio.addEventListener('change', (e) => {
                 updateStateAndSave({ doorType: e.target.value });
             });
         });
 
-        // Step 4: Hardware Type
         document.querySelectorAll('input[name="hardwareType"]').forEach(radio => {
             radio.addEventListener('change', (e) => {
                 updateStateAndSave({ hardwareType: e.target.value });
             });
         });
-        // Step 4: Handle Type
         document.querySelectorAll('input[name="handleType"]').forEach(radio => {
             radio.addEventListener('change', (e) => {
                 updateStateAndSave({ handleType: e.target.value });
             });
         });
-        // Step 4: Extras
         document.querySelectorAll('input[name="extras"]').forEach(checkbox => {
             checkbox.addEventListener('change', () => {
                 updateStateAndSave({ extras: Array.from(document.querySelectorAll('input[name="extras"]:checked')).map(cb => cb.value) });
             });
         });
         
-        // Step 6: Lead Capture & Result
         document.getElementById('view-quote-btn').addEventListener('click', handleViewQuote);
         document.getElementById('pdf-btn').addEventListener('click', generatePDF);
         document.getElementById('whatsapp-btn').addEventListener('click', generateWhatsAppLink);
         document.getElementById('email-btn').addEventListener('click', generateEmailLink);
-
-        // Step 6: Breakdown toggle
-        const toggleBtn = document.getElementById('toggle-breakdown-btn');
-        const breakdownDiv = document.getElementById('result-breakdown');
-        toggleBtn.addEventListener('click', () => {
-            const isHidden = breakdownDiv.classList.toggle('hidden');
-            toggleBtn.querySelector('i').classList.toggle('rotate-180', !isHidden);
-            updateContainerHeight();
-        });
     }
 
     // --- UI & NAVIGATION ---
     function handleDisclaimer() {
-        // Add a check to prevent errors if the element is not found
         if (simulatorOverlay && disclaimerCheckbox) {
             simulatorOverlay.classList.toggle('is-hidden', disclaimerCheckbox.checked);
         }
@@ -1133,7 +1247,7 @@ function setupSimulator() {
             resetState();
             resetFormUI();
             currentStep = 1; 
-            updateUI(false); // Vai para o passo 1 sem scroll
+            updateUI(false);
             handleDisclaimer(); // Re-aplica o overlay
         }
     }
@@ -1144,13 +1258,11 @@ function setupSimulator() {
             const isActive = stepNumber === currentStep;
             step.classList.toggle('active', isActive);
 
-            // Correctly show/hide the previous button within the active step
             const prevButton = step.querySelector('.prev-btn');
             if (prevButton) {
                 prevButton.classList.toggle('hidden', currentStep === 1);
             } 
 
-            // When returning to the last step, show the lead form again
             if (stepNumber === totalSteps && isActive) {
                 document.getElementById('lead-capture-form').classList.remove('hidden');
                 document.getElementById('result-container').classList.add('hidden');
@@ -1163,10 +1275,8 @@ function setupSimulator() {
             line.classList.toggle('active', index < currentStep - 1);
         });
 
-        // Adjust container height after the correct step is made active
         updateContainerHeight();
 
-        // Scroll to the top of the simulator section for better UX
         if (shouldScroll) { // Check the parameter before scrolling
             const simulatorSection = document.getElementById('simulador');
             if (simulatorSection) {
@@ -1182,10 +1292,8 @@ function setupSimulator() {
         document.getElementById('wardrobe-options').classList.toggle('hidden', !isWardrobe);
         document.getElementById('kitchen-options').classList.toggle('hidden', isWardrobe);
 
-        // Explicitly manage handle section visibility when furniture type changes
         const handleTypeSection = document.getElementById('handle-type-section');
         if (isWardrobe) {
-            // For wardrobe, its visibility depends on whether it's an open closet, which is handled in updateWardrobeSubSteps
             updateWardrobeSubSteps();
         } else { // For Kitchen, it should always be visible in step 4
             handleTypeSection.classList.remove('hidden');
@@ -1205,20 +1313,16 @@ function setupSimulator() {
         document.getElementById('closet-door-step').classList.toggle('hidden', !isCloset);
         document.getElementById('add-wardrobe-wall-btn').classList.toggle('hidden', !isCloset);
 
-        // Hide handle selection if it's an open closet
         const handleTypeSection = document.getElementById('handle-type-section');
         handleTypeSection.classList.toggle('hidden', isCloset && !state.closetHasDoors);
         
-        // Hide door type selection if it's an open closet
         const doorTypeSection = document.getElementById('door-type-section');
         const isClosetOpen = isCloset && !state.closetHasDoors;
         doorTypeSection.classList.toggle('hidden', isClosetOpen);
 
-        // Hide mirror door option if it's an open closet
         const mirrorDoorOption = document.getElementById('extra-mirror-door');
         if (mirrorDoorOption) {
             mirrorDoorOption.classList.toggle('hidden', isClosetOpen);
-            // If it's hidden, also uncheck it and remove from state
             if (isClosetOpen) {
                 const mirrorCheckbox = mirrorDoorOption.querySelector('input[type="checkbox"]');
                 if (mirrorCheckbox.checked) {
@@ -1232,7 +1336,6 @@ function setupSimulator() {
     function updateKitchenSubSteps() {
         const hasSinkCabinet = state.kitchenHasSinkCabinet;
         document.getElementById('sink-stone-width-container').classList.toggle('hidden', !hasSinkCabinet);
-        // No need to call updateContainerHeight here, the event listener that calls this function will do it.
     }
 
     function addWardrobeWall() {
@@ -1295,22 +1398,20 @@ function setupSimulator() {
         if (wallEntry) {
             const container = wallEntry.parentElement;
             wallEntry.remove();
-            updateDimensionsState(); // Recalculate state
+            updateDimensionsState();
             
             if (container.id === 'wardrobe-walls-container') {
                 document.getElementById('add-wardrobe-wall-btn').classList.remove('hidden');
             } else if (container.id === 'kitchen-walls-container') {
                 document.getElementById('add-wall-btn').classList.remove('hidden');
             }
-            updateContainerHeight(); // Adjust container height
+            updateContainerHeight();
         }
     }
 
     function updateContainerHeight() {
         const activeStep = document.querySelector('.form-step.active');
         if (activeStep) {
-            // Use a small timeout to allow the DOM to update (e.g., for smooth-toggle animations to start)
-            // before measuring the new height.
             setTimeout(() => {
                 if (stepsContainer) { // Check if container exists
                     stepsContainer.style.height = `${activeStep.offsetHeight}px`;
@@ -1325,14 +1426,21 @@ function setupSimulator() {
             const height = parseFloat(document.getElementById('wardrobe-height').value) || 0;
             state.dimensions.walls = widths.map(w => ({ width: w, height: height }));
             state.dimensions.height = height;
+        const numDrawersInput = document.getElementById('numDrawers');
+        if (numDrawersInput) {
+            state.numDrawers = parseInt(numDrawersInput.value) || 0;
+        }
             updateWardrobeRecommendation();
         } else {
             const widths = Array.from(document.querySelectorAll('input[name="kitchen-wall-width"]')).map(input => parseFloat(input.value) || 0);
             const heights = Array.from(document.querySelectorAll('input[name="kitchen-wall-height"]')).map(input => parseFloat(input.value) || 0);
             state.dimensions.walls = widths.map((w, i) => ({ width: w, height: heights[i] || 0 }));
             state.sinkStoneWidth = parseFloat(document.getElementById('sinkStoneWidth').value) || 0;
+        const kitchenNumDrawersInput = document.getElementById('kitchenNumDrawers');
+        if (kitchenNumDrawersInput) {
+            state.numDrawers = parseInt(kitchenNumDrawersInput.value) || 0;
         }
-        // Save state after dimension update
+        }
     }
 
     function validateStep(step) {
@@ -1360,6 +1468,10 @@ function setupSimulator() {
                 }
                 if (state.wardrobeFormat === null) {
                     showNotification('Por favor, escolha o formato do projeto.', 'error');
+                    return false;
+                }
+                if (state.wardrobeFormat === 'closet' && state.closetHasDoors === null) {
+                    showNotification('Informe se o seu closet terá portas.', 'error');
                     return false;
                 }
             } else { // Cozinha
@@ -1404,11 +1516,15 @@ function setupSimulator() {
                     showNotification('Por favor, escolha o tipo de puxador.', 'error');
                     return false;
                 }
-            } else { // Cozinha
+            } else { // Cozinha (valida puxador sempre)
                 if (!state.handleType) {
                     showNotification('Por favor, escolha o tipo de puxador.', 'error');
                     return false;
                 }
+            }
+            if (!state.hardwareType) {
+                showNotification('Por favor, escolha o tipo de acabamento interno (ferragens).', 'error');
+                return false;
             }
         }
         if (step === 5 && !state.projectOption) {
@@ -1434,7 +1550,6 @@ function setupSimulator() {
             return;
         }
 
-        // Simple logic: hinged doors ~50cm, sliding doors ~100cm. Minimum of 2 doors.
         const hingedDoors = Math.max(2, Math.round(width / 0.45));
         const slidingDoors = Math.max(2, Math.round(width / 1.0));
 
@@ -1443,81 +1558,116 @@ function setupSimulator() {
         updateContainerHeight();
     }
 
+    function calculateEdgeTapeCost(parts) {
+        const totalPerimeter = parts.reduce((acc, part) => acc + 2 * (part.w + part.h), 0) / 1000; // em metros
+        const edgeTapeUsageFactor = 0.7; // Fator realista: assume que ~70% das bordas recebem fita.
+        const edgeTapeCost = totalPerimeter * edgeTapeUsageFactor * SIMULATOR_CONFIG.EDGE_TAPE_COST_PER_METER;
+        if (edgeTapeCost > 0) {
+            return { label: 'Fita de Borda', quantity: Math.round(totalPerimeter * edgeTapeUsageFactor), cost: edgeTapeCost };
+        }
+        return null;
+    }
+
     function calculateWardrobeQuote() {
         const config = SIMULATOR_CONFIG.WARDROBE;
-
         const { height } = state.dimensions;
         const width = state.dimensions.walls.reduce((acc, wall) => acc + wall.width, 0);
-        const frontArea = width * height;
         const hasDoors = !(state.wardrobeFormat === 'closet' && !state.closetHasDoors);
 
-        // Lógica aprimorada para quantidade de dobradiças por porta, com base na altura.
+        state.numDrawers = Math.max(2, Math.floor(width * 2));
+
         let hingesPerDoor = 2; // Mínimo
-        if (height > 1.5) hingesPerDoor = 3;
-        if (height > 2.0) hingesPerDoor = 4;
-        if (height > 2.5) hingesPerDoor = 5;
-
-        const baseBreakdown = [];
-        const extrasBreakdown = [];
-
-        // 1. MDF Cost
-        const totalMaterialArea = frontArea * config.MATERIAL_AREA_MULTIPLIER;
-        if (state.material === 'Mesclada') {
-            // Lógica aprimorada: MDF Premium para a área frontal (portas) e Branco para a estrutura interna.
-            const internalArea = frontArea * (config.MATERIAL_AREA_MULTIPLIER - 1);
-            const numWhiteSheets = Math.ceil(internalArea / config.MDF_SHEET_SIZE);
-            const numColoredSheets = Math.ceil(frontArea / config.MDF_SHEET_SIZE);
-
-            if (numWhiteSheets > 0) baseBreakdown.push({ label: 'Chapas de MDF Branco (Interno)', quantity: numWhiteSheets, cost: numWhiteSheets * config.MDF_SHEET_PRICING['Branco'] });
-            if (numColoredSheets > 0) baseBreakdown.push({ label: 'Chapas de MDF Premium (Portas)', quantity: numColoredSheets, cost: numColoredSheets * config.MDF_SHEET_PRICING['Premium'] });
-        } else {
-            const numSheets = Math.ceil(totalMaterialArea / config.MDF_SHEET_SIZE);
-            const mdfCost = numSheets * config.MDF_SHEET_PRICING[state.material];
-            const materialLabel = state.material === 'Branco' ? 'Chapas de MDF Branco' : 'Chapas de MDF Premium';
-            if (mdfCost > 0) baseBreakdown.push({ label: materialLabel, quantity: numSheets, cost: mdfCost });
-        }
-
-        // 2. Hardware Cost (Hinges, Slides, Handles)
-        const numDrawers = Math.floor(width * 2); // Estimate: 2 drawers per meter of width
-        const slideCost = numDrawers * config.HARDWARE.SLIDE_COST_PER_DRAWER;
-        if (slideCost > 0) baseBreakdown.push({ label: 'Pares de Corrediças de Gaveta', quantity: numDrawers, cost: slideCost });
+        if (height > 1.5) hingesPerDoor = 3; // Lógica de dobradiças alinhada com o PRO
+        if (height > 2.0) hingesPerDoor = 4; // Lógica de dobradiças alinhada com o PRO
+        if (height > 2.5) hingesPerDoor = 5; // Lógica de dobradiças alinhada com o PRO
 
         let numDoors = 0;
         if (hasDoors) {
             if (state.doorType === 'correr') {
                 numDoors = Math.max(2, Math.round(width / 1.0));
             } else { // 'abrir'
-                numDoors = Math.max(2, Math.round(width / 0.45));
+                numDoors = Math.max(2, Math.round(width / 0.50));
+            }
+        }
+
+        const baseBreakdown = [];
+        const extrasBreakdown = [];
+
+        // 1. Custo de MDF (usando otimizador de corte)
+        const { mdf15Parts: allParts, mdf3Parts: backAndBottomParts } = getWardrobeParts(state.dimensions.walls.map(w => ({ width: w.width * 1000, height: w.height * 1000 })), height * 1000, state.dimensions.depth * 10, state.numDrawers, hasDoors, numDoors);
+        let sheets = [];
+
+        if (state.material === 'Mesclada') {
+            let premiumParts;
+            let whiteParts;
+
+            if (hasDoors) {
+                premiumParts = allParts.filter(p => p.description.includes('Porta'));
+                whiteParts = allParts.filter(p => !p.description.includes('Porta'));
+            } else {
+                premiumParts = allParts.filter(p => p.description.includes('Frente de Gaveta'));
+                whiteParts = allParts.filter(p => !p.description.includes('Frente de Gaveta'));
+            }
+            const premiumSheets = optimizeCutting(premiumParts, 2750, 1850);
+            const whiteSheets = optimizeCutting(whiteParts, 2750, 1850);
+            
+            if (whiteSheets.length > 0) baseBreakdown.push({ label: 'Chapas de MDF Branco (Interno)', quantity: whiteSheets.length, cost: whiteSheets.length * config.MDF_SHEET_PRICING['Branco'] });
+            if (premiumSheets.length > 0) baseBreakdown.push({ label: 'Chapas de MDF Premium (Frentes)', quantity: premiumSheets.length, cost: premiumSheets.length * config.MDF_SHEET_PRICING['Premium'] });
+        } else {
+            sheets = optimizeCutting(allParts, 2750, 1850);
+            const mdfCost = sheets.length * config.MDF_SHEET_PRICING[state.material];
+            const materialLabel = state.material === 'Branco' ? 'Chapas de MDF Branco' : 'Chapas de MDF Premium';
+            if (mdfCost > 0) baseBreakdown.push({ label: materialLabel, quantity: sheets.length, cost: mdfCost });
+        }
+
+        const total3mmArea = backAndBottomParts.reduce((acc, part) => acc + (part.w * part.h), 0) / 1000000; // em m²
+        const numBackPanelSheets = Math.ceil(total3mmArea / 5.09); // 5.09m² é a área da chapa
+        if (numBackPanelSheets > 0) {
+            baseBreakdown.push({ label: 'Chapas de Fundo (3mm)', quantity: numBackPanelSheets, cost: numBackPanelSheets * SIMULATOR_CONFIG.MDF_FUNDO_COST });
+        }
+
+        const numDrawers = state.numDrawers;
+        const slideCost = numDrawers * config.HARDWARE.SLIDE_COST_PER_DRAWER;
+        if (slideCost > 0) baseBreakdown.push({ label: 'Pares de Corrediças de Gaveta', quantity: numDrawers, cost: slideCost });
+
+        if (hasDoors) {
+            if (state.doorType === 'abrir') {
                 const totalHinges = numDoors * hingesPerDoor;
-                const hingeCost = totalHinges * config.HARDWARE.HINGE_COST_PER_UNIT[state.hardwareType];
+                const hingeCost = totalHinges * (config.HARDWARE.HINGE_COST_PER_UNIT[state.hardwareType] || config.HARDWARE.HINGE_COST_PER_UNIT['padrao']);
                 const hingeLabel = state.hardwareType === 'softclose' ? 'Dobradiças Soft-close' : 'Dobradiças Padrão';
                 if (hingeCost > 0) baseBreakdown.push({ label: hingeLabel, quantity: totalHinges, cost: hingeCost });
             }
 
             if (state.handleType === 'convencional') {
                 const cost = numDoors * config.HARDWARE.HANDLE_BAR_COST.convencional;
-                if (cost > 0) baseBreakdown.push({ label: `Puxadores Convencionais`, quantity: numDoors, cost: cost });
+                if (cost > 0) baseBreakdown.push({ label: 'Puxadores Convencionais', quantity: numDoors, cost: cost });
             } else { // Perfil
                 const totalHandleLength = (state.doorType === 'correr' && numDoors >= 2) ? (2 * numDoors - 2) * height : numDoors * height;
                 if (totalHandleLength > 0) {
                     const numBarsNeeded = Math.ceil(totalHandleLength / config.HARDWARE.HANDLE_BAR_LENGTH);
-                    const handleCost = numBarsNeeded * (config.HARDWARE.HANDLE_BAR_COST[state.handleType] || 0);
-                    if (handleCost > 0) baseBreakdown.push({ label: `Barras de Puxador Perfil ${state.handleType}`, quantity: numBarsNeeded, cost: handleCost });
+                    let handleCost = 0;
+                    if (state.handleType === 'aluminio') handleCost = numBarsNeeded * config.HARDWARE.HANDLE_BAR_COST.aluminio;
+                    if (state.handleType === 'inox_cor') handleCost = numBarsNeeded * config.HARDWARE.HANDLE_BAR_COST.inox_cor;
+                    const label = state.handleType === 'aluminio' ? 'Barras de Puxador Perfil Alumínio' : 'Barras de Puxador Perfil Inox/Cor';
+                    if (handleCost > 0) baseBreakdown.push({ label: label, quantity: numBarsNeeded, cost: handleCost });
                 }
             }
         }
 
-        // 4. Optional Extras
+        const edgeTapeBreakdown = calculateEdgeTapeCost(allParts);
+        if (edgeTapeBreakdown) baseBreakdown.push(edgeTapeBreakdown);
+
         if (state.projectOption === 'create') {
             const cost = SIMULATOR_CONFIG.COMMON_COSTS.PROJECT_3D;
             if (cost > 0) extrasBreakdown.push({ label: 'Criação do Projeto 3D', cost });
         }
 
         state.extras.forEach(extra => {
-            const cost = config.EXTRAS_COST[extra] || SIMULATOR_CONFIG.COMMON_COSTS[extra] || 0;
+            const cost = config.EXTRAS_COST[extra] || 0;
             if (cost > 0) extrasBreakdown.push({ label: extra, cost: cost });
         });
 
+        const totalMaterialArea = allParts.reduce((acc, part) => acc + (part.w * part.h), 0) / 1000000;
         return { baseBreakdown, extrasBreakdown, totalMaterialArea };
     }
 
@@ -1525,27 +1675,32 @@ function setupSimulator() {
         const config = SIMULATOR_CONFIG.KITCHEN;
         const baseBreakdown = [];
         const extrasBreakdown = [];
+        const numDrawers = state.numDrawers;
 
-        // Material area calculation
-        const totalFrontArea = state.dimensions.walls.reduce((acc, wall) => acc + (wall.width * wall.height), 0);
-        const cabinetDepth = 0.6;
-        const totalCarcassArea = totalFrontArea * 1.2;
-        const totalInternalArea = totalFrontArea * 1.0;
-        const totalMaterialArea = totalFrontArea + totalCarcassArea + totalInternalArea;
+        state.numDrawers = Math.max(2, Math.floor(state.dimensions.walls.reduce((acc, wall) => acc + wall.width, 0) * 2));
 
-        // 1. MDF Cost
+        const { mdf15Parts: parts, mdf3Parts: backAndBottomParts } = getKitchenParts(state.dimensions.walls.map(wall => ({ width: wall.width * 1000, height: wall.height * 1000 })), numDrawers);
+        let sheets = [];
+
         if (state.material === 'Mesclada') {
-            const numWhiteSheets = Math.ceil((totalCarcassArea + totalInternalArea) / config.MDF_SHEET_SIZE);
-            const numColoredSheets = Math.ceil(totalFrontArea / config.MDF_SHEET_SIZE);
-            if (numWhiteSheets > 0) baseBreakdown.push({ label: 'Chapas de MDF Branco', quantity: numWhiteSheets, cost: numWhiteSheets * config.MDF_SHEET_PRICING['Branco'] });
-            if (numColoredSheets > 0) baseBreakdown.push({ label: 'Chapas de MDF Premium', quantity: numColoredSheets, cost: numColoredSheets * config.MDF_SHEET_PRICING['Premium'] });
+            const frontParts = parts.filter(p => p.description.includes('Porta') || p.description.includes('Frente de Gaveta'));
+            const carcassParts = parts.filter(p => !p.description.includes('Porta') && !p.description.includes('Frente de Gaveta'));
+            const premiumSheets = optimizeCutting(frontParts, 2750, 1850);
+            const whiteSheets = optimizeCutting(carcassParts, 2750, 1850);
+            if (whiteSheets.length > 0) baseBreakdown.push({ label: 'Chapas de MDF Branco (Interno)', quantity: whiteSheets.length, cost: whiteSheets.length * config.MDF_SHEET_PRICING['Branco'] });
+            if (premiumSheets.length > 0) baseBreakdown.push({ label: 'Chapas de MDF Premium (Frentes)', quantity: premiumSheets.length, cost: premiumSheets.length * config.MDF_SHEET_PRICING['Premium'] });
         } else {
-            const numSheets = Math.ceil(totalMaterialArea / config.MDF_SHEET_SIZE);
-            const mdfCost = numSheets * config.MDF_SHEET_PRICING[state.material];
-            if (mdfCost > 0) baseBreakdown.push({ label: `Chapas de MDF ${state.material}`, quantity: numSheets, cost: mdfCost });
+            sheets = optimizeCutting(parts, 2750, 1850);
+            const mdfCost = sheets.length * config.MDF_SHEET_PRICING[state.material];
+            if (mdfCost > 0) baseBreakdown.push({ label: `Chapas de MDF ${state.material}`, quantity: sheets.length, cost: mdfCost });
         }
 
-        // --- Extras Calculation ---
+        const total3mmArea = backAndBottomParts.reduce((acc, part) => acc + (part.w * part.h), 0) / 1000000; // em m²
+        const numBackPanelSheets = Math.ceil(total3mmArea / 5.09); // 5.09m² é a área da chapa
+        if (numBackPanelSheets > 0) {
+            baseBreakdown.push({ label: 'Chapas de Fundo (3mm)', quantity: numBackPanelSheets, cost: numBackPanelSheets * SIMULATOR_CONFIG.MDF_FUNDO_COST });
+        }
+
         if (state.kitchenHasSinkCabinet && state.sinkStoneWidth > 0) {
             const sinkCabinetWidth = Math.max(0, state.sinkStoneWidth - 0.05);
             const cost = sinkCabinetWidth * config.EXTRAS_COST.SINK_CABINET_PER_METER;
@@ -1558,42 +1713,34 @@ function setupSimulator() {
             if (cost > 0) extrasBreakdown.push({ label: 'Torre Quente', cost });
         }
 
-        const totalWidth = state.dimensions.walls.reduce((acc, wall) => acc + wall.width, 0);
-        let lowerCabinetWidth = totalWidth;
-        if (state.stoveType === 'piso') { lowerCabinetWidth -= 0.75; }
-        const upperCabinetWidth = totalWidth;
-        const UNIT_WIDTH = config.HARDWARE.UNIT_WIDTH;
-        const lowerUnits = Math.max(0, lowerCabinetWidth) / UNIT_WIDTH;
-        const upperUnits = upperCabinetWidth / UNIT_WIDTH;
-        const totalUnits = Math.ceil(lowerUnits + upperUnits) + (state.hasHotTower ? 2 : 0);
-        const numDoors = Math.round(totalUnits * 0.75);
-        const numDrawers = totalUnits - numDoors;
-
-        // Lógica de dobradiças aprimorada para cozinha (padrão de 2 por porta)
+        const numDoors = parts.filter(p => p.description.includes('Porta')).length;
         const hingesPerDoor = 2;
         const totalHinges = numDoors * hingesPerDoor;
-        const hingeCost = totalHinges * config.HARDWARE.HINGE_COST_PER_UNIT[state.hardwareType];
+        const hingeCost = totalHinges * (config.HARDWARE.HINGE_COST_PER_UNIT[state.hardwareType] || config.HARDWARE.HINGE_COST_PER_UNIT['padrao']);
         const hingeLabel = state.hardwareType === 'softclose' ? 'Dobradiças Soft-close' : 'Dobradiças Padrão';
         if (hingeCost > 0) baseBreakdown.push({ label: hingeLabel, quantity: totalHinges, cost: hingeCost });
 
-        const slideCostPerDrawer = config.HARDWARE.SLIDE_COST_PER_DRAWER;
-        const slideCost = numDrawers * slideCostPerDrawer;
+        const slideCost = numDrawers * config.HARDWARE.SLIDE_COST_PER_DRAWER;
         if (slideCost > 0) baseBreakdown.push({ label: 'Pares de Corrediças de Gaveta', quantity: numDrawers, cost: slideCost });
 
         const totalHandleUnits = numDoors + numDrawers;
+        const UNIT_WIDTH = config.HARDWARE.UNIT_WIDTH;
         const totalHandleLength = totalHandleUnits * UNIT_WIDTH;
         const numBarsNeeded = Math.ceil(totalHandleLength / config.HARDWARE.HANDLE_BAR_LENGTH);
         
         if (state.handleType === 'convencional') {
             const cost = totalHandleUnits * config.HARDWARE.HANDLE_BAR_COST.convencional;
-            if (cost > 0) baseBreakdown.push({ label: `Puxadores Convencionais`, quantity: totalHandleUnits, cost: cost });
+            if (cost > 0) baseBreakdown.push({ label: 'Puxadores Convencionais', quantity: totalHandleUnits, cost: cost });
         } else if (state.handleType === 'aluminio') {
             const cost = numBarsNeeded * config.HARDWARE.HANDLE_BAR_COST[state.handleType];
             if (cost > 0) baseBreakdown.push({ label: 'Barras de Puxador Perfil Alumínio', quantity: numBarsNeeded, cost: cost });
         } else if (state.handleType === 'inox_cor') {
             const cost = (numBarsNeeded * config.HARDWARE.HANDLE_BAR_COST[state.handleType]) + (totalHandleUnits * config.HARDWARE.HANDLE_PREMIUM_EXTRA_PER_UNIT);
-            if (cost > 0) baseBreakdown.push({ label: `Barras de Puxador Perfil Inox/Cor`, quantity: numBarsNeeded, cost: cost });
+            if (cost > 0) baseBreakdown.push({ label: 'Barras de Puxador Perfil Inox/Cor', quantity: numBarsNeeded, cost: cost });
         }
+
+        const edgeTapeBreakdown = calculateEdgeTapeCost(parts);
+        if (edgeTapeBreakdown) baseBreakdown.push(edgeTapeBreakdown);
 
         if (state.projectOption === 'create') {
             const cost = SIMULATOR_CONFIG.COMMON_COSTS.PROJECT_3D;
@@ -1605,6 +1752,7 @@ function setupSimulator() {
             if (cost > 0) extrasBreakdown.push({ label: extra, cost: cost });
         });
 
+        const totalMaterialArea = parts.reduce((acc, part) => acc + (part.w * part.h), 0) / 1000000;
         return { baseBreakdown, extrasBreakdown, totalMaterialArea };
     }
 
@@ -1620,11 +1768,8 @@ function setupSimulator() {
         const basePrice = baseBreakdown.reduce((acc, item) => acc + item.cost, 0);
         const extrasPrice = extrasBreakdown.reduce((acc, item) => acc + item.cost, 0);
 
-        // --- LÓGICA DE PRECIFICAÇÃO ALINHADA COM O SIMULADOR PRO ---
-        // Aplica um multiplicador sobre o custo de material/ferragens para incluir mão de obra e lucro.
-        // O valor é sutilmente maior que o padrão do Simulador Pro (2.0) para criar uma margem de negociação sem assustar o cliente.
-        const multiplier = 2.1; 
-        const finalTotal = (basePrice * multiplier) + extrasPrice;
+        const randomMarginMultiplier = parseFloat((Math.random() * (2.20 - 2.06) + 2.06).toFixed(3));
+        const finalTotal = (basePrice * randomMarginMultiplier) + extrasPrice;
 
         const sheetSize = state.furnitureType === 'Cozinha' ? SIMULATOR_CONFIG.KITCHEN.MDF_SHEET_SIZE : SIMULATOR_CONFIG.WARDROBE.MDF_SHEET_SIZE;
         
@@ -1645,6 +1790,7 @@ function setupSimulator() {
             dimensions: { height: 2.7, depth: 60, walls: [{width: 3.0, height: 2.7}] },
             material: null,
             doorType: null,
+            numDrawers: 4,
             wardrobeFormat: null,
             closetHasDoors: null,
             kitchenHasSinkCabinet: null,
@@ -1664,14 +1810,12 @@ function setupSimulator() {
     }
 
     function resetFormUI() {
-        // Uncheck all radio buttons and checkboxes within the simulator
         document.querySelectorAll('#simulador input[type="radio"], #simulador input[type="checkbox"]').forEach(input => {
             if (!input.closest('#accept-disclaimer-checkbox')) { // Don't reset the disclaimer
                 input.checked = false;
             }
         });
 
-        // Reset specific input values to their defaults
         document.getElementById('wardrobe-width1').value = 3.0;
         document.getElementById('wardrobe-height').value = 2.7;
         const wardrobeWallsContainer = document.getElementById('wardrobe-walls-container');
@@ -1679,6 +1823,8 @@ function setupSimulator() {
         document.getElementById('add-wardrobe-wall-btn').classList.remove('hidden');
         document.getElementById('sinkStoneWidth').value = 1.8;
         document.getElementById('cooktop-location-step').classList.add('hidden');
+        document.getElementById('numDrawers').value = 4;
+        document.getElementById('kitchenNumDrawers').value = 4;
         document.getElementById('kitchen-wall-width1').value = 2.2;
         document.getElementById('kitchen-wall-height1').value = 2.7;
 
@@ -1692,7 +1838,7 @@ function setupSimulator() {
         document.getElementById('project-file-name').textContent = 'Escolher arquivo do projeto';
         document.getElementById('leadName').value = '';
         document.getElementById('leadEmail').value = '';
-        document.getElementById('leadPhone').value = ''; // This line was duplicated, removing one.
+        document.getElementById('leadPhone').value = '';
         disclaimerCheckbox.checked = false;
     }
 
@@ -1703,13 +1849,11 @@ function setupSimulator() {
         const leadPhoneInput = document.getElementById('leadPhone');
         const leadEmailInput = document.getElementById('leadEmail');
 
-        // Reset previous validation styles and add listeners to remove them on input
         [leadNameInput, leadPhoneInput, leadEmailInput].forEach(input => {
             input.classList.remove('invalid');
             input.addEventListener('input', () => input.classList.remove('invalid'), { once: true });
         });
 
-        // 1. Validate inputs
         Object.assign(state.customer, { name: leadNameInput.value, email: leadEmailInput.value, phone: leadPhoneInput.value });
 
         if (!state.customer.name) {
@@ -1725,7 +1869,6 @@ function setupSimulator() {
             return;
         }
 
-        // --- Validação Avançada de Celular (Brasil) ---
         const phoneDigits = state.customer.phone.replace(/\D/g, '');
         if (phoneDigits.length !== 11) {
             showNotification('Por favor, insira um WhatsApp válido com DDD (11 dígitos).', 'error');
@@ -1771,16 +1914,22 @@ function setupSimulator() {
             leadEmailInput.focus();
             return;
         }
+        if (state.customer.email) {
+            const emailDomain = state.customer.email.split('@')[1];
+            if (DISPOSABLE_DOMAINS.includes(emailDomain.toLowerCase())) {
+                showNotification('Por favor, utilize um e-mail válido e permanente, não um endereço temporário.', 'error');
+                leadEmailInput.classList.add('invalid');
+                leadEmailInput.focus();
+                return;
+            }
+        }
 
-        // --- If validation passes, show loading and proceed ---
         viewQuoteBtn.disabled = true;
         viewQuoteBtn.innerHTML = '<div class="spinner mr-2"></div>Calculando...';
 
-        // Use a small timeout to allow the UI to update before heavy calculation
         await new Promise(resolve => setTimeout(resolve, 100));
 
         try {
-            // FIX: Default hardwareType if not selected to prevent calculation errors.
             if (!state.hardwareType) {
                 updateStateAndSave({ hardwareType: 'padrao' });
             }
@@ -1789,7 +1938,7 @@ function setupSimulator() {
             renderResult();
             document.getElementById('lead-capture-form').classList.add('hidden');
             document.getElementById('result-container').classList.remove('hidden');
-            updateContainerHeight(); // Ajusta a altura do container para mostrar o resultado
+            updateContainerHeight();
         } catch (error) {
             console.error("Error calculating quote:", error);
             showNotification('Ocorreu um erro ao calcular o orçamento. Tente novamente.', 'error');
@@ -1803,7 +1952,7 @@ function setupSimulator() {
         const specsContainer = document.getElementById('result-specs');
         if (!specsContainer) return;
 
-        specsContainer.innerHTML = ''; // Clear previous results
+        specsContainer.innerHTML = '';
 
         const createSpecCard = (icon, label, value) => {
             if (!value) return ''; // Don't create a card if the value is null/empty
@@ -1828,7 +1977,6 @@ function setupSimulator() {
         specsHTML += createSpecCard('fa-ruler-combined', 'Dimensões', dimsText);
         specsHTML += createSpecCard('fa-palette', 'Material', state.material);
 
-        // Wardrobe specific details
         if (state.furnitureType === 'Guarda-Roupa') {
             let formatText = state.wardrobeFormat === 'reto' ? 'Reto' : 'Closet';
             if (state.wardrobeFormat === 'closet') {
@@ -1842,7 +1990,6 @@ function setupSimulator() {
             }
         }
 
-        // Common details
         const hasDoors = state.furnitureType === 'Cozinha' || (state.wardrobeFormat === 'reto' || (state.wardrobeFormat === 'closet' && state.closetHasDoors));
         if (hasDoors) {
             specsHTML += createSpecCard('fa-grip-horizontal', 'Puxador', `Perfil ${state.handleType.charAt(0).toUpperCase() + state.handleType.slice(1)}`);
@@ -1854,103 +2001,156 @@ function setupSimulator() {
 
         specsContainer.innerHTML = specsHTML;
 
-        // Update total and breakdown
-        const baseListContainer = document.getElementById('base-price-breakdown-list');
-        const extrasListContainer = document.getElementById('extras-breakdown-list');
-
         document.getElementById('result-total').textContent = `R$ ${state.quote.total.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
         
-        baseListContainer.innerHTML = ''; // Clear previous
-        if (state.quote.baseBreakdown && state.quote.baseBreakdown.length > 0) {
-            let baseHTML = '<h5 class="font-semibold text-charcoal mb-2">Componentes do Projeto:</h5><div class="pl-4 border-l-2 border-gold/50 space-y-2">';
-            state.quote.baseBreakdown.forEach(item => {
-                const quantityText = item.quantity ? `<span class="text-gray-500 text-xs">(Qtd. Aprox: ${item.quantity})</span>` : '';
-                baseHTML += `
-                    <div class="flex justify-between items-center text-sm">
-                        <span class="text-gray-600">${item.label} ${quantityText}</span>
-                        <span class="font-semibold text-charcoal">R$ ${item.cost.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</span>
-                    </div>
-                `;
+        const memorialStructure = document.getElementById('memorial-structure');
+        const memorialHardware = document.getElementById('memorial-hardware');
+        const memorialServices = document.getElementById('memorial-services');
+
+        if (memorialStructure && memorialHardware && memorialServices) {
+            let materialDescription = '';
+            if (state.material === 'Branco') {
+                materialDescription = 'Projeto 100% em MDF Branco TX, garantindo um visual clean, durável e de fácil limpeza.';
+            } else if (state.material === 'Mesclada') {
+                materialDescription = `Estrutura interna em MDF Branco TX e frentes no padrão MDF Premium ${state.customColor ? `(${state.customColor})` : '(cor a definir)'}, combinando economia e design sofisticado.`;
+            } else { // Premium
+                materialDescription = `Projeto 100% no padrão MDF Premium ${state.customColor ? `(${state.customColor})` : '(cor a definir)'}, para um acabamento exclusivo e de alto padrão.`;
+            }
+            memorialStructure.textContent = materialDescription;
+
+            const hardwareDescription = state.hardwareType === 'softclose' 
+                ? 'Ferragens de alto padrão com sistema de amortecimento (soft-close) nas dobradiças das portas, proporcionando um fechamento suave e silencioso.'
+                : 'Ferragens de alta resistência, com dobradiças e corrediças que garantem o funcionamento perfeito do seu móvel por muitos anos.';
+            memorialHardware.textContent = hardwareDescription;
+
+            memorialServices.textContent = 'Sua proposta inclui nossa consultoria completa, visita técnica para medição de precisão, entrega, montagem por equipe própria e garantia total de 5 anos.';
+        }
+
+        const qualityChecklistContainer = document.getElementById('quality-checklist');
+        const extrasContainer = document.getElementById('result-extras');
+
+        if (qualityChecklistContainer && extrasContainer) {
+            let checklistHTML = '<h5 class="font-semibold text-charcoal mb-3">O que está incluso:</h5><div class="space-y-2">';
+            const checklistItems = new Set();
+
+            if (state.quote.baseBreakdown && state.quote.baseBreakdown.length > 0) {
+                checklistItems.add('Estrutura 100% em MDF de alta densidade');
+                checklistItems.add('Fundo protetor em chapa de 3mm');
+                checklistItems.add(`Dobradiças de alta resistência ${state.hardwareType === 'softclose' ? 'com amortecimento' : ''}`);
+                checklistItems.add('Corrediças metálicas para gavetas');
+                if (state.handleType) {
+                    checklistItems.add(`Puxadores modelo ${state.handleType.charAt(0).toUpperCase() + state.handleType.slice(1)}`);
+                }
+            }
+
+            checklistItems.forEach(item => {
+                checklistHTML += `
+                    <div class="flex items-center gap-2 text-gray-700">
+                        <i class="fas fa-check-circle text-green-500"></i>
+                        <span>${item}</span>
+                    </div>`;
             });
-            baseListContainer.innerHTML = baseHTML + '</div>';
+            checklistHTML += '</div>';
+            qualityChecklistContainer.innerHTML = checklistHTML;
+
+            let extrasHTML = '<h5 class="font-semibold text-charcoal mb-2">Serviços Adicionais:</h5><ul class="space-y-1 text-gray-600">';
+            if (state.quote.extrasBreakdown && state.quote.extrasBreakdown.length > 0) {
+                state.quote.extrasBreakdown.forEach(item => {
+                    extrasHTML += `
+                        <li class="flex justify-between">
+                            <span>${item.label}</span>
+                            <strong class="text-charcoal">+ R$ ${item.cost.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</strong>
+                        </li>
+                    `;
+                });
+            } else {
+                extrasHTML += '<li>Nenhum serviço adicional selecionado.</li>';
+            }
+            extrasHTML += '</ul>';
+            extrasContainer.innerHTML = extrasHTML;
         }
 
-        extrasListContainer.innerHTML = ''; // Clear previous
-        if (state.quote.extrasBreakdown && state.quote.extrasBreakdown.length > 0) {
-            let extrasHTML = '<h5 class="font-semibold text-charcoal mb-2">Acabamentos e Personalização:</h5>';
-            state.quote.extrasBreakdown.forEach(item => {
-                extrasHTML += `
-                    <div class="flex justify-between items-center text-sm">
-                        <span class="text-gray-600">${item.label}</span>
-                        <span class="font-semibold text-charcoal">+ R$ ${item.cost.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</span>
-                    </div>
-                `;
-            });
-            extrasListContainer.innerHTML = extrasHTML;
+    }
+
+    function getDescriptiveMemorialAsText() {
+        let materialDescription = '';
+        if (state.material === 'Branco') {
+            materialDescription = 'Projeto 100% em MDF Branco TX.';
+        } else if (state.material === 'Mesclada') {
+            materialDescription = `Estrutura interna em MDF Branco e frentes no padrão *${state.customColor || 'a definir'}*.`;
+        } else { // Premium
+            materialDescription = `Projeto 100% no padrão MDF Premium *${state.customColor || 'a definir'}*.`;
         }
 
-        // Update visual breakdown bar
-        const basePriceBar = document.getElementById('base-price-bar');
-        const extrasPriceBar = document.getElementById('extras-price-bar');
-        const totalForBar = state.quote.basePrice + state.quote.extrasPrice;
+        const hardwareDescription = state.hardwareType === 'softclose' 
+            ? 'Dobradiças com amortecimento (soft-close).'
+            : 'Ferragens de alta resistência.';
 
-        if (basePriceBar && extrasPriceBar && totalForBar > 0) {
-            const basePercentage = (state.quote.basePrice / totalForBar) * 100;
-            basePriceBar.style.width = `${basePercentage}%`;
-            extrasPriceBar.style.width = `${100 - basePercentage}%`;
-            extrasPriceBar.style.left = `${basePercentage}%`;
-        }
+        const handleName = state.handleType ? `Perfil ${state.handleType.charAt(0).toUpperCase() + state.handleType.slice(1)}` : 'Não aplicável';
+
+        return `
+*Memorial Descritivo do Projeto:*
+- *Material:* ${materialDescription}
+- *Acabamento Interno:* ${hardwareDescription}
+- *Puxadores:* ${handleName}.
+- *Itens Adicionais:* ${state.extras.join(', ') || 'Nenhum'}.
+`;
+    }
+
+    function getServicesAndClosingAsText(total) {
+        const formatCurrency = (value) => `R$ ${value.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+        return `
+*Serviços e Garantia:*
+Sua proposta inclui nossa consultoria completa, visita técnica para medição de precisão, entrega, montagem por equipe própria e a limpeza do ambiente após a instalação. Oferecemos garantia total de 5 anos para móveis e ferragens.
+
+---------------------------------
+*Proposta de Investimento: ${formatCurrency(total)}*
+
+Esta proposta foi elaborada para oferecer a melhor combinação de qualidade, design e durabilidade. Para garantir estas condições, basta me confirmar por aqui para formalizarmos o seu pedido. Fico à disposição!
+`;
     }
 
     function getQuoteAsText() {
-        let dimsText = '';
+        const formatCurrency = (value) => `R$ ${value.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+
+        let projectSummary = `*Resumo do Projeto:*\n`;
+        projectSummary += `---------------------------------\n`;
+        projectSummary += `*Ambiente e Medidas:*\n`;
+        projectSummary += `- *Tipo:* ${state.furnitureType}\n`;
+
         if (state.furnitureType === 'Guarda-Roupa') {
-            dimsText = `Paredes: ${state.dimensions.walls.map(w => w.width).join('m + ')}m | Altura: ${state.dimensions.height}m`;
-        } else { // Cozinha
-            dimsText = state.dimensions.walls.map(w => `${w.width}m x ${w.height}m`).join(' | ');
-        }
-        let details = `*Dimensões:* ${dimsText}`;
-        let kitchenDetails = '';
-        let formatDetails = '';
-        if (state.furnitureType === 'Guarda-Roupa') {
+            projectSummary += `- *Largura Total:* ${state.dimensions.walls.map(w => w.width).join('m + ')}m\n`;
+            projectSummary += `- *Altura:* ${state.dimensions.height}m\n`;
             if (state.wardrobeFormat === 'closet') {
-                formatDetails = `\n*Formato:* Closet ${state.closetHasDoors ? 'Fechado' : 'Aberto'}`;
-            }
-            if (state.closetHasDoors) {
-                formatDetails += `\n*Tipo de Porta:* ${state.doorType === 'abrir' ? 'De Abrir' : 'De Correr'}`;
+                projectSummary += `- *Formato:* Closet ${state.closetHasDoors ? 'Fechado' : 'Aberto'}\n`;
             }
         } else { // Cozinha
-            if (state.kitchenHasSinkCabinet) {
-                kitchenDetails = `\n*Armário de Pia:* Sim (para pedra de ${state.sinkStoneWidth}m)`;
-            }
-            if (state.hasHotTower) {
-                kitchenDetails += `\n*Torre Quente:* Sim`;
-            }
-            if (state.stoveType === 'cooktop') {
-                const location = state.cooktopLocation === 'pia' ? 'na pedra da pia' : 'em bancada separada';
-                kitchenDetails += `\n*Tipo de Fogão:* Cooktop (${location})`;
-            } else {
-                kitchenDetails += `\n*Tipo de Fogão:* De Piso`;
-            }
-        }
-
-        let projectDetails = '';
-        if (state.projectOption === 'create') projectDetails = '\n*Projeto 3D:* Sim (incluso no valor)';
-        if (state.projectOption === 'upload' && state.projectFile) projectDetails = '\n*Projeto 3D:* Cliente anexou o arquivo.';
-        if (state.projectOption === 'upload' && !state.projectFile) projectDetails = '\n*Projeto 3D:* Cliente informou que tem o projeto (não anexado).';
-        const hardwareDetails = `\n*Acabamento Interno:* ${state.hardwareType === 'padrao' ? 'Padrão' : 'Com Amortecimento (Soft-close)'}`;
-
-        const handleName = state.handleType.charAt(0).toUpperCase() + state.handleType.slice(1);
-
-        let breakdownText = `\n\n*Detalhamento do Valor:*\n- Estrutura e Produção: R$ ${state.quote.basePrice.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`;
-        if (state.quote.extrasBreakdown && state.quote.extrasBreakdown.length > 0) {
-            breakdownText += '\n*Acabamentos e Personalização:*';
-            state.quote.extrasBreakdown.forEach(item => {
-                breakdownText += `\n  - ${item.label}: + R$ ${item.cost.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`;
+            state.dimensions.walls.forEach((wall, index) => {
+                projectSummary += `- *Parede ${index + 1}:* ${wall.width}m (Largura) x ${wall.height}m (Altura)\n`;
             });
+            if (state.kitchenHasSinkCabinet) {
+                projectSummary += `- *Inclui Balcão de Pia:* Sim (${state.sinkStoneWidth}m)\n`;
+            }
         }
 
-        return `*Orçamento de Móveis Planejados*\n---------------------------------\n*Cliente:* ${state.customer.name}\n*Móvel:* ${state.furnitureType}${formatDetails}${kitchenDetails}\n${details}${projectDetails}\n*Material:* ${state.material} ${state.customColor ? `(Cor: ${state.customColor})` : ''}\n*Puxador:* Perfil ${handleName}${hardwareDetails}\n*Extras:* ${state.extras.join(', ') || 'Nenhum'}\n---------------------------------\n*Total Estimado: ${document.getElementById('result-total').textContent}*${breakdownText}\n\n_Este é um orçamento informativo. O valor final será definido após visita técnica._`;
+        projectSummary += `\n*Materiais e Acabamentos:*\n`;
+        projectSummary += `- *Material:* ${state.material}\n`;
+        if (state.customColor) {
+            projectSummary += `- *Cor Escolhida:* ${state.customColor}\n`;
+        }
+        projectSummary += `- *Ferragens:* ${state.hardwareType === 'softclose' ? 'Soft-close' : 'Padrão'}\n`;
+        if (state.handleType) {
+            projectSummary += `- *Puxador:* ${state.handleType.charAt(0).toUpperCase() + state.handleType.slice(1)}\n`;
+        }
+
+        projectSummary += `\n*Detalhes Adicionais:*\n`;
+        if (state.extras.length > 0) {
+            projectSummary += `- *Extras:* ${state.extras.join(', ')}\n`;
+        }
+        projectSummary += `- *Projeto 3D:* ${state.projectOption === 'create' ? 'Solicitado' : (state.projectOption === 'upload' ? 'Cliente possui' : 'Não solicitado')}\n`;
+        projectSummary += `---------------------------------`;
+
+        return `Olá, Roni! Acabei de fazer uma simulação de orçamento no seu site e gostaria de conversar sobre o projeto.\n\nO valor estimado foi de *${formatCurrency(state.quote.total)}*.\n\n${projectSummary}\n\nAguardo seu contato! Meu nome é ${state.customer.name}.`;
     }
 
     async function generatePDF() {
@@ -1963,7 +2163,6 @@ function setupSimulator() {
             const { jsPDF } = window.jspdf;
             const pdfTemplate = document.getElementById('pdf-template');
     
-            // --- Populate Template ---
             const quoteId = Date.now().toString().slice(-6);
             document.getElementById('pdf-quote-id').textContent = quoteId;
             document.getElementById('pdf-date').textContent = new Date().toLocaleDateString('pt-BR');
@@ -1972,9 +2171,8 @@ function setupSimulator() {
             document.getElementById('pdf-email').textContent = state.customer.email || 'Não informado';
             document.getElementById('pdf-phone').textContent = state.customer.phone;
     
-            // Populate Specs Table
             const specsContainer = document.getElementById('pdf-specs-table');
-            specsContainer.innerHTML = ''; // Clear previous
+            specsContainer.innerHTML = '';
             const createSpecRow = (label, value) => {
                 if (!value) return '';
                 return `<div class="py-2 border-b border-gray-200"><strong class="text-gray-500">${label}:</strong><p class="font-semibold">${value}</p></div>`;
@@ -2004,22 +2202,37 @@ function setupSimulator() {
             
             specsContainer.innerHTML = specsHTML;
     
-            // Populate Pricing
             const formatCurrency = (value) => `R$ ${value.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`;
-            document.getElementById('pdf-base-price').textContent = formatCurrency(state.quote.basePrice);
             document.getElementById('pdf-total').textContent = formatCurrency(state.quote.total);
     
-            const extrasContainer = document.getElementById('pdf-extras-breakdown');
-            extrasContainer.innerHTML = '';
-            if (state.quote.extrasBreakdown && state.quote.extrasBreakdown.length > 0) {
-                let extrasHTML = '<p class="font-semibold text-charcoal">Acabamentos e Personalização:</p><div class="pl-4 border-l-2 border-gold/50 space-y-1 mt-1">';
-                state.quote.extrasBreakdown.forEach(item => {
-                    extrasHTML += `<div class="flex justify-between items-center text-sm"><span class="text-gray-600">${item.label}</span><span class="font-semibold">+ ${formatCurrency(item.cost)}</span></div>`;
+            const summaryContainer = document.getElementById('pdf-project-summary');
+            let summaryHTML = '';
+            summaryHTML += `<strong>Ambiente e Medidas:</strong>\n`;
+            summaryHTML += `  - Tipo: ${state.furnitureType}\n`;
+
+            if (state.furnitureType === 'Guarda-Roupa') {
+                summaryHTML += `  - Largura Total: ${state.dimensions.walls.map(w => w.width).join('m + ')}m\n`;
+                summaryHTML += `  - Altura: ${state.dimensions.height}m\n`;
+                if (state.wardrobeFormat === 'closet') {
+                    summaryHTML += `  - Formato: Closet ${state.closetHasDoors ? 'Fechado' : 'Aberto'}\n`;
+                }
+            } else { // Cozinha
+                state.dimensions.walls.forEach((wall, index) => {
+                    summaryHTML += `  - Parede ${index + 1}: ${wall.width}m (Largura) x ${wall.height}m (Altura)\n`;
                 });
-                extrasHTML += '</div>';
-                extrasContainer.innerHTML = extrasHTML;
+                if (state.kitchenHasSinkCabinet) {
+                    summaryHTML += `  - Inclui Balcão de Pia: Sim (${state.sinkStoneWidth}m)\n`;
+                }
             }
-            // --- End Populate ---
+
+            summaryHTML += `\n<strong>Materiais e Acabamentos:</strong>\n`;
+            summaryHTML += `  - Material: ${state.material}${state.customColor ? ` (Cor: ${state.customColor})` : ''}\n`;
+            summaryHTML += `  - Ferragens: ${state.hardwareType === 'softclose' ? 'Soft-close' : 'Padrão'}\n`;
+            if (state.handleType) {
+                summaryHTML += `  - Puxador: ${state.handleType.charAt(0).toUpperCase() + state.handleType.slice(1)}\n`;
+            }
+
+            summaryContainer.innerHTML = summaryHTML.replace(/\n/g, '<br>');
     
             pdfTemplate.classList.remove('hidden');
             const canvas = await html2canvas(pdfTemplate.firstElementChild, { scale: 2, useCORS: true });

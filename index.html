@@ -143,17 +143,11 @@
     </div>
 
     <!-- Hero Section -->
-    <section id="inicio" class="relative min-h-screen flex items-center justify-center overflow-hidden">
-        <div class="absolute inset-0 z-0">
-            <img src="https://images.unsplash.com/photo-1686023858213-9653d3248fdc?crop=entropy&cs=srgb&fm=jpg&ixid=M3w3NDQ2MzR8MHwxfHNlYXJjaHwxfHxjdXN0b20lMjBraXRjaGVuJTIwY2FiaW5ldHN8ZW58MHx8fHwxNzU4MTMwMTI1fDA&ixlib=rb-4.1.0&q=85" 
-                 alt="Cozinha planejada de alta qualidade" 
-                 class="w-full h-full object-cover" 
-                 class="w-full h-full object-cover fixed" 
-                 width="1920" height="1080"
-                 loading="eager">
-            <div class="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(0,0,0,0.3)_0%,rgba(0,0,0,0.9)_100%)]"></div>
-        </div>
-        
+    <section id="inicio" class="relative min-h-screen flex items-center justify-center bg-cover bg-center bg-no-repeat bg-fixed" style="background-image: url('https://images.unsplash.com/photo-1686023858213-9653d3248fdc?crop=entropy&cs=srgb&fm=jpg&ixid=M3w3NDQ2MzR8MHwxfHNlYXJjaHwxfHxjdXN0b20lMjBraXRjaGVuJTIwY2FiaW5ldHN8ZW58MHx8fHwxNzU4MTMwMTI1fDA&ixlib=rb-4.1.0&q=85');">
+        <!-- Overlay -->
+        <div class="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(0,0,0,0.3)_0%,rgba(0,0,0,0.9)_100%)]"></div>
+
+        <!-- Content -->
         <div class="relative z-10 container mx-auto px-4 sm:px-6 reveal reveal-up">
             <div class="max-w-3xl mx-auto text-center">
                 <h1 class="font-montserrat text-white mb-5 leading-tight shadow-text">
@@ -185,64 +179,50 @@
 
     <!-- Sobre Nós -->
     <section id="sobre" class="py-20 bg-gray-50 overflow-x-hidden">
-        <div class="container mx-auto px-4 sm:px-6">
-            <div class="grid md:grid-cols-2 gap-12 items-center">
-                <div class="space-y-6 reveal reveal-left">
-                    <h2 class="font-montserrat font-bold text-4xl md:text-5xl text-charcoal mb-6">
-                        Sobre o 
-                        <span class="text-gold">Roni Marceneiro</span>
-                    </h2>
-                    <div class="space-y-4 text-gray-700 leading-relaxed">
-                        <p class="text-lg">
-                            Com uma tradição de <strong>mais de 30 anos</strong> em marcenaria, <strong>o Roni Marceneiro</strong> é referência na criação de móveis planejados que unem beleza, funcionalidade e durabilidade.
-                        </p>
-                        <p>
-                            Nossa paixão é transformar lares e espaços com soluções inteligentes. Como especialistas em móveis sob medida, desenvolvemos projetos residenciais e comerciais, utilizando materiais de alta qualidade e as melhores técnicas do mercado para garantir um acabamento impecável.
-                        </p>
-                        <p>
-                            Para nós, cada projeto é uma oportunidade de realizar sonhos. Entendemos que um móvel planejado vai além da função: ele reflete a identidade de quem vive no espaço. Por isso, dedicamos total atenção a cada detalhe, desde o design inicial até a montagem final.
-                        </p>
-                    </div>
-                    
-                    <!-- Stats -->
-                    <div class="grid grid-cols-3 gap-6 pt-8">
-                        <div class="text-center">
-                            <div class="counter text-3xl font-bold text-gold mb-2" data-count-to="1000" data-suffix="+">0</div>
-                            <div class="text-sm text-gray-600">Projetos Entregues</div>
-                        </div>
-                        <div class="text-center">
-                            <div class="counter text-3xl font-bold text-gold mb-2" data-count-to="30" data-suffix="+">0</div>
-                            <div class="text-sm text-gray-600">Anos de Experiência</div>
-                        </div>
-                        <div class="text-center">
-                            <div class="counter text-3xl font-bold text-gold mb-2" data-count-to="99" data-suffix="%">0</div>
-                            <div class="text-sm text-gray-600">Satisfação</div>
-                        </div>
-                    </div>
+        <div class="container mx-auto px-4 sm:px-6 reveal reveal-up">
+            <!-- Título Centralizado -->
+            <div class="text-center mb-12">
+                <h2 class="font-montserrat font-bold text-4xl md:text-5xl text-charcoal mb-4">
+                    Sobre o <span class="text-gold">Roni Marceneiro</span>
+                </h2>
+                <p class="text-lg text-gray-700 max-w-3xl mx-auto leading-relaxed">
+                    Com uma tradição de <strong>mais de 30 anos</strong>, nossa paixão é transformar lares com móveis planejados que unem beleza, funcionalidade e durabilidade. Cada projeto é uma oportunidade de realizar sonhos, com atenção total a cada detalhe.
+                </p>
+            </div>
+
+            <!-- Destaques em Grid -->
+            <div class="grid md:grid-cols-3 gap-8 max-w-6xl mx-auto">
+                <div class="group flex flex-col items-center text-center p-6 bg-white rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1">
+                    <div class="flex-shrink-0 w-20 h-20 bg-gold/10 rounded-full flex items-center justify-center mb-4 transition-colors duration-300 group-hover:bg-gold/20"><i class="fas fa-hammer text-4xl text-gold"></i></div>
+                    <h4 class="font-montserrat font-bold text-charcoal text-xl mb-2">Tradição que Inspira</h4>
+                    <p class="text-gray-600 leading-relaxed text-sm">Mais de três décadas dedicadas à arte da marcenaria, transformando madeira em peças que contam histórias.</p>
                 </div>
-                
-                <!-- Novo Bloco de Destaques (substituindo a imagem) -->
-                <div class="space-y-6 reveal reveal-right">
-                    <div class="group flex items-start space-x-6 p-6 bg-white rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1">
-                        <div class="flex-shrink-0 w-16 h-16 bg-gold/20 rounded-full flex items-center justify-center transition-colors duration-300 group-hover:bg-gold/30"><i class="fas fa-hammer text-4xl text-gold"></i></div>
-                        <div>
-                            <h4 class="font-montserrat font-bold text-charcoal text-xl mb-1">Tradição que Inspira</h4>
-                            <p class="text-gray-600 leading-relaxed">Mais de três décadas dedicadas à arte da marcenaria, transformando madeira em peças que contam histórias e duram gerações.</p>
-                        </div>
+                <div class="group flex flex-col items-center text-center p-6 bg-white rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1">
+                    <div class="flex-shrink-0 w-20 h-20 bg-gold/10 rounded-full flex items-center justify-center mb-4 transition-colors duration-300 group-hover:bg-gold/20"><i class="fas fa-gem text-4xl text-gold"></i></div>
+                    <h4 class="font-montserrat font-bold text-charcoal text-xl mb-2">Qualidade em Detalhes</h4>
+                    <p class="text-gray-600 leading-relaxed text-sm">Compromisso com a excelência, utilizando apenas materiais de primeira linha para um acabamento impecável.</p>
+                </div>
+                <div class="group flex flex-col items-center text-center p-6 bg-white rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1">
+                    <div class="flex-shrink-0 w-20 h-20 bg-gold/10 rounded-full flex items-center justify-center mb-4 transition-colors duration-300 group-hover:bg-gold/20"><i class="fas fa-handshake text-4xl text-gold"></i></div>
+                    <h4 class="font-montserrat font-bold text-charcoal text-xl mb-2">Confiança e Transparência</h4>
+                    <p class="text-gray-600 leading-relaxed text-sm">Um processo claro e um relacionamento próximo, garantindo que cada projeto seja a realização de um sonho.</p>
+                </div>
+            </div>
+
+            <!-- Stats -->
+            <div class="mt-16 pt-10 border-t border-gold/20">
+                <div class="grid grid-cols-3 gap-6 max-w-3xl mx-auto">
+                    <div class="text-center">
+                        <div class="counter text-4xl font-bold text-gold mb-1" data-count-to="1000" data-suffix="+">0</div>
+                        <div class="text-sm text-gray-600 uppercase tracking-wider">Projetos</div>
                     </div>
-                    <div class="group flex items-start space-x-6 p-6 bg-white rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1">
-                        <div class="flex-shrink-0 w-16 h-16 bg-gold/20 rounded-full flex items-center justify-center transition-colors duration-300 group-hover:bg-gold/30"><i class="fas fa-gem text-4xl text-gold"></i></div>
-                        <div>
-                            <h4 class="font-montserrat font-bold text-charcoal text-xl mb-1">Qualidade em Cada Detalhe</h4>
-                            <p class="text-gray-600 leading-relaxed">Compromisso com a excelência, utilizando apenas materiais de primeira linha e ferragens robustas para um acabamento impecável.</p>
-                        </div>
+                    <div class="text-center">
+                        <div class="counter text-4xl font-bold text-gold mb-1" data-count-to="30" data-suffix="+">0</div>
+                        <div class="text-sm text-gray-600 uppercase tracking-wider">Anos</div>
                     </div>
-                    <div class="group flex items-start space-x-6 p-6 bg-white rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1">
-                        <div class="flex-shrink-0 w-16 h-16 bg-gold/20 rounded-full flex items-center justify-center transition-colors duration-300 group-hover:bg-gold/30"><i class="fas fa-handshake text-4xl text-gold"></i></div>
-                        <div>
-                            <h4 class="font-montserrat font-bold text-charcoal text-xl mb-1">Confiança e Transparência</h4>
-                            <p class="text-gray-600 leading-relaxed">Um processo claro e um relacionamento próximo com o cliente, garantindo que cada projeto seja a realização de um sonho.</p>
-                        </div>
+                    <div class="text-center">
+                        <div class="counter text-4xl font-bold text-gold mb-1" data-count-to="99" data-suffix="%">0</div>
+                        <div class="text-sm text-gray-600 uppercase tracking-wider">Satisfação</div>
                     </div>
                 </div>
             </div>
@@ -991,55 +971,31 @@
                                         <!-- Specs will be dynamically inserted here by JS -->
                                     </div>
                                 </div>
-                                <div id="result-breakdown-container" class="bg-gray-100 p-8">
-                                    <button id="toggle-breakdown-btn" class="w-full text-center text-charcoal font-semibold mb-4 hover:text-gold transition-colors">
-                                        Entenda seu Orçamento <i class="fas fa-chevron-down ml-1 transition-transform"></i>
-                                    </button>
-                                    <div id="result-breakdown" class="hidden">
-                                        <div class="space-y-6 text-gray-700">
-                                            <!-- Base components will be inserted here by JS -->
-                                            <div id="base-price-breakdown-list" class="space-y-3">
-                                                <!-- e.g., MDF sheets, hardware, etc. -->
+                                <div id="result-breakdown-container" class="bg-gray-100 p-8 text-gray-700">
+                                    <h4 class="font-montserrat font-bold text-xl text-charcoal mb-4 text-center">Memorial Descritivo do seu Projeto</h4>
+                                    <div id="result-memorial" class="space-y-3 text-sm">
+                                        <div class="flex items-start gap-3 p-3 bg-white/50 rounded-lg">
+                                            <i class="fas fa-layer-group text-gold w-5 text-center mt-1"></i>
+                                            <p><strong class="text-charcoal">Estrutura:</strong> <span id="memorial-structure"></span></p>
+                                        </div>
+                                        <div class="flex items-start gap-3 p-3 bg-white/50 rounded-lg">
+                                            <i class="fas fa-cogs text-gold w-5 text-center mt-1"></i>
+                                            <p><strong class="text-charcoal">Acabamento Interno:</strong> <span id="memorial-hardware"></span></p>
+                                        </div>
+                                        <div class="flex items-start gap-3 p-3 bg-white/50 rounded-lg">
+                                            <i class="fas fa-shield-alt text-gold w-5 text-center mt-1"></i>
+                                            <p><strong class="text-charcoal">Serviços e Garantia:</strong> <span id="memorial-services"></span></p>
+                                        </div>
+                                    </div>
+                                    <!-- Nova Seção: Previsão de Materiais e Serviços -->
+                                    <div class="mt-6 pt-6 border-t border-gold/20">
+                                        <h4 class="font-montserrat font-bold text-xl text-charcoal mb-4 text-center">Checklist de Qualidade do Projeto</h4>
+                                        <div class="grid md:grid-cols-2 gap-6 text-sm">
+                                            <div id="quality-checklist" class="p-4 bg-white/50 rounded-lg">
+                                                <!-- Quantities will be inserted here by JS -->
                                             </div>
-                                            
-                                            <!-- Dynamic Extras List -->
-                                            <div id="extras-breakdown-list" class="space-y-3 border-t border-gray-200 pt-4 mt-4">
-                                                <!-- Items will be inserted here by JS -->
-                                            </div>
-
-                                            <!-- Visual Breakdown Bar -->
-                                            <div class="pt-2">
-                                                <div class="relative w-full bg-gray-200 rounded-full h-3 overflow-hidden">
-                                                    <div id="base-price-bar" class="absolute top-0 left-0 h-full bg-charcoal transition-all duration-500 ease-in-out"></div>
-                                                    <div id="extras-price-bar" class="absolute top-0 h-full bg-gold transition-all duration-500 ease-in-out"></div>
-                                                </div>
-                                                <div class="flex justify-between mt-2 text-xs">
-                                                    <span class="flex items-center"><i class="fas fa-circle text-charcoal mr-2"></i>Estrutura</span>
-                                                    <span class="flex items-center"><i class="fas fa-circle text-gold mr-2"></i>Personalização</span>
-                                                </div>
-                                            </div>
-                                        
-                                        <!-- What's Included (New Grid Layout) -->
-                                        <div class="pt-6">
-                                            <h5 class="font-semibold text-charcoal mb-4 text-center">Serviços Inclusos no seu Projeto</h5>
-                                            <div class="grid grid-cols-2 gap-4">
-                                                <div class="included-item-card">
-                                                    <i class="fas fa-ruler-combined text-gold text-2xl"></i>
-                                                    <p>Visita Técnica</p>
-                                                </div>
-                                                <div class="included-item-card">
-                                                    <i class="fas fa-truck text-gold text-2xl"></i>
-                                                    <p>Entrega e Montagem</p>
-                                                </div>
-                                                <div class="included-item-card">
-                                                    <i class="fas fa-broom text-gold text-2xl"></i>
-                                                    <p>Limpeza Pós-Obra</p>
-                                                </div>
-                                                <div class="included-item-card">
-                                                    <i class="fas fa-shield-alt text-gold text-2xl"></i>
-                                                    <p>Garantia de 5 Anos</p>
-                                                </div>
-                                            </div>
+                                            <div id="result-extras" class="p-4 bg-white/50 rounded-lg">
+                                                <!-- Extras will be inserted here by JS -->
                                             </div>
                                         </div>
                                     </div>
@@ -1493,6 +1449,24 @@
         </div>
     </div>
 
+    <!-- Instagram Modal -->
+    <div id="instagram-modal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-[100] flex items-center justify-center p-4 hidden" role="dialog" aria-modal="true" aria-hidden="true">
+        <div class="bg-white rounded-lg w-full max-w-4xl h-[90vh] md:h-[95vh] flex flex-col shadow-2xl">
+            <div class="flex justify-between items-center p-4 border-b">
+                <h3 id="instagram-modal-title" class="font-montserrat font-bold text-xl text-charcoal flex items-center gap-2">
+                    <i class="fab fa-instagram text-gold"></i>
+                    @roni.marceneiro
+                </h3>
+                <button id="instagram-modal-close" class="text-charcoal text-2xl hover:text-gold transition-colors">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="flex-1 p-2 bg-gray-200">
+                <iframe id="instagram-iframe" src="" class="w-full h-full border-0 rounded-b-lg" title="Instagram Roni Marceneiro"></iframe>
+            </div>
+        </div>
+    </div>
+
     <!-- Hidden Template for PDF Generation -->
     <div id="pdf-template" class="hidden font-roboto">
         <div class="p-10 bg-white text-charcoal w-[210mm]">
@@ -1535,14 +1509,10 @@
     
             <!-- Pricing -->
             <section class="mt-8">
-                <h2 class="font-montserrat font-bold text-xl bg-gray-100 p-3 rounded-t-lg">Detalhamento do Valor</h2>
+                <h2 class="font-montserrat font-bold text-xl bg-gray-100 p-3 rounded-t-lg">Resumo do Orçamento</h2>
                 <div class="border-l border-r border-b rounded-b-lg p-4 space-y-3">
-                    <div class="flex justify-between items-center">
-                        <span>Estrutura e Produção</span>
-                        <span id="pdf-base-price" class="font-semibold"></span>
-                    </div>
-                    <div id="pdf-extras-breakdown">
-                        <!-- Extras breakdown will be inserted here -->
+                    <div id="pdf-project-summary" class="text-sm space-y-1 whitespace-pre-wrap">
+                        <!-- O resumo do projeto (igual ao do WhatsApp) será inserido aqui -->
                     </div>
                     <div class="flex justify-between items-center text-xl font-bold border-t-2 border-gold pt-3 mt-3">
                         <span>TOTAL ESTIMADO</span>
@@ -1560,7 +1530,8 @@
         </div>
     </div>
 
-    <script src="script.js"></script>    <script>
+    <script src="bin-packing.js"></script>
+    <script src="script.js"></script><script>
     </script>
 </body>
 </html>
