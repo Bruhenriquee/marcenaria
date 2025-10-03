@@ -1036,6 +1036,118 @@ function setupSimulator() {
         },
     };
 
+    function getQuoteAsHtml() {
+        const formatCurrency = (value) => `R$ ${value.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+
+        const styles = `
+            <style>
+                body { font-family: Arial, sans-serif; margin: 0; padding: 0; background-color: #f4f4f4; }
+                .container { max-width: 600px; margin: 20px auto; background-color: #ffffff; padding: 20px; border-radius: 8px; }
+                .header { text-align: center; border-bottom: 2px solid #D4AF37; padding-bottom: 10px; margin-bottom: 20px; }
+                .header h1 { color: #2F2F2F; margin: 0; font-size: 24px; }
+                .header p { color: #D4AF37; margin: 0; text-transform: uppercase; letter-spacing: 2px; font-size: 12px; }
+                .section { margin-bottom: 20px; }
+                .section h2 { font-size: 18px; color: #2F2F2F; border-bottom: 1px solid #eee; padding-bottom: 5px; margin-bottom: 10px; }
+                .details-table { width: 100%; border-collapse: collapse; }
+                .details-table td { padding: 8px 0; border-bottom: 1px solid #f0f0f0; font-size: 14px; }
+                .details-table td:first-child { color: #555; width: 40%; }
+                .details-table td:last-child { font-weight: bold; color: #2F2F2F; }
+                .total { text-align: center; padding: 20px; background-color: #f9f9f9; border-radius: 8px; margin-top: 20px; }
+                .total h3 { margin: 0; color: #555; font-size: 16px; }
+                .total p { margin: 5px 0 0; font-size: 32px; font-weight: bold; color: #D4AF37; }
+            </style>
+        `;
+
+        let projectDetailsHtml = '';
+        if (state.furnitureType === 'Guarda-Roupa') {
+            projectDetailsHtml += `<tr><td>Largura Total</td><td>${state.dimensions.walls.map(w => w.width).join('m + ')}m</td></tr>`;
+            projectDetailsHtml += `<tr><td>Altura</td><td>${state.dimensions.height}m</td></tr>`;
+            if (state.wardrobeFormat === 'closet') {
+                projectDetailsHtml += `<tr><td>Formato</td><td>Closet ${state.closetHasDoors ? 'Fechado' : 'Aberto'}</td></tr>`;
+            }
+        } else { // Cozinha
+            state.dimensions.walls.forEach((wall, index) => {
+                projectDetailsHtml += `<tr><td>Parede ${index + 1}</td><td>${wall.width}m (Largura) x ${wall.height}m (Altura)</td></tr>`;
+            });
+            if (state.kitchenHasSinkCabinet) {
+                projectDetailsHtml += `<tr><td>Balcão de Pia</td><td>Sim (${state.sinkStoneWidth}m)</td></tr>`;
+            }
+        }
+
+        let handleHtml = state.handleType ? `<tr><td>Puxador</td><td>${state.handleType.charAt(0).toUpperCase() + state.handleType.slice(1)}</td></tr>` : '';
+        let extrasHtml = state.extras.length > 0 ? `<tr><td>Extras</td><td>${state.extras.join(', ')}</td></tr>` : '';
+        let project3DHtml = `<tr><td>Projeto 3D</td><td>${state.projectOption === 'create' ? 'Solicitado' : (state.projectOption === 'upload' ? 'Cliente possui' : 'Não solicitado')}</td></tr>`;
+
+        const body = `
+            ${styles}
+            <div class="container">
+                <div class="header">
+                    <h1>Roni Marceneiro</h1>
+                    <p>Móveis Planejados</p>
+                </div>
+                <div class="section">
+                    <h2>Novo Lead do Simulador!</h2>
+                    <table class="details-table">
+                        <tr><td>Nome do Cliente</td><td>${state.customer.name}</td></tr>
+                        <tr><td>WhatsApp</td><td><a href="https://wa.me/55${state.customer.phone.replace(/\D/g, '')}">${state.customer.phone}</a></td></tr>
+                        <tr><td>E-mail</td><td><a href="mailto:${state.customer.email}">${state.customer.email}</a></td></tr>
+                    </table>
+                </div>
+                <div class="section">
+                    <h2>Resumo do Projeto</h2>
+                    <table class="details-table">
+                        <tr><td>Tipo de Móvel</td><td>${state.furnitureType}</td></tr>
+                        ${projectDetailsHtml}
+                        <tr><td>Material</td><td>${state.material}${state.customColor ? ` (${state.customColor})` : ''}</td></tr>
+                        <tr><td>Ferragens</td><td>${state.hardwareType === 'softclose' ? 'Soft-close' : 'Padrão'}</td></tr>
+                        ${handleHtml}
+                        ${extrasHtml}
+                        ${project3DHtml}
+                    </table>
+                </div>
+                <div class="total">
+                    <h3>Valor Total Estimado</h3>
+                    <p>${formatCurrency(state.quote.total)}</p>
+                </div>
+            </div>
+        `;
+        return body;
+    }
+
+    const DISPOSABLE_DOMAINS = [
+        '10minutemail.com', 'temp-mail.org', 'guerrillamail.com', 'mailinator.com', 
+        'throwawaymail.com', 'getairmail.com', 'yopmail.com', 'fakemail.net'
+    ];
+
+    async function submitToFormspree() {
+        const formspreeEndpoint = "https://formspree.io/f/manpjzjv"; // SEU ID JÁ ESTÁ AQUI
+        const formData = new FormData();
+        formData.append("_subject", `Novo Lead do Simulador: ${state.customer.name} - ${state.furnitureType}`);
+        formData.append("_replyto", state.customer.email);
+
+        // Enviando dados como texto simples para garantir compatibilidade com anexos
+        formData.append("Nome Cliente", state.customer.name);
+        formData.append("WhatsApp", state.customer.phone);
+        formData.append("E-mail", state.customer.email);
+        formData.append("Resumo do Orçamento", getQuoteAsText(true));
+
+        // Anexa o arquivo do projeto, se existir
+        if (state.projectFile) {
+            formData.append("attachment", state.projectFile);
+        }
+
+        try {
+            await fetch(formspreeEndpoint, {
+                method: 'POST',
+                body: formData,
+                headers: { 'Accept': 'application/json' }
+            });
+            console.log("Lead do simulador enviado para o Formspree.");
+        } catch (error) {
+            console.error("Erro ao enviar lead para o Formspree:", error);
+        }
+    }
+
     function init() {
         setupEventListeners();
         window.addEventListener('resize', debounce(updateContainerHeight, 200));
@@ -1206,9 +1318,7 @@ function setupSimulator() {
         });
         
         document.getElementById('view-quote-btn').addEventListener('click', handleViewQuote);
-        document.getElementById('pdf-btn').addEventListener('click', generatePDF);
         document.getElementById('whatsapp-btn').addEventListener('click', generateWhatsAppLink);
-        document.getElementById('email-btn').addEventListener('click', generateEmailLink);
     }
 
     // --- UI & NAVIGATION ---
@@ -1377,7 +1487,7 @@ function setupSimulator() {
                     </div>
                     <div>
                         <label for="kitchen-wall-height${wallCount}" class="text-sm text-gray-600">Altura da parede (m)</label>
-                        <input type="number" id="kitchen-wall-height${wallCount}" name="kitchen-wall-height" step="0.1" min="0" value="2.7" class="form-input">
+                        <input type="number" id="kitchen-wall-height${wallCount}" name="kitchen-wall-height" step="0.1" min="0" value="2.75" class="form-input">
                     </div>
                 </div>
             </div>
@@ -1939,6 +2049,9 @@ function setupSimulator() {
             document.getElementById('lead-capture-form').classList.add('hidden');
             document.getElementById('result-container').classList.remove('hidden');
             updateContainerHeight();
+
+            // Envia os dados para o Formspree em segundo plano
+            submitToFormspree();
         } catch (error) {
             console.error("Error calculating quote:", error);
             showNotification('Ocorreu um erro ao calcular o orçamento. Tente novamente.', 'error');
@@ -2110,7 +2223,7 @@ Esta proposta foi elaborada para oferecer a melhor combinação de qualidade, de
 `;
     }
 
-    function getQuoteAsText() {
+    function getQuoteAsText(forEmail = false) {
         const formatCurrency = (value) => `R$ ${value.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 
         let projectSummary = `*Resumo do Projeto:*\n`;
@@ -2150,7 +2263,11 @@ Esta proposta foi elaborada para oferecer a melhor combinação de qualidade, de
         projectSummary += `- *Projeto 3D:* ${state.projectOption === 'create' ? 'Solicitado' : (state.projectOption === 'upload' ? 'Cliente possui' : 'Não solicitado')}\n`;
         projectSummary += `---------------------------------`;
 
-        return `Olá, Roni! Acabei de fazer uma simulação de orçamento no seu site e gostaria de conversar sobre o projeto.\n\nO valor estimado foi de *${formatCurrency(state.quote.total)}*.\n\n${projectSummary}\n\nAguardo seu contato! Meu nome é ${state.customer.name}.`;
+        if (forEmail) {
+            return projectSummary.replace(/\*/g, ''); // Remove asteriscos para texto puro
+        } else {
+            return `Olá, Roni! Acabei de fazer uma simulação de orçamento no seu site e gostaria de conversar sobre o projeto.\n\nO valor estimado foi de *${formatCurrency(state.quote.total)}*.\n\n${projectSummary}\n\nAguardo seu contato! Meu nome é ${state.customer.name}.`;
+        }
     }
 
     async function generatePDF() {
@@ -2258,10 +2375,6 @@ Esta proposta foi elaborada para oferecer a melhor combinação de qualidade, de
             text += '\n\n*(Anexei o arquivo do meu projeto no simulador. Por favor, me informe como posso enviá-lo.)*';
         }
         window.open(`https://wa.me/5518997312957?text=${encodeURIComponent(text)}`, '_blank');
-    }
-
-    function generateEmailLink() {
-        window.location.href = `mailto:?subject=${encodeURIComponent(`Orçamento de Móveis: ${state.customer.name}`)}&body=${encodeURIComponent(getQuoteAsText())}`;
     }
 
     init();

@@ -143,7 +143,7 @@ function splitLargePart(width, height, description, sheetWidthLimit = 2750) {
     const pieceWidth = width / numPieces;
     return Array.from({ length: numPieces }, (_, i) => ({ w: pieceWidth, h: height, description: `${description} #${i + 1}` }));
 }
-function getWardrobeParts(walls, height, depth, numDrawers, hasDoors, numDoors) {
+function getWardrobeParts(walls, height, depth, numDrawers, hasDoors, numDoors, hasCorner) {
     const thickness = 15; // MDF thickness in mm
     const mdf15Parts = [];
     const mdf3Parts = [];
@@ -153,6 +153,12 @@ function getWardrobeParts(walls, height, depth, numDrawers, hasDoors, numDoors) 
     mdf15Parts.push({ w: height, h: depth, description: 'Right Side' });
     mdf15Parts.push(...splitLargePart(totalWidth, depth, 'Top'));
     mdf15Parts.push(...splitLargePart(totalWidth, depth, 'Bottom'));
+
+    // Se tiver canto, ajusta a largura da primeira parede para não sobrepor
+    const effectiveWalls = walls.map((wall, index) => {
+        const shouldAdjust = hasCorner && (index === 0 || index === 1);
+        return { ...wall, width: shouldAdjust ? wall.width - 900 : wall.width };
+    });
 
     const internalHeight = height - (2 * thickness); // Altura interna real (desconta tampo e base).
     const numModules = Math.ceil(totalWidth / 900); // Módulos de no máximo 90cm.
@@ -165,7 +171,7 @@ function getWardrobeParts(walls, height, depth, numDrawers, hasDoors, numDoors) 
 
     for (let i = 0; i < numModules; i++) {
         const numShelves = Math.floor(height / 800); // Shelves per module
-        for (let s = 0; s < numShelves; s++) {
+        for (let s = 0; s < numShelves; s++) { 
             mdf15Parts.push({ w: internalModuleWidth, h: depth - 20, description: `Shelf ${i+1}-${s+1}` });
         }
     }
@@ -191,10 +197,30 @@ function getWardrobeParts(walls, height, depth, numDrawers, hasDoors, numDoors) 
         mdf3Parts.push({ w: drawerBoxWidth, h: drawerBoxDepth, description: 'Drawer Bottom' });
     }
 
-    walls.forEach((wall, index) => {
+    effectiveWalls.forEach((wall, index) => {
         mdf3Parts.push(...splitLargePart(wall.width, height, `Back Panel Wall ${index + 1}`));
     });
 
+    // Adiciona as peças do módulo de canto se selecionado
+    if (hasCorner) {
+        const cornerDim = 900; // Dimensão do canto: 90x90cm
+        const cornerDoorWidth = 400; // Largura comum para cada folha da porta de canto
+
+        // Estrutura do módulo de canto
+        mdf15Parts.push({ w: cornerDim, h: cornerDim, description: 'Canto - Tampo' });
+        mdf15Parts.push({ w: cornerDim, h: cornerDim, description: 'Canto - Base' });
+        mdf15Parts.push({ w: internalHeight, h: depth, description: 'Canto - Divisória Interna' });
+        mdf15Parts.push({ w: internalHeight, h: cornerDim - depth, description: 'Canto - Fechamento Lateral' });
+        mdf15Parts.push({ w: cornerDim - thickness, h: depth - 20, description: 'Canto - Prateleira' });
+
+        // Portas do módulo de canto (sistema bi-fold)
+        mdf15Parts.push({ w: cornerDoorWidth, h: height, description: 'Canto - Porta' });
+        mdf15Parts.push({ w: cornerDoorWidth, h: height, description: 'Canto - Porta' });
+
+        // Fundo do módulo de canto
+        mdf3Parts.push({ w: cornerDim, h: height, description: 'Canto - Fundo' });
+        mdf3Parts.push({ w: cornerDim - depth, h: height, description: 'Canto - Fundo Lateral' });
+    }
     // CORREÇÃO: Adiciona o painel de fundo para a lateral do móvel, que estava faltando.
     mdf3Parts.push({ w: depth, h: height, description: 'Back Panel Side' });
 
@@ -324,12 +350,14 @@ function setupSimulator() {
     const state = {
         quoteId: null, // To track saved quotes
         furnitureType: null,
-        dimensions: { height: 2.7, depth: 60, walls: [{width: 3.0, height: 2.7}] },
+        dimensions: { height: 2.75, depth: 60, walls: [{width: 3.0, height: 2.75}] },
         wardrobeFormat: null,
         material: null,
+        kitchenScope: null,
         kitchenHasSinkCabinet: null,
         numDrawers: 4, // Default number of drawers
         sinkStoneWidth: 1.8,
+        sinkCabinetWidth: 1.8,
         hasHotTower: null,
         hotTowerHeight: 2.2,
         stoveType: null,
@@ -338,6 +366,7 @@ function setupSimulator() {
         doorType: null,
         closetHasDoors: null,
         handleType: null,
+        closetHasCorner: null,
         projectOption: null,
         projectFile: null,
         photos: [], // Para armazenar as fotos do local
@@ -395,6 +424,13 @@ function setupSimulator() {
     function setupEventListeners() {
         document.getElementById('simulator-content').addEventListener('click', (e) => {
             if (e.target.closest('.next-btn')) {
+                // Auto-correct any final commas before proceeding
+                const activeStepInputs = e.target.closest('.form-step').querySelectorAll('input[type="number"]');
+                activeStepInputs.forEach(input => {
+                    if (input.value.includes(',')) {
+                        input.value = input.value.replace(',', '.');
+                    }
+                });
                 handleNextStep();
             } else if (e.target.closest('.prev-btn')) {
                 handlePrevStep();
@@ -406,6 +442,13 @@ function setupSimulator() {
                 handleRemoveWall(e.target.closest('.remove-wall-btn'));
             } else if (e.target.closest('#save-quote-btn')) {
                 handleSaveQuote();
+            }
+        });
+
+        // Event delegation to auto-correct comma to period in number inputs
+        document.getElementById('simulador').addEventListener('input', (e) => {
+            if (e.target.type === 'number' && e.key === ',') {
+                e.target.value = e.target.value.replace(/,/g, '.');
             }
         });
 
@@ -443,14 +486,29 @@ function setupSimulator() {
             });
         });
 
-        document.querySelectorAll('input[name="kitchenSink"]').forEach(radio => {
+        document.querySelectorAll('input[name="closetCorner"]').forEach(radio => {
             radio.addEventListener('change', (e) => {
-                updateStateAndSave({ kitchenHasSinkCabinet: e.target.value === 'sim' });
+                updateStateAndSave({ closetHasCorner: e.target.value === 'sim' });
+                updateWardrobeSubSteps();
+                updateContainerHeight();
+            });
+        });
+
+        document.querySelectorAll('input[name="kitchenScope"]').forEach(radio => {
+            radio.addEventListener('change', (e) => {
+                updateStateAndSave({ kitchenScope: e.target.value });
                 updateKitchenSubSteps();
                 updateContainerHeight();
             });
         });
 
+        document.getElementById('sinkStoneWidth').addEventListener('input', (e) => {
+            const stoneWidth = e.target.value;
+            const cabinetInput = document.getElementById('sinkCabinetWidth');
+            if (cabinetInput.value === '' || parseFloat(cabinetInput.value) === parseFloat(state.sinkStoneWidth)) {
+                cabinetInput.value = stoneWidth;
+            }
+        });
         document.querySelectorAll('input[name="hasHotTower"]').forEach(radio => {
             radio.addEventListener('change', (e) => {
                 updateStateAndSave({ hasHotTower: e.target.value === 'sim' });
@@ -802,6 +860,9 @@ function setupSimulator() {
         const isCloset = state.wardrobeFormat === 'closet';
         document.getElementById('closet-door-step').classList.toggle('hidden', !isCloset);
         document.getElementById('add-wardrobe-wall-btn').classList.toggle('hidden', !isCloset);
+        // Mostra a pergunta sobre o canto apenas se for um closet com mais de uma parede
+        const wallCount = document.getElementById('wardrobe-walls-container').children.length;
+        document.getElementById('closet-corner-step').classList.toggle('hidden', !isCloset || wallCount < 2);
 
         const hasDoors = !(isCloset && !state.closetHasDoors);
         const handleTypeSection = document.getElementById('handle-type-section');
@@ -826,8 +887,27 @@ function setupSimulator() {
     }
 
     function updateKitchenSubSteps() {
-        const hasSinkCabinet = state.kitchenHasSinkCabinet;
-        document.getElementById('sink-stone-width-container').classList.toggle('hidden', !hasSinkCabinet);
+        const scope = state.kitchenScope;
+        const isFullKitchen = scope === 'completa';
+        const isSinkOnly = scope === 'pia_apenas';
+
+        // Mostra opções de cozinha completa (torre, fogão, etc.) e os inputs de parede
+        document.getElementById('full-kitchen-options').classList.toggle('hidden', !isFullKitchen);
+        document.getElementById('kitchen-walls-container').classList.toggle('hidden', !isFullKitchen);
+        document.getElementById('add-wall-btn').classList.toggle('hidden', !isFullKitchen);
+
+        // Mostra os inputs de medida da pia para AMBOS os casos (cozinha completa ou apenas pia)
+        const showSinkInputs = isFullKitchen || isSinkOnly;
+        document.getElementById('sink-stone-width-container').classList.toggle('hidden', !showSinkInputs);
+
+        // Lógica de estado: se for apenas pia, limpa as paredes.
+        if (isSinkOnly) {
+            updateStateAndSave({ dimensions: { ...state.dimensions, walls: [] } });
+        } 
+        // Se for cozinha completa e não houver paredes definidas, adiciona a padrão.
+        else if (isFullKitchen && state.dimensions.walls.length === 0) {
+            updateStateAndSave({ dimensions: { ...state.dimensions, walls: [{width: 2.2, height: 2.7}] } });
+        }
     }
 
     function addWardrobeWall() {
@@ -851,6 +931,7 @@ function setupSimulator() {
             document.getElementById('add-wardrobe-wall-btn').classList.add('hidden');
         }
         updateContainerHeight();
+        updateWardrobeSubSteps(); // Adicionado para verificar a visibilidade do passo de canto
     }
 
     function addKitchenWall() {
@@ -869,7 +950,7 @@ function setupSimulator() {
                     </div>
                     <div>
                         <label for="kitchen-wall-height${wallCount}" class="text-sm text-gray-600">Altura da parede (m)</label>
-                        <input type="number" id="kitchen-wall-height${wallCount}" name="kitchen-wall-height" step="0.1" min="0" value="2.7" class="form-input">
+                        <input type="number" id="kitchen-wall-height${wallCount}" name="kitchen-wall-height" step="0.1" min="0" value="2.75" class="form-input">
                     </div>
                 </div>
             </div>
@@ -891,6 +972,7 @@ function setupSimulator() {
             const container = wallEntry.parentElement;
             wallEntry.remove();
             updateDimensionsState();
+            updateWardrobeSubSteps(); // Re-check visibility of corner step
             
             if (container.id === 'wardrobe-walls-container') {
                 document.getElementById('add-wardrobe-wall-btn').classList.remove('hidden');
@@ -920,6 +1002,16 @@ function setupSimulator() {
             state.dimensions.height = height;
             updateDrawerRecommendation();
             updateWardrobeRecommendation();
+        } else { // Cozinha
+            const widths = Array.from(document.querySelectorAll('input[name="kitchen-wall-width"]')).map(input => parseFloat(input.value) || 0);
+            const heights = Array.from(document.querySelectorAll('input[name="kitchen-wall-height"]')).map(input => parseFloat(input.value) || 0);
+            state.dimensions.walls = widths.map((w, i) => ({ width: w, height: heights[i] || 0 }));
+            state.sinkStoneWidth = parseFloat(document.getElementById('sinkStoneWidth').value) || 0;
+            state.sinkCabinetWidth = parseFloat(document.getElementById('sinkCabinetWidth').value) || 0;
+            const kitchenNumDrawersInput = document.getElementById('kitchenNumDrawers');
+            if (kitchenNumDrawersInput) {
+                state.numDrawers = parseInt(kitchenNumDrawersInput.value) || 0;
+            }
         }
         updateKitchenDrawerRecommendation();
     }
@@ -947,17 +1039,18 @@ function setupSimulator() {
                     heightInput?.scrollIntoView({ behavior: 'smooth', block: 'center' });
                     return false;
                 }
-                if (state.wardrobeFormat === null) {
-                    showNotification('Por favor, escolha o formato do projeto.', 'error');
-                    return false;
-                }
                 if (state.wardrobeFormat === 'closet' && state.closetHasDoors === null) {
                     showNotification('Informe se o seu closet terá portas.', 'error');
                     return false;
                 }
+                const wallCount = state.dimensions.walls.filter(w => w.width > 0).length;
+                if (state.wardrobeFormat === 'closet' && wallCount > 1 && state.closetHasCorner === null) {
+                    showNotification('Informe se o projeto terá um módulo de canto.', 'error');
+                    return false;
+                }
             } else { // Cozinha
                 const kitchenArea = state.dimensions.walls.reduce((acc, wall) => acc + (wall.width * wall.height), 0);
-                if (kitchenArea <= 0 && !state.kitchenHasSinkCabinet) {
+                if (state.kitchenScope === 'completa' && kitchenArea <= 0) {
                     const firstWidthInput = document.getElementById('kitchen-wall-width1');
                     showNotification('Por favor, adicione as medidas de pelo menos uma parede de armários.', 'error');
                     firstWidthInput?.focus();
@@ -968,6 +1061,10 @@ function setupSimulator() {
                     showNotification('Informe se o projeto incluirá um armário para a pia.', 'error');
                     return false;
                 }
+                if (state.kitchenHasSinkCabinet && state.kitchenScope === null) {
+                    showNotification('Informe se o projeto terá apenas o armário da pia ou mais armários.', 'error');
+                    return false;
+                }
                 if (state.hasHotTower === null) {
                     showNotification('Informe se o projeto terá Torre Quente.', 'error');
                     return false;
@@ -976,7 +1073,7 @@ function setupSimulator() {
                     showNotification('Por favor, escolha o tipo de fogão.', 'error');
                     return false;
                 }
-                if (state.stoveType === 'cooktop' && state.cooktopLocation === null) {
+                if (state.kitchenScope === 'completa' && state.stoveType === 'cooktop' && state.cooktopLocation === null) {
                     showNotification('Informe onde o cooktop será instalado.', 'error');
                     return false;
                 }
@@ -1180,7 +1277,7 @@ function setupSimulator() {
         const extrasBreakdown = [];
 
         // 1. MDF Cost (com lógica para Mesclado)
-        const { mdf15Parts: allParts, mdf3Parts: backAndBottomParts } = getWardrobeParts(state.dimensions.walls.map(w => ({ width: w.width * 1000, height: w.height * 1000 })), height * 1000, state.dimensions.depth * 10, state.numDrawers, hasDoors, numDoors);
+        const { mdf15Parts: allParts, mdf3Parts: backAndBottomParts } = getWardrobeParts(state.dimensions.walls.map(w => ({ width: w.width * 1000, height: w.height * 1000 })), height * 1000, state.dimensions.depth * 10, state.numDrawers, hasDoors, numDoors, state.closetHasCorner);
         let sheets = [];
 
         if (state.material === 'Mesclada') {
@@ -1409,14 +1506,17 @@ function setupSimulator() {
         Object.assign(state, {
             quoteId: null,
             furnitureType: null,
-            dimensions: { height: 2.7, depth: 60, walls: [{width: 3.0, height: 2.7}] },
+            dimensions: { height: 2.75, depth: 60, walls: [{width: 3.0, height: 2.75}] },
             material: null,
             doorType: null,
+            kitchenScope: null,
             wardrobeFormat: null,
             closetHasDoors: null,
+            closetHasCorner: null,
             kitchenHasSinkCabinet: null,
             numDrawers: 4,
             sinkStoneWidth: 1.8,
+            sinkCabinetWidth: 1.8,
             hasHotTower: null,
             stoveType: null,
             cooktopLocation: null,
@@ -1440,7 +1540,7 @@ function setupSimulator() {
         document.querySelectorAll('#simulador input[type="radio"], #simulador input[type="checkbox"]').forEach(input => { input.checked = false; });
 
         document.getElementById('wardrobe-width1').value = 3.0;
-        document.getElementById('wardrobe-height').value = 2.7;
+        document.getElementById('wardrobe-height').value = 2.75;
         document.querySelectorAll('#wardrobe-walls-container input[name="wardrobe-width"]:not(#wardrobe-width1)').forEach(input => input.value = '0');
         document.getElementById('add-wardrobe-wall-btn').classList.remove('hidden');
 
@@ -1449,7 +1549,7 @@ function setupSimulator() {
         document.getElementById('numDrawers').value = 4; // For wardrobe
         document.getElementById('kitchenNumDrawers').value = 4; // For kitchen
         document.getElementById('kitchen-wall-width1').value = 2.2;
-        document.getElementById('kitchen-wall-height1').value = 2.7;
+        document.getElementById('kitchen-wall-height1').value = 2.75;
 
         document.getElementById('premium-options').classList.add('hidden');
         document.getElementById('customColor').value = '';
@@ -1713,6 +1813,11 @@ function setupSimulator() {
                 if (closetDoorsRadio) closetDoorsRadio.click();
             }
             document.getElementById('numDrawers').value = state.numDrawers || 4;
+
+            if (state.closetHasCorner !== null) {
+                const closetCornerRadio = document.querySelector(`input[name="closetCorner"][value="${state.closetHasCorner ? 'sim' : 'nao'}"]`);
+                if (closetCornerRadio) closetCornerRadio.click();
+            }
         } else { // Cozinha
             const kitchenSinkRadio = document.querySelector(`input[name="kitchenSink"][value="${state.kitchenHasSinkCabinet ? 'sim' : 'nao'}"]`);
             if (kitchenSinkRadio) kitchenSinkRadio.click();
@@ -1721,6 +1826,7 @@ function setupSimulator() {
             if (hotTowerRadio) hotTowerRadio.click();
 
             const stoveTypeRadio = document.querySelector(`input[name="stoveType"][value="${state.stoveType}"]`);
+            document.getElementById('sinkCabinetWidth').value = state.sinkCabinetWidth;
             if (stoveTypeRadio) stoveTypeRadio.click();
 
             if (state.stoveType === 'cooktop') {
@@ -1733,10 +1839,6 @@ function setupSimulator() {
         // Step 4: Extras
         if (state.doorType) {
             const doorTypeRadio = document.querySelector(`input[name="doorType"][value="${state.doorType}"]`);
-            if (doorTypeRadio) doorTypeRadio.click();
-        }
-        if (state.handleType) {
-            const handleTypeRadio = document.querySelector(`input[name="handleType"][value="${state.handleType}"]`);
             if (handleTypeRadio) handleTypeRadio.click();
         }
 
@@ -1757,7 +1859,7 @@ function setupSimulator() {
                     document.querySelectorAll('#wardrobe-walls-container input[name="wardrobe-width"]').forEach((input, i) => {
                         input.value = state.dimensions.walls[i]?.width || 0;
                     });
-                    document.getElementById('wardrobe-height').value = state.dimensions.height;
+                    document.getElementById('wardrobe-height').value = state.dimensions.height || 2.75;
                 } else { // Cozinha
                     document.getElementById('sinkStoneWidth').value = state.sinkStoneWidth;
                     const kitchenWallsContainer = document.getElementById('kitchen-walls-container');
@@ -1833,6 +1935,9 @@ function setupSimulator() {
             let formatText = state.wardrobeFormat === 'reto' ? 'Reto' : 'Closet';
             if (state.wardrobeFormat === 'closet') {
                 formatText += state.closetHasDoors ? ' (Fechado)' : ' (Aberto)';
+            }
+            if (state.closetHasCorner) {
+                formatText += ' com Canto';
             }
             specsHTML += createSpecCard('fa-vector-square', 'Formato', formatText);
 
